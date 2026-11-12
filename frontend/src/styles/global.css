@@ -1,0 +1,167 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-padding-top: 2rem;
+}
+
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 0.3em;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 5px;
+}
+
+h1, h2, h3, p, figure {
+  margin: 0;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+::selection {
+  color: var(--color-paper);
+  background: var(--color-ink);
+}
+
+.page-width {
+  width: min(var(--page-width), calc(100% - 3rem));
+  margin-inline: auto;
+}
+
+.skip-link {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1;
+  padding: 0.75rem 1rem;
+  background: var(--color-paper);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 6.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.08em;
+  text-decoration: none;
+}
+
+.wordmark svg {
+  width: 1.8rem;
+  height: 1.8rem;
+  margin-right: 0.2rem;
+}
+
+.wordmark-dot {
+  color: var(--color-accent);
+  margin-left: -0.4rem;
+}
+
+.site-header nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem var(--space-4);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.site-header nav a, .site-footer a {
+  display: inline-block;
+  padding-block: 0.75rem;
+}
+
+.site-header nav a {
+  text-decoration: none;
+}
+
+.site-header nav a:hover {
+  text-decoration: underline;
+}
+
+.site-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-block: var(--space-4);
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+.footer-brand {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.06em;
+}
+
+@media (max-width: 40rem) {
+  .site-header {
+    min-height: 5.5rem;
+    gap: var(--space-2);
+  }
+
+  .site-header nav {
+    gap: 0 var(--space-2);
+    font-size: 0.8rem;
+  }
+
+  .wordmark {
+    font-size: 2rem;
+  }
+
+  .wordmark svg {
+    width: 1.4rem;
+    margin-right: 0;
+  }
+
+  .site-footer > p:nth-child(2) {
+    order: 1;
+    flex-basis: 100%;
+  }
+}
