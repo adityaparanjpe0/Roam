@@ -774,4 +774,3 @@ Use `memory.md` to name personal PRs and evidence. Both developers should unders
 ### Salesforce/large-scale notification questions
 
 Roam teaches idempotency, durable state, provider failure handling, and isolation by owner. It does not implement million-message delivery, delayed notification scheduling, or true multi-tenancy. Those require separate system-design preparation; do not pretend Roam proves them.
-
