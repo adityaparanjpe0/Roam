@@ -160,8 +160,4 @@ svg {
     margin-right: 0;
   }
 
-  .site-footer > p:nth-child(2) {
-    order: 1;
-    flex-basis: 100%;
-  }
 }

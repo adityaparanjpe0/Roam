@@ -8,8 +8,8 @@ function SiteHeader() {
         roam<span className="wordmark-dot">.</span>
       </a>
       <nav aria-label="Main navigation">
-        <a href="#the-idea">The idea</a>
-        <a href="#about">About Roam <span aria-hidden="true">↗</span></a>
+        <a href="#the-idea">Planned features</a>
+        <a href="#about">About</a>
       </nav>
     </header>
   )

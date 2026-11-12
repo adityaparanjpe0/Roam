@@ -23,7 +23,7 @@ test('all navigation links point to existing, unique page targets', () => {
     expect(container.querySelectorAll(target)).toHaveLength(1)
   }
 
-  expect(screen.getByRole('link', { name: 'Explore the idea' })).toHaveAttribute('href', '#the-idea')
+  expect(screen.getByRole('link', { name: 'See planned features' })).toHaveAttribute('href', '#the-idea')
   expect(screen.getByRole('link', { name: 'Skip to content' })).toHaveAttribute('href', '#main-content')
   expect(screen.getByRole('main')).toHaveAttribute('tabindex', '-1')
 })
@@ -31,8 +31,9 @@ test('all navigation links point to existing, unique page targets', () => {
 test('clearly explains that planning capabilities are not available yet', () => {
   render(<App />)
 
-  expect(screen.getByText('In development. A first look at what’s ahead.')).toBeInTheDocument()
-  expect(screen.getByText(/planned features and aren’t available yet/)).toBeInTheDocument()
+  expect(screen.getByText('Roam is in development. Planning features aren’t available yet.')).toBeInTheDocument()
+  expect(screen.getByText('Illustrative planner concept. Not generated or interactive.')).toBeInTheDocument()
+  expect(screen.getByRole('list', { name: 'Illustrative day plan' })).toBeInTheDocument()
   expect(screen.getAllByRole('article')).toHaveLength(3)
   expect(screen.queryByRole('button')).not.toBeInTheDocument()
 })
