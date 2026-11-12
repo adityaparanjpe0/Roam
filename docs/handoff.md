@@ -1,6 +1,6 @@
 # Roam MVP handoff
 
-> Status: approved plan; implementation has not started in this package  
+> Status: approved MVP plan; frontend foundation in progress on PR #2, with other phases still planned. See [memory.md](memory.md) for evidence.
 > Owners: two developers; assign names in `memory.md` before the first feature branch  
 > Primary goal: build, deploy, measure, and deeply understand a credible AI-native full-stack project
 

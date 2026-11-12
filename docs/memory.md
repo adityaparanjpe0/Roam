@@ -1,7 +1,7 @@
 # Roam durable project memory
 
 > Purpose: preserve verified context across developers and AI sessions  
-> Last updated: 2026-11-07  
+> Last updated: 2026-11-12
 > Rule: this file records decisions and evidence; it must not turn plans into facts
 
 ## 1. Current snapshot
@@ -12,13 +12,16 @@
 - This documentation package contains `handoff.md`, `AGENTS.md`, `CLAUDE.md`, `SKILL.md`, `DESIGN.md`, `instructions.md`, `prompt.md`, and `memory.md`, plus an index README.
 - The intended builders are two college developers seeking AI-native/full-stack experience, stronger technical depth, and evidence for resume discussions.
 - The documentation explicitly targets a low-volume USD $0–$5/month demo and does not guarantee that price.
+- PR #2 frontend work is present on `feat/frontend-foundation`: strict React/TypeScript/Vite tooling, a responsive static landing page, and three behavior tests. Branch commits: `613b8af` (tooling), `af4a50e` (landing page), and `2f49eb8` (design simplification and CTA hover). Merge, CI, and teammate review are not verified; status remains `IN_PROGRESS`.
+- Node is pinned to **24.22.3** in [`.nvmrc`](../.nvmrc); npm **11.5.1** was used for local verification. Setup, including the path without nvm, is in the [frontend README](../frontend/README.md).
+- Resolved frontend versions: React/React DOM **19.3.1**, TypeScript **6.0.3**, Vite **8.3.8**, React plugin **6.3.0**, ESLint **10.14.0**, Vitest **5.1.0**, Testing Library React **16.3.3** / DOM **10.4.2**, jest-dom **7.0.1**, and jsdom **31.0.0**. Exact transitive versions are in the [npm lockfile](../frontend/package-lock.json).
 
 ### Not yet verified or implemented
 
-- No Roam application repository has been scaffolded by this package.
-- No frontend, backend, database schema, migration, authentication, LLM integration, Places/Routes integration, validation engine, replanning engine, PDF generator, CI workflow, Docker image, deployment, benchmark, or production run is claimed.
+- The original documentation-only snapshot is superseded for the frontend by the branch evidence above. The backend directory contains a placeholder only.
+- No backend application, database schema, migration, authentication, LLM integration, Places/Routes integration, validation engine, replanning engine, PDF generator, CI workflow, Docker image, deployment, benchmark, or production run is claimed.
 - No provider credentials, billing account, quotas, hosting account, domain, or OAuth consent configuration is claimed.
-- No test, performance, reliability, security, user-satisfaction, cost, or ATS outcome has been measured.
+- Local frontend checks are recorded below. No performance, reliability, security certification, user-satisfaction, cost, or ATS outcome has been measured.
 - No resume bullet should use past-tense implementation claims based only on these documents.
 
 ### Status legend
@@ -62,7 +65,7 @@ Material changes should receive an ADR under `docs/adr/` and a row here. Dates a
 | ID | Date | Status | Decision | Rationale / consequence |
 |---|---|---|---|---|
 | D-001 | 2026-11-07 | PLANNED | Use a modular FastAPI monolith with one PostgreSQL database. | Fits two developers and atomic workflows; distribute only after measured pressure. |
-| D-002 | 2026-11-07 | PLANNED | React/TypeScript/Vite frontend, built into the production FastAPI image and served same-origin. | Simplifies secure cookies/CORS, deployment, and cost. |
+| D-002 | 2026-11-07 | IN_PROGRESS | React/TypeScript/Vite frontend, built into the production FastAPI image and served same-origin. | Frontend exists on the PR #2 branch; production image and same-origin serving remain planned. |
 | D-003 | 2026-11-07 | PLANNED | Use synchronous SQLAlchemy/httpx/FastAPI paths initially. | Easier to reason about; strict timeouts; queue/async reconsidered from measurements. |
 | D-004 | 2026-11-07 | PLANNED | PostgreSQL with SQLAlchemy 2 and Alembic. | Relational ownership, ordered itinerary structure, constraints, transactions, indexing. |
 | D-005 | 2026-11-07 | PLANNED | Retrieve real place candidates before LLM planning; model references allowlisted IDs only. | Prevents fabricated venue identity and bounds provider/model work. |
@@ -86,7 +89,7 @@ Resolve through a dated decision/ADR before the dependent implementation ships.
 |---|---|---|---|---|
 | O-001 | Developer names and primary workstream split? | Use Developer A/B only in planning. | Both | First issue/PR |
 | O-002 | Repository owner, name, visibility, and code license? | Private repository; no public license until agreed. | Both | Repository creation/public release |
-| O-003 | Exact Python/Node versions and dependency versions? | Select supported versions and pin in lockfiles/CI. | Phase 0 owner | Scaffold merge |
+| O-003 | Exact Python/Node versions and dependency versions? | Frontend Node 24.22.3 and npm lockfile recorded on PR #2; Python, CI, and container runtime pins remain open. | Phase 0 owner | Scaffold merge |
 | O-004 | Initial LLM provider/model and data-retention setting? | Fake adapter; live model chosen from current structured-output support, cost, latency, and terms. | Planner owner | Live generation |
 | O-005 | Exact Places/Routes SKUs and provider data fields allowed in saved trips/PDF? | Persist stable IDs only; do not launch unclear fields. | Provider owner | Live provider persistence |
 | O-006 | Initial hosting and managed PostgreSQL vendors/current free limits? | Evaluate current Render-like hobby service and Neon-like Postgres; avoid vendor assumptions in domain. | Deployment owner | First deployment |
@@ -102,6 +105,7 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 | Capability | Status | Owner | Evidence | Next acceptance gate |
 |---|---|---|---|---|
 | Repository scaffold and CI | PLANNED | Unassigned | None | Clean checkout and CI failure/success proof |
+| Frontend foundation / PR #2 | IN_PROGRESS | Frontend contributor; reviewer not recorded | Branch commits `613b8af`, `af4a50e`, `2f49eb8`; [tests](../frontend/src/App.test.tsx); verification below | Documentation review, teammate review, and merge evidence |
 | Trip schema/migrations/CRUD | PLANNED | Unassigned | None | PostgreSQL integration + cross-owner denial |
 | Google OIDC/session/CSRF | PLANNED | Unassigned | None | Invalid state/claims and secure cookie tests |
 | Provider-neutral Places/Routes | PLANNED | Unassigned | None | Fake + live opt-in normalization/failure proof |
@@ -122,6 +126,7 @@ Both developers must understand the full architecture. This ledger identifies de
 |---|---|---|---|---|---|
 | — | Not assigned | Developer A | Developer B | — | — |
 | — | Not assigned | Developer B | Developer A | — | — |
+| 2026-11-12 | PR #2 frontend foundation | User with Codex assistance; name not recorded | Teammate review not verified | Tooling, landing page, tests, design refinements; documentation in progress | Strict TypeScript, component structure, CSS tokens, accessibility checks, and the static-concept boundary |
 
 For each meaningful PR, capture design, code, tests, debugging, and review work separately. Do not equate lines changed with ownership.
 
@@ -129,7 +134,23 @@ For each meaningful PR, capture design, code, tests, debugging, and review work 
 
 | Date | Claim | Evidence link/path | Environment/config | Limits/caveats | Approved wording |
 |---|---|---|---|---|---|
-| 2026-11-07 | Roam has a scoped architecture/documentation plan. | This documentation package | Documentation only | No application code exists | “Designed a plan for…” only until implementation |
+| 2026-11-07 | Roam has a scoped architecture/documentation plan. | This documentation package | Documentation only at package creation | Historical snapshot; frontend status superseded on 2026-11-12 | “Designed a plan for…” only for unimplemented capabilities |
+| 2026-11-12 | Frontend foundation works locally on the feature branch. | `613b8af`, `af4a50e`, `2f49eb8`; [test suite](../frontend/src/App.test.tsx); checks below | macOS, Node 24.22.3, npm 11.5.1 | No merge/CI/deployment claim; no planning functionality | “Built and locally verified a frontend foundation on a feature branch.” |
+
+### PR #2 local verification — 2026-11-12
+
+From `frontend/`, with the pinned runtime supplied using `npm exec --yes --package=node@24.22.3 --`:
+
+- `npm ci`: passed using the committed lockfile.
+- `npm run lint`, `npm run typecheck`, `npm run test -- --run`, and `npm run build`: passed; the suite contains **3 passing tests**.
+- `npm ls --depth=0`: no dependency conflicts reported during Milestone 1.
+- Chrome checks during Milestone 2: no horizontal overflow at widths 320, 375, 768, 1024, and 1440; doubled-text reflow at width 640; visible skip-link focus; Enter focuses main content; next Tab reaches the CTA; CTA navigation works; no page errors reported. Desktop and mobile captures were visually inspected. Temporary Playwright tooling was used, not a committed e2e suite.
+- Body, muted, and accent text on the paper background have calculated contrast ratios of **10.71:1**, **5.53:1**, and **5.62:1**. Screen-reader and cross-browser testing remain unverified.
+- Full npm audit: **10 moderate findings** associated with the development lint toolchain's `minimatch` dependency. Production-only audit: **0 reported vulnerabilities**. No forced override/downgrade was applied; recheck upstream fixes before merge.
+
+The landing page uses a static, explicitly labeled planner concept with generic activities. It performs no trip generation or backend/provider calls. React Router, TanStack Query, API clients, auth, maps, and PDF packages remain deferred. The original decorative postcard design was superseded by the user-approved simplification in `2f49eb8`.
+
+Documentation milestone: frontend setup and these evidence records are being updated on the same branch. No new architecture decision supersedes D-002; same-origin production serving remains planned.
 
 Examples of acceptable future evidence:
 

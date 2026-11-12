@@ -101,6 +101,10 @@ Rules:
 
 ## 5. Target local setup
 
+**Current frontend-only setup:** the PR #2 branch has a standalone landing page. Follow the [frontend README](../frontend/README.md) for Node 24.22.3, installation, development, and checks, including an option without nvm. No backend, database, Docker, `.env`, or API proxy is needed for this page. This has been checked locally; CI is not yet configured.
+
+The full-stack commands below remain a future target and cannot be used as a working setup yet.
+
 After Phase 0 scaffolding, a new contributor should be able to run:
 
 ```bash
