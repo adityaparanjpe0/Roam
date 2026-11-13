@@ -1,21 +1,21 @@
 # Roam project documentation pack
 
-> Status: planning package, not an implemented application  
+> Status: MVP planning documents; frontend foundation in progress on PR #2
 > Package date: 2026-11-07  
 > Intended audience: two college developers building and defending the project together
 
-This directory is the source-of-truth documentation starter for **Roam**, an AI-native travel planner. Copy the directory contents into the root of the future Roam repository. Keep the filenames and links intact.
+This directory contains the source-of-truth project documentation for **Roam**, an AI-native travel planner. Agent instructions live at the repository root; design, workflow, handoff, and evidence records live here.
 
-The package is deliberately scoped to an interview-defensible MVP: one React/TypeScript frontend, one modular FastAPI/Python backend, PostgreSQL, real Places/Routes data, constrained LLM planning, deterministic validation, owner-only authorization, partial replanning with locked activities, saved trips, and a downloadable PDF. It does **not** claim that any application code, deployment, tests, integrations, or performance results already exist.
+The planned MVP includes a React/TypeScript frontend, modular FastAPI/Python backend, PostgreSQL, grounded AI planning, owner-only trips, partial replanning, and PDF downloads. The frontend foundation and its local tests exist on the feature branch; planning functionality, backend integration, CI, and deployment remain planned. See the [frontend setup](../frontend/README.md) and [current evidence](memory.md).
 
 ## File index
 
 | File | Primary audience | Purpose |
 |---|---|---|
 | [`handoff.md`](handoff.md) | Both developers | Product scope, phased backlog, acceptance criteria, risks, ownership, and handoff checklist |
-| [`AGENTS.md`](AGENTS.md) | Any coding agent | Repository-wide constraints, truthfulness rules, architecture boundaries, and verification expectations |
-| [`CLAUDE.md`](CLAUDE.md) | GPT-6 Sol | A concise working agreement for GPT-6 Sol; the filename is conventional and does not imply a different model |
-| [`SKILL.md`](SKILL.md) | Codex-compatible assistants | Reusable Roam development workflows for features, migrations, providers, validation, PDF work, and pull requests |
+| [`AGENTS.md`](../AGENTS.md) | Any coding agent | Repository-wide constraints, truthfulness rules, architecture boundaries, and verification expectations |
+| [`CLAUDE.md`](../CLAUDE.md) | GPT-6 Sol | A concise working agreement for GPT-6 Sol; the filename is conventional and does not imply a different model |
+| [`SKILL.md`](../SKILL.md) | Codex-compatible assistants | Reusable Roam development workflows for features, migrations, providers, validation, PDF work, and pull requests |
 | [`DESIGN.md`](DESIGN.md) | Developers and interviewers | Architecture, data model, APIs, flows, security, reliability, cost, licensing, and scaling decisions |
 | [`instructions.md`](instructions.md) | Human contributors | Local setup target, engineering standards, GitHub workflow, CI, testing, migrations, and deployment practices |
 | [`prompt.md`](prompt.md) | Future AI sessions | Copyable master prompt for bounded, evidence-based implementation work |
@@ -31,7 +31,7 @@ The package is deliberately scoped to an interview-defensible MVP: one React/Typ
 6. Update `memory.md` after every merged decision or milestone.
 7. Use `prompt.md` to start a fresh implementation session without losing scope.
 
-## Canonical decisions at a glance
+## Planned canonical decisions at a glance
 
 - **Architecture:** modular monolith; React build and FastAPI API are deployed as one same-origin service initially.
 - **Persistence:** PostgreSQL with SQLAlchemy and Alembic; SQL is favored because trips, days, activities, ownership, and revisions are relational.
@@ -51,26 +51,25 @@ The package is deliberately scoped to an interview-defensible MVP: one React/Typ
 - Never turn target metrics or illustrative resume bullets into factual claims.
 - When implementation changes a decision, update all affected documents in the same pull request.
 
-## Initial repository target
+## Current repository layout
 
 ```text
 roam/
 ├── AGENTS.md
 ├── CLAUDE.md
-├── DESIGN.md
 ├── SKILL.md
-├── handoff.md
-├── instructions.md
-├── memory.md
-├── prompt.md
 ├── README.md
+├── .nvmrc
 ├── frontend/
-├── backend/
-├── docs/
-├── scripts/
-├── docker-compose.yml
-└── .github/workflows/
+├── backend/             # placeholder only
+└── docs/
+    ├── DESIGN.md
+    ├── handoff.md
+    ├── instructions.md
+    ├── memory.md
+    ├── prompt.md
+    └── README.md
 ```
 
-The code directories and automation files above are a target layout; they are not part of this documentation-only package.
+Scripts, CI, Docker, and backend application files remain future work. This tree shows the main project locations, not every file.
 

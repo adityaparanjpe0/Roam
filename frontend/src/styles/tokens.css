@@ -1,0 +1,22 @@
+:root {
+  color-scheme: light;
+  --color-paper: #f7f5ed;
+  --color-surface: #eeecdf;
+  --color-ink: #183f32;
+  --color-muted: #59665b;
+  --color-accent: #9e482e;
+  --color-accent-hover: #7d3622;
+  --color-border: #d8dace;
+  --color-on-green: #f7f5ed;
+  --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2rem;
+  --space-5: 3rem;
+  --space-6: 5rem;
+  --radius-small: 0.25rem;
+  --radius-large: 1rem;
+  --page-width: 72rem;
+}
