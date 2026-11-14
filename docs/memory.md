@@ -1,12 +1,20 @@
 # Roam durable project memory
 
 > Purpose: preserve verified context across developers and AI sessions  
-> Last updated: 2026-11-12
+> Last updated: 2026-11-13
 > Rule: this file records decisions and evidence; it must not turn plans into facts
 
 ## 1. Current snapshot
 
 ### Verified facts
+
+- PR #3 Milestone 1 is committed as `b829d9b` on `feat/backend-foundation`:
+  a minimal FastAPI app, Python 3.12 runtime selection, uv lockfile, and backend
+  setup instructions. Owner: user with Codex assistance; teammate review and merge
+  are not verified. Milestone 2 is committed as `9cc6424`, adding a `GET /health` router and
+  Pydantic response schema, locally verified with HTTP 200 and `{"status":"ok"}`.
+  Milestone 3 adds uncommitted pytest configuration and three locally passing
+  health endpoint tests. See the local verification records below.
 
 - The product concept and scoped MVP have been agreed in planning conversation.
 - This documentation package contains `handoff.md`, `AGENTS.md`, `CLAUDE.md`, `SKILL.md`, `DESIGN.md`, `instructions.md`, `prompt.md`, and `memory.md`, plus an index README.
@@ -18,8 +26,8 @@
 
 ### Not yet verified or implemented
 
-- The original documentation-only snapshot is superseded for the frontend by the branch evidence above. The backend directory contains a placeholder only.
-- No backend application, database schema, migration, authentication, LLM integration, Places/Routes integration, validation engine, replanning engine, PDF generator, CI workflow, Docker image, deployment, benchmark, or production run is claimed.
+- The original documentation-only snapshot is superseded by the frontend branch evidence above and the minimal backend foundation recorded on 2026-11-13. The backend-placeholder status is superseded; PR #3 is still in progress.
+- Beyond the backend health endpoint tests, no database schema, migration, authentication, LLM integration, Places/Routes integration, validation engine, replanning engine, PDF generator, CI workflow, Docker image, deployment, benchmark, or production run is claimed.
 - No provider credentials, billing account, quotas, hosting account, domain, or OAuth consent configuration is claimed.
 - Local frontend checks are recorded below. No performance, reliability, security certification, user-satisfaction, cost, or ATS outcome has been measured.
 - No resume bullet should use past-tense implementation claims based only on these documents.
@@ -89,7 +97,7 @@ Resolve through a dated decision/ADR before the dependent implementation ships.
 |---|---|---|---|---|
 | O-001 | Developer names and primary workstream split? | Use Developer A/B only in planning. | Both | First issue/PR |
 | O-002 | Repository owner, name, visibility, and code license? | Private repository; no public license until agreed. | Both | Repository creation/public release |
-| O-003 | Exact Python/Node versions and dependency versions? | Frontend Node 24.22.3 and npm lockfile recorded on PR #2; Python, CI, and container runtime pins remain open. | Phase 0 owner | Scaffold merge |
+| O-003 | Exact Python/Node versions and dependency versions? | Frontend Node 24.22.3 and npm lockfile recorded on PR #2; backend Python 3.12 selected and uv lockfile verified on PR #3 Milestone 1. CI/container pins remain open. | Phase 0 owner | Scaffold merge |
 | O-004 | Initial LLM provider/model and data-retention setting? | Fake adapter; live model chosen from current structured-output support, cost, latency, and terms. | Planner owner | Live generation |
 | O-005 | Exact Places/Routes SKUs and provider data fields allowed in saved trips/PDF? | Persist stable IDs only; do not launch unclear fields. | Provider owner | Live provider persistence |
 | O-006 | Initial hosting and managed PostgreSQL vendors/current free limits? | Evaluate current Render-like hobby service and Neon-like Postgres; avoid vendor assumptions in domain. | Deployment owner | First deployment |
@@ -105,6 +113,7 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 | Capability | Status | Owner | Evidence | Next acceptance gate |
 |---|---|---|---|---|
 | Repository scaffold and CI | PLANNED | Unassigned | None | Clean checkout and CI failure/success proof |
+| Backend foundation / PR #3 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | Milestone 1 `b829d9b`; Milestone 2 `9cc6424`; uncommitted Milestone 3 with 3 passing tests; [backend setup](../backend/README.md); local verification below | Milestone 3 inspection/commit, test-client warning follow-up, teammate review, and merge evidence |
 | Frontend foundation / PR #2 | IN_PROGRESS | Frontend contributor; reviewer not recorded | Branch commits `613b8af`, `af4a50e`, `2f49eb8`; [tests](../frontend/src/App.test.tsx); verification below | Documentation review, teammate review, and merge evidence |
 | Trip schema/migrations/CRUD | PLANNED | Unassigned | None | PostgreSQL integration + cross-owner denial |
 | Google OIDC/session/CSRF | PLANNED | Unassigned | None | Invalid state/claims and secure cookie tests |
@@ -131,6 +140,84 @@ Both developers must understand the full architecture. This ledger identifies de
 For each meaningful PR, capture design, code, tests, debugging, and review work separately. Do not equate lines changed with ownership.
 
 ## 7. Evidence ledger
+
+### PR #3 Milestone 3 local verification — 2026-11-13
+
+- Owner: user with Codex assistance on `feat/backend-foundation`; teammate
+  review, merge, and deployment are not verified. No Git commit made by Codex.
+- Added [health endpoint tests](../backend/tests/test_health.py) and pytest
+  test discovery/import settings in [pyproject.toml](../backend/pyproject.toml).
+  The in-process `TestClient` exercises the registered app and separately
+  checks HTTP 200, exact JSON body, and JSON content type. No server is required.
+- Windows, Python **3.12.16**, pytest **9.2.0**: focused command
+  `.venv/Scripts/python.exe -m pytest tests/test_health.py -v` passed **3 tests**.
+- Full check commands used `C:/Users/rohan/.local/bin/uv.exe` by absolute path:
+  `uv --no-cache sync --frozen --all-groups --offline` and
+  `uv --no-cache lock --check --offline` passed. With the prefix
+  `uv --no-cache run --locked --offline`, `ruff format --check .` passed
+  (8 files already formatted), `ruff check .` passed, `mypy app` passed
+  (6 source files), and `pytest` passed **3 tests**.
+- Both pytest runs emitted one `StarletteDeprecationWarning`: the installed
+  Starlette test client deprecates HTTPX usage and suggests `httpx2`. No warning
+  suppression or dependency change was applied. Review compatibility in a
+  separate dependency update before relying on a future test-client release.
+- Editor diagnostics reported no errors in the test file or dependency
+  configuration. No dependency lockfile change, external paid calls, or
+  frontend changes were needed. macOS/Linux and CI execution remain unverified.
+- This supersedes the earlier pending-endpoint-test status. The three local
+  implementation milestones are delivered; PR #3 remains `IN_PROGRESS` pending
+  user inspection/commit and team review/merge evidence. Phase 0 is incomplete.
+
+### PR #3 Milestone 2 local verification — 2026-11-13
+
+- Owner: user with Codex assistance, on `feat/backend-foundation`; no commit,
+  teammate review, merge, or deployment claimed for this milestone.
+- Added a synchronous [health router](../backend/app/api/health.py), registered
+  in the application, and a [response schema](../backend/app/schemas/health.py)
+  whose status is restricted to `ok`. No dependencies changed.
+- Human-approved contract: `GET /health` is dependency-free liveness with
+  HTTP 200 and `{"status":"ok"}`. This refines the earlier proposed separate
+  health paths; readiness remains planned. See [DESIGN.md](DESIGN.md).
+- Using the existing Windows Python 3.12.16 virtual environment:
+  `.venv/Scripts/python.exe -m ruff format --check .` passed (7 files already
+  formatted), `-m ruff check .` passed, and `-m mypy app` passed (6 source files).
+  Editor diagnostics reported no errors in the application package.
+- An ephemeral verification script started Uvicorn on loopback port 8765 and
+  checked actual HTTP responses: `/health` returned **200**, content type
+  **application/json**, and exactly `{"status":"ok"}`; `/openapi.json` returned
+  **200**, listed `/health`, and described the response status as constant `ok`.
+  The script stopped its verification server afterward.
+- No pytest test files were created or executed; Milestone 3 remains pending.
+  No frontend files, external provider integrations, or paid calls were involved.
+
+### PR #3 Milestone 1 local verification — 2026-11-13
+
+- Environment: Windows; uv **0.13.8**, CPython **3.12.16**, isolated
+  `backend/.venv`. uv was installed into a temporary tools directory without
+  modifying PATH; developers should follow the uv installation instructions
+  in the [backend README](../backend/README.md).
+- Runtime versions installed from [uv.lock](../backend/uv.lock): FastAPI
+  **0.162.7**, Pydantic **2.14.3**, Uvicorn **0.54.0**. Development versions:
+  HTTPX **0.28.1**, pytest **9.2.0**, Ruff **0.17.5**, mypy **1.20.2**.
+- `uv sync --all-groups`: resolved dependencies and created the virtual environment.
+  Subsequent `uv --no-cache sync --frozen --all-groups --offline` and
+  `uv --no-cache lock --check --offline`: passed using the committed-file candidate
+  lockfile. The temporary uv executable was invoked by its absolute path.
+- `uv --no-cache run --locked --offline ruff format --check .`: passed
+  (3 files already formatted); `ruff check .`: passed; `mypy app`: passed
+  (2 source files). The same `uv run` flags were used for each tool.
+- `.venv/Scripts/python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000`:
+  application startup completed. Local HTTP checks returned **200** for `/docs`
+  and `/openapi.json`; schema title was `Roam API` and custom path count was **0**.
+  The verification server was stopped afterward.
+- Editor diagnostics reported no errors in the application entry point or
+  dependency configuration. `git diff --check` passed; `git check-ignore`
+  confirmed virtual-environment and pytest/Ruff/mypy cache paths are ignored.
+- No pytest tests were created or executed; endpoint testing belongs to Milestone 3.
+  No macOS/Linux execution, CI, teammate review, merge, or deployment is claimed.
+
+This record supersedes the earlier backend-placeholder snapshot only. It does
+not mark the overall scaffold/CI milestone or backend foundation complete.
 
 | Date | Claim | Evidence link/path | Environment/config | Limits/caveats | Approved wording |
 |---|---|---|---|---|---|
