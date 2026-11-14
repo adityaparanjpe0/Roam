@@ -8,11 +8,12 @@
 
 ### Verified facts
 
-- PR #3 Milestone 1 is present as uncommitted work on `feat/backend-foundation`:
+- PR #3 Milestone 1 is committed as `b829d9b` on `feat/backend-foundation`:
   a minimal FastAPI app, Python 3.12 runtime selection, uv lockfile, and backend
   setup instructions. Owner: user with Codex assistance; teammate review and merge
-  are not verified. Health routing and endpoint tests remain planned. See the
-  local verification record below.
+  are not verified. Milestone 2 adds an uncommitted `GET /health` router and
+  Pydantic response schema, locally verified with HTTP 200 and `{"status":"ok"}`.
+  Endpoint tests remain planned. See the local verification records below.
 
 - The product concept and scoped MVP have been agreed in planning conversation.
 - This documentation package contains `handoff.md`, `AGENTS.md`, `CLAUDE.md`, `SKILL.md`, `DESIGN.md`, `instructions.md`, `prompt.md`, and `memory.md`, plus an index README.
@@ -25,7 +26,7 @@
 ### Not yet verified or implemented
 
 - The original documentation-only snapshot is superseded by the frontend branch evidence above and the minimal backend foundation recorded on 2026-11-13. The backend-placeholder status is superseded; PR #3 is still in progress.
-- No backend health endpoint, endpoint tests, database schema, migration, authentication, LLM integration, Places/Routes integration, validation engine, replanning engine, PDF generator, CI workflow, Docker image, deployment, benchmark, or production run is claimed.
+- No backend endpoint test suite, database schema, migration, authentication, LLM integration, Places/Routes integration, validation engine, replanning engine, PDF generator, CI workflow, Docker image, deployment, benchmark, or production run is claimed.
 - No provider credentials, billing account, quotas, hosting account, domain, or OAuth consent configuration is claimed.
 - Local frontend checks are recorded below. No performance, reliability, security certification, user-satisfaction, cost, or ATS outcome has been measured.
 - No resume bullet should use past-tense implementation claims based only on these documents.
@@ -111,7 +112,7 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 | Capability | Status | Owner | Evidence | Next acceptance gate |
 |---|---|---|---|---|
 | Repository scaffold and CI | PLANNED | Unassigned | None | Clean checkout and CI failure/success proof |
-| Backend foundation / PR #3 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | Uncommitted Milestone 1 diff; [backend setup](../backend/README.md); local verification below | Health endpoint, endpoint tests, teammate review, and merge evidence |
+| Backend foundation / PR #3 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | Milestone 1 commit `b829d9b`; uncommitted Milestone 2 health route; [backend setup](../backend/README.md); local verification below | Endpoint tests, teammate review, and merge evidence |
 | Frontend foundation / PR #2 | IN_PROGRESS | Frontend contributor; reviewer not recorded | Branch commits `613b8af`, `af4a50e`, `2f49eb8`; [tests](../frontend/src/App.test.tsx); verification below | Documentation review, teammate review, and merge evidence |
 | Trip schema/migrations/CRUD | PLANNED | Unassigned | None | PostgreSQL integration + cross-owner denial |
 | Google OIDC/session/CSRF | PLANNED | Unassigned | None | Invalid state/claims and secure cookie tests |
@@ -138,6 +139,28 @@ Both developers must understand the full architecture. This ledger identifies de
 For each meaningful PR, capture design, code, tests, debugging, and review work separately. Do not equate lines changed with ownership.
 
 ## 7. Evidence ledger
+
+### PR #3 Milestone 2 local verification — 2026-11-13
+
+- Owner: user with Codex assistance, on `feat/backend-foundation`; no commit,
+  teammate review, merge, or deployment claimed for this milestone.
+- Added a synchronous [health router](../backend/app/api/health.py), registered
+  in the application, and a [response schema](../backend/app/schemas/health.py)
+  whose status is restricted to `ok`. No dependencies changed.
+- Human-approved contract: `GET /health` is dependency-free liveness with
+  HTTP 200 and `{"status":"ok"}`. This refines the earlier proposed separate
+  health paths; readiness remains planned. See [DESIGN.md](DESIGN.md).
+- Using the existing Windows Python 3.12.16 virtual environment:
+  `.venv/Scripts/python.exe -m ruff format --check .` passed (7 files already
+  formatted), `-m ruff check .` passed, and `-m mypy app` passed (6 source files).
+  Editor diagnostics reported no errors in the application package.
+- An ephemeral verification script started Uvicorn on loopback port 8765 and
+  checked actual HTTP responses: `/health` returned **200**, content type
+  **application/json**, and exactly `{"status":"ok"}`; `/openapi.json` returned
+  **200**, listed `/health`, and described the response status as constant `ok`.
+  The script stopped its verification server afterward.
+- No pytest test files were created or executed; Milestone 3 remains pending.
+  No frontend files, external provider integrations, or paid calls were involved.
 
 ### PR #3 Milestone 1 local verification — 2026-11-13
 

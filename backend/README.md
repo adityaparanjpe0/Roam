@@ -1,8 +1,8 @@
 # Roam backend
 
-PR #3, Milestone 1 provides the Python environment and a minimal FastAPI app.
-The health endpoint is planned for Milestone 2; endpoint tests are planned for
-Milestone 3. No database, credentials, environment variables, or other services
+PR #3, Milestones 1 and 2 provide the Python environment, a minimal FastAPI app,
+and a health endpoint. Endpoint tests are planned for Milestone 3.
+No database, credentials, environment variables, or other services
 are required to start this backend.
 
 ## Prerequisites
@@ -47,7 +47,7 @@ are already ignored by the repository. No manual activation is needed with
 `backend/.venv/bin/python` on macOS/Linux as the Python interpreter.
 
 Runtime dependencies are FastAPI (HTTP framework), Pydantic (typed response
-schemas in Milestone 2), and Uvicorn (application server). The development
+schemas), and Uvicorn (application server). The development
 group provides Ruff (format/lint), mypy (type checking), pytest, and HTTPX
 (FastAPI test-client support in Milestone 3).
 
@@ -60,9 +60,29 @@ uv run --locked uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Open <http://127.0.0.1:8000/docs> for FastAPI's interactive documentation or
-<http://127.0.0.1:8000/openapi.json> for the generated API schema. No custom
-routes exist yet; `/` and `/health` return 404 at this milestone. Stop the
+<http://127.0.0.1:8000/openapi.json> for the generated API schema. The root
+path `/` has no route and returns 404. Stop the
 server with Ctrl+C. Reload mode is for local development.
+
+## Health endpoint
+
+Open <http://127.0.0.1:8000/health> or request it from another terminal:
+
+```text
+curl.exe -i http://127.0.0.1:8000/health
+```
+
+On macOS/Linux, use `curl -i` instead of `curl.exe -i`.
+Expect HTTP **200**, content type `application/json`, and this response body:
+
+```json
+{"status":"ok"}
+```
+
+This unauthenticated liveness check only confirms that the application can
+handle a request. It performs no database or provider calls and makes no
+readiness claim. Separate `/health/live` and `/health/ready` routes remain
+future design options; neither is implemented in this PR.
 
 ## Checks
 
@@ -81,18 +101,20 @@ Automated endpoint tests will be added in Milestone 3. Once they exist, run:
 uv run --locked pytest
 ```
 
-At Milestone 1 there are no tests; pytest reporting no tests collected is not
+At Milestone 2 there are no tests; pytest reporting no tests collected is not
 a passing test suite. Format changes with `uv run --locked ruff format .`.
 
 ## Structure
 
 - `app/main.py` creates the single FastAPI application object that Uvicorn imports.
 - `app/__init__.py` marks the application as a Python package.
+- `app/api/health.py` defines the health router, registered in `app/main.py`.
+- `app/schemas/health.py` defines the Pydantic response with status restricted to `ok`.
 - `pyproject.toml` declares dependencies and development-tool settings.
 - `uv.lock` records exact dependency versions for reproducible installs.
 
-HTTP routers and response schemas will go in `app/api/` and `app/schemas/`
-when the health endpoint is added. Add other architecture layers only when
+HTTP routers and response schemas live in `app/api/` and `app/schemas/`.
+Add other architecture layers only when
 a feature needs them. Run commands from this directory so `app.main` imports
 consistently; a build system or `PYTHONPATH` shell changes are unnecessary.
 

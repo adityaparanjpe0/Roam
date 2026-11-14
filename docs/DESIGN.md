@@ -4,10 +4,11 @@
 > Last reviewed: 2026-11-07  
 > Decision rule: every dependency must solve a current problem and be explainable by both developers
 
-Implementation note (2026-11-13): PR #3 Milestone 1 introduces a minimal FastAPI
-application, a Python 3.12 development environment, and uv dependency locking.
-See the [backend README](../backend/README.md). Health endpoints, business APIs,
-database integration, and the production deployment described below remain planned.
+Implementation note (2026-11-13): PR #3 Milestones 1 and 2 introduce a minimal
+FastAPI application, a Python 3.12 development environment, uv dependency locking,
+and `GET /health`. See the [backend README](../backend/README.md). Automated
+endpoint tests, readiness checks, business APIs, database integration, and the
+production deployment described below remain planned.
 
 ## 1. Context and design goals
 
@@ -266,8 +267,13 @@ Base path: `/api/v1`. JSON uses `snake_case`. Times are RFC 3339 instants; local
 | `GET` | `/auth/google/callback` | Validate response, upsert user, rotate Roam session, redirect safely |
 | `POST` | `/api/v1/auth/logout` | CSRF-protected revoke and clear cookie |
 | `GET` | `/api/v1/me` | Return minimal current-user profile and CSRF token/bootstrap data |
-| `GET` | `/health/live` | Process alive; no dependency calls |
-| `GET` | `/health/ready` | Bounded database readiness; no LLM/Maps call |
+| `GET` | `/health` | PR #3 Milestone 2: unauthenticated liveness, HTTP 200 with `{"status":"ok"}`; no dependency calls |
+| `GET` | `/health/live` | Planned separate liveness path; not implemented in PR #3 |
+| `GET` | `/health/ready` | Planned bounded database readiness; no LLM/Maps call; not implemented in PR #3 |
+
+The human-approved PR #3 foundation uses `/health` as its liveness contract.
+This refines the original separate-path proposal without claiming dependency
+readiness. Revisit the separate paths when database readiness is implemented.
 
 ### Trips and activities
 

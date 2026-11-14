@@ -5,8 +5,8 @@ See the [product handoff](docs/handoff.md) and [technical design](docs/DESIGN.md
 for the MVP scope and architecture.
 
 The backend foundation is in progress in PR #3 on `feat/backend-foundation`.
-Milestone 1 adds a minimal FastAPI application and reproducible Python setup;
-the health endpoint and automated endpoint tests remain planned.
+Milestones 1 and 2 add a minimal FastAPI application, reproducible Python setup,
+and a `GET /health` liveness endpoint. Automated endpoint tests remain planned.
 
 Follow the [backend setup instructions](backend/README.md) to install
 dependencies, start the local server, and run the available checks.

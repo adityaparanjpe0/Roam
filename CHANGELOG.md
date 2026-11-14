@@ -9,7 +9,9 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) co
 ### Added
 - PR #3 Milestone 1 backend foundation: minimal FastAPI application, Python 3.12
   runtime selection, uv dependency declarations/lockfile, and local setup instructions.
-  Health routing and automated endpoint tests remain planned.
+  Automated endpoint tests remain planned.
+- PR #3 Milestone 2: dependency-free `GET /health` liveness endpoint returning
+  HTTP 200 with `{"status":"ok"}`, using a router and typed response schema.
 - Initial project directory structure for frontend, backend, and documentation.
 - Project architecture, development guidelines, and AI coding agent instructions.
 - Environment variable template (`.env.example`).
