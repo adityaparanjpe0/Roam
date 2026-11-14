@@ -4,6 +4,11 @@
 > Last reviewed: 2026-11-07  
 > Decision rule: every dependency must solve a current problem and be explainable by both developers
 
+Implementation note (2026-11-13): PR #3 Milestone 1 introduces a minimal FastAPI
+application, a Python 3.12 development environment, and uv dependency locking.
+See the [backend README](../backend/README.md). Health endpoints, business APIs,
+database integration, and the production deployment described below remain planned.
+
 ## 1. Context and design goals
 
 Roam creates realistic travel itineraries from user preferences. It combines uncertain external data and probabilistic model output with persistent user data, so its core design problem is not “call an LLM.” It is maintaining a trustworthy boundary:

@@ -7,6 +7,9 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) co
 ## [Unreleased]
 
 ### Added
+- PR #3 Milestone 1 backend foundation: minimal FastAPI application, Python 3.12
+  runtime selection, uv dependency declarations/lockfile, and local setup instructions.
+  Health routing and automated endpoint tests remain planned.
 - Initial project directory structure for frontend, backend, and documentation.
 - Project architecture, development guidelines, and AI coding agent instructions.
 - Environment variable template (`.env.example`).

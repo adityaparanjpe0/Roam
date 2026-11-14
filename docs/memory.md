@@ -1,12 +1,18 @@
 # Roam durable project memory
 
 > Purpose: preserve verified context across developers and AI sessions  
-> Last updated: 2026-11-12
+> Last updated: 2026-11-13
 > Rule: this file records decisions and evidence; it must not turn plans into facts
 
 ## 1. Current snapshot
 
 ### Verified facts
+
+- PR #3 Milestone 1 is present as uncommitted work on `feat/backend-foundation`:
+  a minimal FastAPI app, Python 3.12 runtime selection, uv lockfile, and backend
+  setup instructions. Owner: user with Codex assistance; teammate review and merge
+  are not verified. Health routing and endpoint tests remain planned. See the
+  local verification record below.
 
 - The product concept and scoped MVP have been agreed in planning conversation.
 - This documentation package contains `handoff.md`, `AGENTS.md`, `CLAUDE.md`, `SKILL.md`, `DESIGN.md`, `instructions.md`, `prompt.md`, and `memory.md`, plus an index README.
@@ -18,8 +24,8 @@
 
 ### Not yet verified or implemented
 
-- The original documentation-only snapshot is superseded for the frontend by the branch evidence above. The backend directory contains a placeholder only.
-- No backend application, database schema, migration, authentication, LLM integration, Places/Routes integration, validation engine, replanning engine, PDF generator, CI workflow, Docker image, deployment, benchmark, or production run is claimed.
+- The original documentation-only snapshot is superseded by the frontend branch evidence above and the minimal backend foundation recorded on 2026-11-13. The backend-placeholder status is superseded; PR #3 is still in progress.
+- No backend health endpoint, endpoint tests, database schema, migration, authentication, LLM integration, Places/Routes integration, validation engine, replanning engine, PDF generator, CI workflow, Docker image, deployment, benchmark, or production run is claimed.
 - No provider credentials, billing account, quotas, hosting account, domain, or OAuth consent configuration is claimed.
 - Local frontend checks are recorded below. No performance, reliability, security certification, user-satisfaction, cost, or ATS outcome has been measured.
 - No resume bullet should use past-tense implementation claims based only on these documents.
@@ -89,7 +95,7 @@ Resolve through a dated decision/ADR before the dependent implementation ships.
 |---|---|---|---|---|
 | O-001 | Developer names and primary workstream split? | Use Developer A/B only in planning. | Both | First issue/PR |
 | O-002 | Repository owner, name, visibility, and code license? | Private repository; no public license until agreed. | Both | Repository creation/public release |
-| O-003 | Exact Python/Node versions and dependency versions? | Frontend Node 24.22.3 and npm lockfile recorded on PR #2; Python, CI, and container runtime pins remain open. | Phase 0 owner | Scaffold merge |
+| O-003 | Exact Python/Node versions and dependency versions? | Frontend Node 24.22.3 and npm lockfile recorded on PR #2; backend Python 3.12 selected and uv lockfile verified on PR #3 Milestone 1. CI/container pins remain open. | Phase 0 owner | Scaffold merge |
 | O-004 | Initial LLM provider/model and data-retention setting? | Fake adapter; live model chosen from current structured-output support, cost, latency, and terms. | Planner owner | Live generation |
 | O-005 | Exact Places/Routes SKUs and provider data fields allowed in saved trips/PDF? | Persist stable IDs only; do not launch unclear fields. | Provider owner | Live provider persistence |
 | O-006 | Initial hosting and managed PostgreSQL vendors/current free limits? | Evaluate current Render-like hobby service and Neon-like Postgres; avoid vendor assumptions in domain. | Deployment owner | First deployment |
@@ -105,6 +111,7 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 | Capability | Status | Owner | Evidence | Next acceptance gate |
 |---|---|---|---|---|
 | Repository scaffold and CI | PLANNED | Unassigned | None | Clean checkout and CI failure/success proof |
+| Backend foundation / PR #3 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | Uncommitted Milestone 1 diff; [backend setup](../backend/README.md); local verification below | Health endpoint, endpoint tests, teammate review, and merge evidence |
 | Frontend foundation / PR #2 | IN_PROGRESS | Frontend contributor; reviewer not recorded | Branch commits `613b8af`, `af4a50e`, `2f49eb8`; [tests](../frontend/src/App.test.tsx); verification below | Documentation review, teammate review, and merge evidence |
 | Trip schema/migrations/CRUD | PLANNED | Unassigned | None | PostgreSQL integration + cross-owner denial |
 | Google OIDC/session/CSRF | PLANNED | Unassigned | None | Invalid state/claims and secure cookie tests |
@@ -131,6 +138,35 @@ Both developers must understand the full architecture. This ledger identifies de
 For each meaningful PR, capture design, code, tests, debugging, and review work separately. Do not equate lines changed with ownership.
 
 ## 7. Evidence ledger
+
+### PR #3 Milestone 1 local verification — 2026-11-13
+
+- Environment: Windows; uv **0.13.8**, CPython **3.12.16**, isolated
+  `backend/.venv`. uv was installed into a temporary tools directory without
+  modifying PATH; developers should follow the uv installation instructions
+  in the [backend README](../backend/README.md).
+- Runtime versions installed from [uv.lock](../backend/uv.lock): FastAPI
+  **0.162.7**, Pydantic **2.14.3**, Uvicorn **0.54.0**. Development versions:
+  HTTPX **0.28.1**, pytest **9.2.0**, Ruff **0.17.5**, mypy **1.20.2**.
+- `uv sync --all-groups`: resolved dependencies and created the virtual environment.
+  Subsequent `uv --no-cache sync --frozen --all-groups --offline` and
+  `uv --no-cache lock --check --offline`: passed using the committed-file candidate
+  lockfile. The temporary uv executable was invoked by its absolute path.
+- `uv --no-cache run --locked --offline ruff format --check .`: passed
+  (3 files already formatted); `ruff check .`: passed; `mypy app`: passed
+  (2 source files). The same `uv run` flags were used for each tool.
+- `.venv/Scripts/python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000`:
+  application startup completed. Local HTTP checks returned **200** for `/docs`
+  and `/openapi.json`; schema title was `Roam API` and custom path count was **0**.
+  The verification server was stopped afterward.
+- Editor diagnostics reported no errors in the application entry point or
+  dependency configuration. `git diff --check` passed; `git check-ignore`
+  confirmed virtual-environment and pytest/Ruff/mypy cache paths are ignored.
+- No pytest tests were created or executed; endpoint testing belongs to Milestone 3.
+  No macOS/Linux execution, CI, teammate review, merge, or deployment is claimed.
+
+This record supersedes the earlier backend-placeholder snapshot only. It does
+not mark the overall scaffold/CI milestone or backend foundation complete.
 
 | Date | Claim | Evidence link/path | Environment/config | Limits/caveats | Approved wording |
 |---|---|---|---|---|---|
