@@ -11,9 +11,10 @@
 - PR #3 Milestone 1 is committed as `b829d9b` on `feat/backend-foundation`:
   a minimal FastAPI app, Python 3.12 runtime selection, uv lockfile, and backend
   setup instructions. Owner: user with Codex assistance; teammate review and merge
-  are not verified. Milestone 2 adds an uncommitted `GET /health` router and
+  are not verified. Milestone 2 is committed as `9cc6424`, adding a `GET /health` router and
   Pydantic response schema, locally verified with HTTP 200 and `{"status":"ok"}`.
-  Endpoint tests remain planned. See the local verification records below.
+  Milestone 3 adds uncommitted pytest configuration and three locally passing
+  health endpoint tests. See the local verification records below.
 
 - The product concept and scoped MVP have been agreed in planning conversation.
 - This documentation package contains `handoff.md`, `AGENTS.md`, `CLAUDE.md`, `SKILL.md`, `DESIGN.md`, `instructions.md`, `prompt.md`, and `memory.md`, plus an index README.
@@ -26,7 +27,7 @@
 ### Not yet verified or implemented
 
 - The original documentation-only snapshot is superseded by the frontend branch evidence above and the minimal backend foundation recorded on 2026-11-13. The backend-placeholder status is superseded; PR #3 is still in progress.
-- No backend endpoint test suite, database schema, migration, authentication, LLM integration, Places/Routes integration, validation engine, replanning engine, PDF generator, CI workflow, Docker image, deployment, benchmark, or production run is claimed.
+- Beyond the backend health endpoint tests, no database schema, migration, authentication, LLM integration, Places/Routes integration, validation engine, replanning engine, PDF generator, CI workflow, Docker image, deployment, benchmark, or production run is claimed.
 - No provider credentials, billing account, quotas, hosting account, domain, or OAuth consent configuration is claimed.
 - Local frontend checks are recorded below. No performance, reliability, security certification, user-satisfaction, cost, or ATS outcome has been measured.
 - No resume bullet should use past-tense implementation claims based only on these documents.
@@ -112,7 +113,7 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 | Capability | Status | Owner | Evidence | Next acceptance gate |
 |---|---|---|---|---|
 | Repository scaffold and CI | PLANNED | Unassigned | None | Clean checkout and CI failure/success proof |
-| Backend foundation / PR #3 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | Milestone 1 commit `b829d9b`; uncommitted Milestone 2 health route; [backend setup](../backend/README.md); local verification below | Endpoint tests, teammate review, and merge evidence |
+| Backend foundation / PR #3 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | Milestone 1 `b829d9b`; Milestone 2 `9cc6424`; uncommitted Milestone 3 with 3 passing tests; [backend setup](../backend/README.md); local verification below | Milestone 3 inspection/commit, test-client warning follow-up, teammate review, and merge evidence |
 | Frontend foundation / PR #2 | IN_PROGRESS | Frontend contributor; reviewer not recorded | Branch commits `613b8af`, `af4a50e`, `2f49eb8`; [tests](../frontend/src/App.test.tsx); verification below | Documentation review, teammate review, and merge evidence |
 | Trip schema/migrations/CRUD | PLANNED | Unassigned | None | PostgreSQL integration + cross-owner denial |
 | Google OIDC/session/CSRF | PLANNED | Unassigned | None | Invalid state/claims and secure cookie tests |
@@ -139,6 +140,33 @@ Both developers must understand the full architecture. This ledger identifies de
 For each meaningful PR, capture design, code, tests, debugging, and review work separately. Do not equate lines changed with ownership.
 
 ## 7. Evidence ledger
+
+### PR #3 Milestone 3 local verification — 2026-11-13
+
+- Owner: user with Codex assistance on `feat/backend-foundation`; teammate
+  review, merge, and deployment are not verified. No Git commit made by Codex.
+- Added [health endpoint tests](../backend/tests/test_health.py) and pytest
+  test discovery/import settings in [pyproject.toml](../backend/pyproject.toml).
+  The in-process `TestClient` exercises the registered app and separately
+  checks HTTP 200, exact JSON body, and JSON content type. No server is required.
+- Windows, Python **3.12.16**, pytest **9.2.0**: focused command
+  `.venv/Scripts/python.exe -m pytest tests/test_health.py -v` passed **3 tests**.
+- Full check commands used `C:/Users/rohan/.local/bin/uv.exe` by absolute path:
+  `uv --no-cache sync --frozen --all-groups --offline` and
+  `uv --no-cache lock --check --offline` passed. With the prefix
+  `uv --no-cache run --locked --offline`, `ruff format --check .` passed
+  (8 files already formatted), `ruff check .` passed, `mypy app` passed
+  (6 source files), and `pytest` passed **3 tests**.
+- Both pytest runs emitted one `StarletteDeprecationWarning`: the installed
+  Starlette test client deprecates HTTPX usage and suggests `httpx2`. No warning
+  suppression or dependency change was applied. Review compatibility in a
+  separate dependency update before relying on a future test-client release.
+- Editor diagnostics reported no errors in the test file or dependency
+  configuration. No dependency lockfile change, external paid calls, or
+  frontend changes were needed. macOS/Linux and CI execution remain unverified.
+- This supersedes the earlier pending-endpoint-test status. The three local
+  implementation milestones are delivered; PR #3 remains `IN_PROGRESS` pending
+  user inspection/commit and team review/merge evidence. Phase 0 is incomplete.
 
 ### PR #3 Milestone 2 local verification — 2026-11-13
 

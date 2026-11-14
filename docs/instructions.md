@@ -101,10 +101,11 @@ Rules:
 
 ## 5. Target local setup
 
-**Current backend-only setup (PR #3, Milestone 2):** use Python 3.12 and uv
+**Current backend-only setup (PR #3, Milestone 3):** use Python 3.12 and uv
 with the [backend README](../backend/README.md). The minimal FastAPI app needs
 no database, Docker, credentials, or `.env`. `GET /health` returns HTTP 200
-with `{"status":"ok"}`. Endpoint tests are deferred to Milestone 3.
+with `{"status":"ok"}`. Run `uv run --locked pytest` from `backend/` for
+three endpoint tests using an in-process client; no running server is needed.
 The full-stack commands below remain planned.
 
 **Current frontend-only setup:** the PR #2 branch has a standalone landing page. Follow the [frontend README](../frontend/README.md) for Node 24.22.3, installation, development, and checks, including an option without nvm. No backend, database, Docker, `.env`, or API proxy is needed for this page. This has been checked locally; CI is not yet configured.

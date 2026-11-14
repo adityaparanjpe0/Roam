@@ -1,7 +1,7 @@
 # Roam backend
 
-PR #3, Milestones 1 and 2 provide the Python environment, a minimal FastAPI app,
-and a health endpoint. Endpoint tests are planned for Milestone 3.
+PR #3, Milestones 1 through 3 provide the Python environment, a minimal FastAPI
+app, a health endpoint, and automated endpoint tests.
 No database, credentials, environment variables, or other services
 are required to start this backend.
 
@@ -49,7 +49,7 @@ are already ignored by the repository. No manual activation is needed with
 Runtime dependencies are FastAPI (HTTP framework), Pydantic (typed response
 schemas), and Uvicorn (application server). The development
 group provides Ruff (format/lint), mypy (type checking), pytest, and HTTPX
-(FastAPI test-client support in Milestone 3).
+(FastAPI test-client support).
 
 ## Start the development server
 
@@ -95,14 +95,29 @@ uv run --locked ruff check .
 uv run --locked mypy app
 ```
 
-Automated endpoint tests will be added in Milestone 3. Once they exist, run:
+Run all automated tests (no Uvicorn server needs to be running):
 
 ```text
 uv run --locked pytest
 ```
 
-At Milestone 2 there are no tests; pytest reporting no tests collected is not
-a passing test suite. Format changes with `uv run --locked ruff format .`.
+For a focused, verbose run:
+
+```text
+uv run --locked pytest tests/test_health.py -v
+```
+
+The three tests use FastAPI's in-process `TestClient` to request the registered
+`/health` route and assert HTTP 200, the exact `{"status":"ok"}` body, and the
+JSON content type. They require no database, credentials, or external network.
+pytest configuration finds tests under `tests/` and adds this directory to its
+import path so both `pytest` and `python -m pytest` can import `app`.
+
+Local verification: **3 passed** on Windows with Python 3.12.16. The current
+Starlette test client emits one deprecation warning about HTTPX usage. It is
+not suppressed; review a compatible test-client dependency update separately.
+
+Format changes with `uv run --locked ruff format .`.
 
 ## Structure
 
@@ -112,6 +127,7 @@ a passing test suite. Format changes with `uv run --locked ruff format .`.
 - `app/schemas/health.py` defines the Pydantic response with status restricted to `ok`.
 - `pyproject.toml` declares dependencies and development-tool settings.
 - `uv.lock` records exact dependency versions for reproducible installs.
+- `tests/test_health.py` checks the health endpoint's HTTP response contract.
 
 HTTP routers and response schemas live in `app/api/` and `app/schemas/`.
 Add other architecture layers only when
@@ -121,7 +137,15 @@ consistently; a build system or `PYTHONPATH` shell changes are unnecessary.
 ## Troubleshooting
 
 - **`uv` not found:** restart the terminal after installation and check the
-  PATH instructions printed by the installer.
+  PATH instructions printed by the installer. If uv is already installed on
+  Windows, close all VS Code windows and reopen VS Code to refresh its PATH.
+  You can also use the executable directly, for example:
+
+  ```powershell
+  & "$env:USERPROFILE\.local\bin\uv.exe" run --locked pytest
+  ```
+
+  Run that command from `backend`. If the executable is missing, install uv first.
 - **Missing Python 3.12:** run `uv python install 3.12` before syncing.
 - **Port 8000 already in use:** stop the other process or use `--port 8001`.
 - **Cannot import `app`:** check that the current directory is `backend`.

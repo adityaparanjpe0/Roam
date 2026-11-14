@@ -4,10 +4,10 @@
 > Last reviewed: 2026-11-07  
 > Decision rule: every dependency must solve a current problem and be explainable by both developers
 
-Implementation note (2026-11-13): PR #3 Milestones 1 and 2 introduce a minimal
+Implementation note (2026-11-13): PR #3 Milestones 1 through 3 introduce a minimal
 FastAPI application, a Python 3.12 development environment, uv dependency locking,
-and `GET /health`. See the [backend README](../backend/README.md). Automated
-endpoint tests, readiness checks, business APIs, database integration, and the
+and `GET /health` with three locally passing endpoint tests. See the
+[backend README](../backend/README.md). Readiness checks, business APIs, database integration, and the
 production deployment described below remain planned.
 
 ## 1. Context and design goals
