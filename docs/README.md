@@ -1,12 +1,12 @@
 # Roam project documentation pack
 
-> Status: MVP planning documents; frontend foundation in progress on PR #2
+> Status: frontend/backend foundations in local `main`; PR #5 local database work verified on its feature branch
 > Package date: 2026-11-07  
 > Intended audience: two college developers building and defending the project together
 
 This directory contains the source-of-truth project documentation for **Roam**, an AI-native travel planner. Agent instructions live at the repository root; design, workflow, handoff, and evidence records live here.
 
-The planned MVP includes a React/TypeScript frontend, modular FastAPI/Python backend, PostgreSQL, grounded AI planning, owner-only trips, partial replanning, and PDF downloads. The frontend foundation and its local tests exist on the feature branch; planning functionality, backend integration, CI, and deployment remain planned. See the [frontend setup](../frontend/README.md) and [current evidence](memory.md).
+The planned MVP includes a React/TypeScript frontend, modular FastAPI/Python backend, PostgreSQL, grounded AI planning, owner-only trips, partial replanning, and PDF downloads. The frontend and backend foundations are merged in local Git history. PR #5 adds locally verified PostgreSQL/Compose on its feature branch; application database integration, planning features, CI, and deployment remain planned. See the [frontend setup](../frontend/README.md), [backend setup](../backend/README.md), [database runbook](runbooks/local-postgres.md), and [current evidence](memory.md).
 
 ## File index
 
@@ -20,6 +20,7 @@ The planned MVP includes a React/TypeScript frontend, modular FastAPI/Python bac
 | [`instructions.md`](instructions.md) | Human contributors | Local setup target, engineering standards, GitHub workflow, CI, testing, migrations, and deployment practices |
 | [`prompt.md`](prompt.md) | Future AI sessions | Copyable master prompt for bounded, evidence-based implementation work |
 | [`memory.md`](memory.md) | Both developers and assistants | Durable decisions, current status, open questions, ownership log, evidence ledger, and change log |
+| [`runbooks/local-postgres.md`](runbooks/local-postgres.md) | Both developers | Local database setup, operations, persistence evidence, and production-security boundary |
 
 ## Reading order
 
@@ -61,15 +62,17 @@ roam/
 ├── README.md
 ├── .nvmrc
 ├── frontend/
-├── backend/             # placeholder only
+├── backend/             # FastAPI foundation; no database integration yet
+├── docker-compose.yml  # local PostgreSQL only
 └── docs/
     ├── DESIGN.md
     ├── handoff.md
     ├── instructions.md
     ├── memory.md
     ├── prompt.md
-    └── README.md
+    ├── README.md
+    └── runbooks/local-postgres.md
 ```
 
-Scripts, CI, Docker, and backend application files remain future work. This tree shows the main project locations, not every file.
+Scripts, CI, the production Dockerfile, and backend database integration remain future work. This tree shows the main project locations, not every file.
 

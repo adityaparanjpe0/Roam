@@ -10,6 +10,11 @@ and `GET /health` with three locally passing endpoint tests. See the
 [backend README](../backend/README.md). Readiness checks, business APIs, database integration, and the
 production deployment described below remain planned.
 
+Implementation note (2026-11-15): PR #5 adds a locally verified PostgreSQL
+Compose setup on `feat/postgres-docker-setup`. It does not connect FastAPI to the
+database or introduce application tables/migrations. See the
+[local PostgreSQL runbook](runbooks/local-postgres.md) for configuration and evidence.
+
 ## 1. Context and design goals
 
 Roam creates realistic travel itineraries from user preferences. It combines uncertain external data and probabilistic model output with persistent user data, so its core design problem is not “call an LLM.” It is maintaining a trustworthy boundary:
@@ -670,6 +675,21 @@ Do not include a provider map screenshot/tile or third-party photo by default. C
 - FastAPI development server;
 - PostgreSQL in Docker Compose;
 - fake providers by default; live adapters only with explicit environment configuration.
+
+PR #5 local database configuration uses the official `postgres:18.7-bookworm`
+image, a project-scoped named volume mounted at `/var/lib/postgresql` (PostgreSQL
+18 data lives under `/var/lib/postgresql/18/docker`), and only
+`127.0.0.1:${POSTGRES_PORT:-5432}:5432` for published access. A bounded
+`pg_isready` health check reports database-server readiness, not FastAPI readiness
+or successful authentication. Explicit password-authenticated SQL checks are
+documented in the [runbook](runbooks/local-postgres.md).
+
+The ignored root `.env` supplies required initialization settings; no real
+credentials are committed. Changes to initialization variables do not reconfigure
+an existing volume. This local bootstrap user is privileged and TLS is off;
+production must use separate restricted credentials, protected secrets, verified
+TLS/network access, and tested backups. The local Compose file is not the
+production deployment. No backend/provider/CI service or custom image is added.
 
 ### Production image
 

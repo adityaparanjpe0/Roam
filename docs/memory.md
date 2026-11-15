@@ -1,32 +1,38 @@
 # Roam durable project memory
 
 > Purpose: preserve verified context across developers and AI sessions  
-> Last updated: 2026-11-13
+> Last updated: 2026-11-15
 > Rule: this file records decisions and evidence; it must not turn plans into facts
 
 ## 1. Current snapshot
 
 ### Verified facts
 
-- PR #3 Milestone 1 is committed as `b829d9b` on `feat/backend-foundation`:
-  a minimal FastAPI app, Python 3.12 runtime selection, uv lockfile, and backend
-  setup instructions. Owner: user with Codex assistance; teammate review and merge
-  are not verified. Milestone 2 is committed as `9cc6424`, adding a `GET /health` router and
-  Pydantic response schema, locally verified with HTTP 200 and `{"status":"ok"}`.
-  Milestone 3 adds uncommitted pytest configuration and three locally passing
-  health endpoint tests. See the local verification records below.
+- Backend foundation: `b829d9b` (Python/uv/app setup), `9cc6424` (typed health
+  endpoint), and `8f2115c` (tests/documentation) are included in local `main` via
+  merge `e08a3f0`. Frontend foundation is included via merge `2281737`.
+  These local Git records supersede the earlier uncommitted/unmerged status
+  statements. Teammate approvals and CI remain unverified. Historical workstream
+  labels PR #2 (frontend) and PR #3 (backend) are retained here; actual merge
+  messages number them #1 and #2 respectively.
+- PR #5 local PostgreSQL work is on `feat/postgres-docker-setup`: configuration
+  `f715de3`, verification record `6bb7bea`, and documentation in progress.
+  PostgreSQL 18.7 was healthy on localhost; authenticated host access and
+  restart/recreation persistence were verified on 2026-11-15. No backend database
+  integration, application schema, or migration was added. Owner: user with Codex
+  assistance; PR #5 merge and teammate review are not verified.
 
 - The product concept and scoped MVP have been agreed in planning conversation.
 - This documentation package contains `handoff.md`, `AGENTS.md`, `CLAUDE.md`, `SKILL.md`, `DESIGN.md`, `instructions.md`, `prompt.md`, and `memory.md`, plus an index README.
 - The intended builders are two college developers seeking AI-native/full-stack experience, stronger technical depth, and evidence for resume discussions.
 - The documentation explicitly targets a low-volume USD $0–$5/month demo and does not guarantee that price.
-- PR #2 frontend work is present on `feat/frontend-foundation`: strict React/TypeScript/Vite tooling, a responsive static landing page, and three behavior tests. Branch commits: `613b8af` (tooling), `af4a50e` (landing page), and `2f49eb8` (design simplification and CTA hover). Merge, CI, and teammate review are not verified; status remains `IN_PROGRESS`.
+- Frontend work includes strict React/TypeScript/Vite tooling, a responsive static landing page, and three behavior tests. Source commits: `613b8af`, `af4a50e`, `2f49eb8`, and documentation `53250ec`. Merge evidence is recorded above; CI and teammate approval are not claimed.
 - Node is pinned to **24.22.3** in [`.nvmrc`](../.nvmrc); npm **11.5.1** was used for local verification. Setup, including the path without nvm, is in the [frontend README](../frontend/README.md).
 - Resolved frontend versions: React/React DOM **19.3.1**, TypeScript **6.0.3**, Vite **8.3.8**, React plugin **6.3.0**, ESLint **10.14.0**, Vitest **5.1.0**, Testing Library React **16.3.3** / DOM **10.4.2**, jest-dom **7.0.1**, and jsdom **31.0.0**. Exact transitive versions are in the [npm lockfile](../frontend/package-lock.json).
 
 ### Not yet verified or implemented
 
-- The original documentation-only snapshot is superseded by the frontend branch evidence above and the minimal backend foundation recorded on 2026-11-13. The backend-placeholder status is superseded; PR #3 is still in progress.
+- The original documentation-only and backend-placeholder snapshots are superseded by the foundation merge records above and the PR #5 database verification. Production deployment remains planned.
 - Beyond the backend health endpoint tests, no database schema, migration, authentication, LLM integration, Places/Routes integration, validation engine, replanning engine, PDF generator, CI workflow, Docker image, deployment, benchmark, or production run is claimed.
 - No provider credentials, billing account, quotas, hosting account, domain, or OAuth consent configuration is claimed.
 - Local frontend checks are recorded below. No performance, reliability, security certification, user-satisfaction, cost, or ATS outcome has been measured.
@@ -75,7 +81,7 @@ Material changes should receive an ADR under `docs/adr/` and a row here. Dates a
 | D-001 | 2026-11-07 | PLANNED | Use a modular FastAPI monolith with one PostgreSQL database. | Fits two developers and atomic workflows; distribute only after measured pressure. |
 | D-002 | 2026-11-07 | IN_PROGRESS | React/TypeScript/Vite frontend, built into the production FastAPI image and served same-origin. | Frontend exists on the PR #2 branch; production image and same-origin serving remain planned. |
 | D-003 | 2026-11-07 | PLANNED | Use synchronous SQLAlchemy/httpx/FastAPI paths initially. | Easier to reason about; strict timeouts; queue/async reconsidered from measurements. |
-| D-004 | 2026-11-07 | PLANNED | PostgreSQL with SQLAlchemy 2 and Alembic. | Relational ownership, ordered itinerary structure, constraints, transactions, indexing. |
+| D-004 | 2026-11-07 | IN_PROGRESS | PostgreSQL with SQLAlchemy 2 and Alembic. | Local PostgreSQL 18.7/Compose is verified on PR #5; application integration, SQLAlchemy, and migrations remain planned. |
 | D-005 | 2026-11-07 | PLANNED | Retrieve real place candidates before LLM planning; model references allowlisted IDs only. | Prevents fabricated venue identity and bounds provider/model work. |
 | D-006 | 2026-11-07 | PLANNED | Deterministic Python code is authoritative for authorization, locks, time, routes, known hours, and budget arithmetic. | Probabilistic output cannot enforce hard application invariants. |
 | D-007 | 2026-11-07 | PLANNED | Replanning uses a typed scoped patch against stable IDs and a base trip version. | Preserves unaffected work, supports locks, costs less, and is explainable. |
@@ -97,7 +103,7 @@ Resolve through a dated decision/ADR before the dependent implementation ships.
 |---|---|---|---|---|
 | O-001 | Developer names and primary workstream split? | Use Developer A/B only in planning. | Both | First issue/PR |
 | O-002 | Repository owner, name, visibility, and code license? | Private repository; no public license until agreed. | Both | Repository creation/public release |
-| O-003 | Exact Python/Node versions and dependency versions? | Frontend Node 24.22.3 and npm lockfile recorded on PR #2; backend Python 3.12 selected and uv lockfile verified on PR #3 Milestone 1. CI/container pins remain open. | Phase 0 owner | Scaffold merge |
+| O-003 | Exact Python/Node versions and dependency versions? | Node 24.22.3/npm lockfile and Python 3.12/uv lockfile recorded; local PostgreSQL image pinned to `18.7-bookworm` on PR #5. Application CI/container runtime pins remain open. | Phase 0 owner | Scaffold merge |
 | O-004 | Initial LLM provider/model and data-retention setting? | Fake adapter; live model chosen from current structured-output support, cost, latency, and terms. | Planner owner | Live generation |
 | O-005 | Exact Places/Routes SKUs and provider data fields allowed in saved trips/PDF? | Persist stable IDs only; do not launch unclear fields. | Provider owner | Live provider persistence |
 | O-006 | Initial hosting and managed PostgreSQL vendors/current free limits? | Evaluate current Render-like hobby service and Neon-like Postgres; avoid vendor assumptions in domain. | Deployment owner | First deployment |
@@ -113,8 +119,9 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 | Capability | Status | Owner | Evidence | Next acceptance gate |
 |---|---|---|---|---|
 | Repository scaffold and CI | PLANNED | Unassigned | None | Clean checkout and CI failure/success proof |
-| Backend foundation / PR #3 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | Milestone 1 `b829d9b`; Milestone 2 `9cc6424`; uncommitted Milestone 3 with 3 passing tests; [backend setup](../backend/README.md); local verification below | Milestone 3 inspection/commit, test-client warning follow-up, teammate review, and merge evidence |
-| Frontend foundation / PR #2 | IN_PROGRESS | Frontend contributor; reviewer not recorded | Branch commits `613b8af`, `af4a50e`, `2f49eb8`; [tests](../frontend/src/App.test.tsx); verification below | Documentation review, teammate review, and merge evidence |
+| Backend foundation / historical PR #3 | IMPLEMENTED | User with Codex assistance; reviewer not recorded | Local `main` merge `e08a3f0`; `8f2115c`; [backend setup](../backend/README.md); historical verification below | Test-client warning follow-up; CI and reviewer evidence not recorded |
+| Frontend foundation / historical PR #2 | IMPLEMENTED | Frontend contributor; reviewer not recorded | Local `main` merge `2281737`; [tests](../frontend/src/App.test.tsx); historical verification below | CI and reviewer evidence not recorded |
+| Local PostgreSQL / PR #5 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | `f715de3`, `6bb7bea`; [runbook and verification](runbooks/local-postgres.md) | Documentation review, teammate walkthrough, and merge evidence; no production claim |
 | Trip schema/migrations/CRUD | PLANNED | Unassigned | None | PostgreSQL integration + cross-owner denial |
 | Google OIDC/session/CSRF | PLANNED | Unassigned | None | Invalid state/claims and secure cookie tests |
 | Provider-neutral Places/Routes | PLANNED | Unassigned | None | Fake + live opt-in normalization/failure proof |
@@ -136,10 +143,35 @@ Both developers must understand the full architecture. This ledger identifies de
 | — | Not assigned | Developer A | Developer B | — | — |
 | — | Not assigned | Developer B | Developer A | — | — |
 | 2026-11-12 | PR #2 frontend foundation | User with Codex assistance; name not recorded | Teammate review not verified | Tooling, landing page, tests, design refinements; documentation in progress | Strict TypeScript, component structure, CSS tokens, accessibility checks, and the static-concept boundary |
+| 2026-11-15 | PR #5 local PostgreSQL | User with Codex assistance; name not recorded | Teammate walkthrough/review pending | Compose/environment setup, authenticated SQL, lifecycle persistence checks, and runbook | Image vs container, volume vs backup, loopback publishing, database health vs application liveness, and local vs production security |
 
 For each meaningful PR, capture design, code, tests, debugging, and review work separately. Do not equate lines changed with ownership.
 
 ## 7. Evidence ledger
+
+### PR #5 local database verification — 2026-11-15
+
+- Configuration `f715de3`; verification record `6bb7bea`. Docker Engine **28.1.1**,
+  Compose **2.35.1**, official `postgres:18.7-bookworm`; measured server **18.7**.
+- Named volume `roam_postgres_data` mounted at `/var/lib/postgresql`; actual
+  data directory `/var/lib/postgresql/18/docker`. Host port **55432** was chosen
+  only in ignored local configuration because an unrelated host PostgreSQL used
+  5432. No unrelated service was stopped.
+- Compose validation and health wait passed. Live binding was only
+  `127.0.0.1:55432`; correct host password succeeded and incorrect password failed.
+- Exact marker row survived both restart (same container ID) and `down`/`up`
+  recreation (new container ID, unchanged volume). The disposable verification
+  database was removed; the application database had zero public tables.
+- Generated local credentials were not printed or committed. `.env` was ignored,
+  untracked, and owner-readable/writable only on macOS. Existing application code
+  and dependency files were unchanged.
+- Security inspection: external-client authentication uses SCRAM-SHA-256;
+  internal socket/loopback rules use `trust`; development role is a superuser;
+  TLS is off. No container vulnerability scan, backup/restore, upgrade, Windows
+  runtime, production deployment, or backend integration was verified.
+- Full commands, image digest, container lifecycle evidence, setup, and known
+  limitations are in the [local PostgreSQL runbook](runbooks/local-postgres.md).
+  This is development infrastructure, not a production security certification.
 
 ### PR #3 Milestone 3 local verification — 2026-11-13
 
@@ -237,7 +269,7 @@ From `frontend/`, with the pinned runtime supplied using `npm exec --yes --packa
 
 The landing page uses a static, explicitly labeled planner concept with generic activities. It performs no trip generation or backend/provider calls. React Router, TanStack Query, API clients, auth, maps, and PDF packages remain deferred. The original decorative postcard design was superseded by the user-approved simplification in `2f49eb8`.
 
-Documentation milestone: frontend setup and these evidence records are being updated on the same branch. No new architecture decision supersedes D-002; same-origin production serving remains planned.
+The frontend documentation milestone was committed as `53250ec` and included in local `main` via `2281737`. This supersedes the earlier documentation-in-progress note. No new architecture decision supersedes D-002; same-origin production serving remains planned.
 
 Examples of acceptable future evidence:
 
@@ -281,7 +313,7 @@ Use this for real debugging stories suitable for retrospectives/interviews.
 
 | Date | Symptom/impact | Root cause | Detection gap | Fix and regression evidence | Owner | Follow-up |
 |---|---|---|---|---|---|---|
-| — | No implementation incidents yet | — | — | — | — | — |
+| 2026-11-15 | Local database failed to bind port 5432 | An existing host PostgreSQL already listened there | Port availability was discovered at startup | Changed only ignored `POSTGRES_PORT` to 55432; authenticated SQL and persistence checks passed; [evidence](runbooks/local-postgres.md) | User with Codex assistance | Document port overrides and preserve unrelated services |
 
 Do not manufacture a “biggest challenge.” Record one after it actually happens.
 

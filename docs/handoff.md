@@ -1,6 +1,6 @@
 # Roam MVP handoff
 
-> Status: approved MVP plan; frontend foundation in progress on PR #2, with other phases still planned. See [memory.md](memory.md) for evidence.
+> Status: approved MVP plan; frontend/backend foundations are present in local `main`. PR #5 local PostgreSQL setup is verified on its feature branch; application database integration and deployment remain planned. See [memory.md](memory.md) for evidence.
 > Owners: two developers; assign names in `memory.md` before the first feature branch  
 > Primary goal: build, deploy, measure, and deeply understand a credible AI-native full-stack project
 
@@ -139,7 +139,7 @@ Phases are vertical slices. Each should end with a merged, demonstrable behavior
 
 - Initialize the monorepo, licenses, code owners/ownership ledger, issue templates, PR template, branch protection, and CI skeleton.
 - Scaffold React/Vite and FastAPI packages with pinned runtimes and dependency lockfiles.
-- Add Docker Compose for local PostgreSQL and a multi-stage production Dockerfile.
+- Add Docker Compose for local PostgreSQL (PR #5 branch verification is recorded in the [runbook](runbooks/local-postgres.md)). The multi-stage production Dockerfile remains planned.
 - Add environment validation, `.env.example`, secret scanning, formatting, linting, types, and a smoke test.
 - Create a public issue/backlog board only if both developers will maintain it.
 

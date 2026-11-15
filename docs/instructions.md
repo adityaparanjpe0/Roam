@@ -74,6 +74,10 @@ Commit `.env.example` with placeholders and descriptions. Never commit `.env` or
 
 | Variable | Purpose | Secret? |
 |---|---|---:|
+| `POSTGRES_DB` | Current local Compose database name; first initialization only | No |
+| `POSTGRES_USER` | Current local development bootstrap user; first initialization only | No |
+| `POSTGRES_PASSWORD` | Current local Compose password; stored only in ignored `.env` | Yes |
+| `POSTGRES_PORT` | Local loopback host port; default 5432, override for conflicts | No |
 | `APP_ENV` | `development`, `test`, `production` | No |
 | `APP_BASE_URL` | Exact public/local origin used for redirects and links | No |
 | `DATABASE_URL` | PostgreSQL connection URI | Yes |
@@ -101,6 +105,13 @@ Rules:
 
 ## 5. Target local setup
 
+**Current local database setup (PR #5):** follow the [PostgreSQL runbook](runbooks/local-postgres.md)
+for Docker Desktop, local credentials, startup/shutdown, authenticated SQL,
+persistence verification, and troubleshooting. PostgreSQL is independent of the
+backend. No API keys or managed database account are needed. This is a local-only
+development setup; deployment hardening remains planned. Do not run
+`docker compose down -v` for routine shutdown.
+
 **Current backend-only setup (PR #3, Milestone 3):** use Python 3.12 and uv
 with the [backend README](../backend/README.md). The minimal FastAPI app needs
 no database, Docker, credentials, or `.env`. `GET /health` returns HTTP 200
@@ -110,7 +121,7 @@ The full-stack commands below remain planned.
 
 **Current frontend-only setup:** the PR #2 branch has a standalone landing page. Follow the [frontend README](../frontend/README.md) for Node 24.22.3, installation, development, and checks, including an option without nvm. No backend, database, Docker, `.env`, or API proxy is needed for this page. This has been checked locally; CI is not yet configured.
 
-The full-stack commands below remain a future target and cannot be used as a working setup yet.
+The full-stack commands below remain a future target and cannot be used as a working setup yet. The current database and application foundations run independently; migrations and database integration do not exist yet. Configure a unique local password before starting Compose; copying `.env.example` alone is insufficient.
 
 After Phase 0 scaffolding, a new contributor should be able to run:
 
