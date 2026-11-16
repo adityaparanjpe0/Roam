@@ -1,6 +1,16 @@
 import { render, screen, within } from '@testing-library/react'
-import { expect, test } from 'vitest'
+import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import App from './App'
+
+beforeEach(() => {
+  vi.stubEnv('DEV', true)
+  vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {})))
+})
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+  vi.unstubAllEnvs()
+})
 
 test('introduces Roam with named landmarks and a single primary heading', () => {
   render(<App />)
@@ -35,5 +45,20 @@ test('clearly explains that planning capabilities are not available yet', () => 
   expect(screen.getByText('Illustrative planner concept. Not generated or interactive.')).toBeInTheDocument()
   expect(screen.getByRole('list', { name: 'Illustrative day plan' })).toBeInTheDocument()
   expect(screen.getAllByRole('article')).toHaveLength(3)
-  expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  expect(within(screen.getByRole('main')).queryByRole('button')).not.toBeInTheDocument()
+})
+
+test('includes a developer connection check without changing the landing page', () => {
+  render(<App />)
+
+  expect(screen.getByRole('complementary', { name: 'Backend connection' })).toBeInTheDocument()
+  expect(screen.getByRole('status')).toHaveTextContent('Checking backend…')
+})
+
+test('omits the connection diagnostic and its requests outside development', () => {
+  vi.stubEnv('DEV', false)
+  render(<App />)
+
+  expect(screen.queryByRole('complementary', { name: 'Backend connection' })).not.toBeInTheDocument()
+  expect(fetch).not.toHaveBeenCalled()
 })

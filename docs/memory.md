@@ -8,6 +8,19 @@
 
 ### Verified facts
 
+- Merge reconciliation (2026-11-16): `origin/main` at `80e3d3a` includes PR #4's
+  CI workflows and guide. The in-progress merge preserves those changes and
+  PR #6's integration work. Historical CI branch-only/unmerged statements below
+  are superseded for merge status; hosted execution and teammate approval remain
+  unverified. No workflow or application source was changed during resolution.
+- Post-resolution local checks (2026-11-16): the workflow-equivalent locked
+  installs, backend Ruff format/lint, mypy, and pytest passed (3 tests, existing
+  Starlette/HTTPX warning). Frontend clean install, ESLint, typecheck, Vitest
+  (32 tests), and production build passed with pinned Node 24.22.3. Both complete
+  CI and integration evidence sections were retained verbatim. These macOS
+  results do not verify hosted Ubuntu execution. The merge commit is pending
+  developer review; Codex did not commit or push.
+
 - PR #4 Milestone 5: user with Codex assistance added the [CI guide](CI.md)
   and necessary documentation links/status corrections on 2026-11-16.
   All 14 workflow command lines are present in the guide. Both packages' local
@@ -46,12 +59,19 @@
   statements. Teammate approvals and CI remain unverified. Historical workstream
   labels PR #2 (frontend) and PR #3 (backend) are retained here; actual merge
   messages number them #1 and #2 respectively.
-- PR #5 local PostgreSQL work is on `feat/postgres-docker-setup`: configuration
-  `f715de3`, verification record `6bb7bea`, and documentation in progress.
+- PR #5 local PostgreSQL work includes configuration `f715de3`, verification
+  record `6bb7bea`, and documentation `7cf6e1f`, merged into local `main` via
+  `2e4fa6f` (actual GitHub merge message #3). This supersedes its earlier
+  documentation-in-progress and unverified-merge status.
   PostgreSQL 18.7 was healthy on localhost; authenticated host access and
   restart/recreation persistence were verified on 2026-11-15. No backend database
   integration, application schema, or migration was added. Owner: user with Codex
-  assistance; PR #5 merge and teammate review are not verified.
+  assistance; teammate review is not verified.
+- PR #6 health integration is on `feat/front-back-int`: `d66391a` adds the
+  validated fetch client/proxy, `ab6e482` adds the development-only status panel,
+  and documentation/live verification are recorded below. Real HTTP success,
+  backend-down failure, and restart/retry recovery were verified locally.
+  PR #6 is not claimed merged, reviewed, deployed, or verified in CI.
 
 - The product concept and scoped MVP have been agreed in planning conversation.
 - This documentation package contains `handoff.md`, `AGENTS.md`, `CLAUDE.md`, `SKILL.md`, `DESIGN.md`, `instructions.md`, `prompt.md`, and `memory.md`, plus an index README.
@@ -64,7 +84,11 @@
 ### Not yet verified or implemented
 
 - The original documentation-only and backend-placeholder snapshots are superseded by the foundation merge records above and the PR #5 database verification. Production deployment remains planned.
-- Beyond the application foundations and branch-only backend/frontend CI workflows, no database schema, migration, authentication, LLM integration, Places/Routes integration, validation engine, replanning engine, PDF generator, Docker image, deployment, benchmark, or production run is claimed. Hosted CI execution remains unverified.
+- Beyond the foundations and HTTP health integration above, no database schema,
+  migration, authentication, LLM/Places/Routes integration, validation/replanning
+  engine, PDF generator, production application image, deployment, benchmark, or
+  production run is claimed. Backend/frontend CI workflow files are present;
+  hosted CI execution remains unverified.
 - No provider credentials, billing account, quotas, hosting account, domain, or OAuth consent configuration is claimed.
 - Local frontend checks are recorded below. No performance, reliability, security certification, user-satisfaction, cost, or ATS outcome has been measured.
 - No resume bullet should use past-tense implementation claims based only on these documents.
@@ -110,7 +134,7 @@ Material changes should receive an ADR under `docs/adr/` and a row here. Dates a
 | ID | Date | Status | Decision | Rationale / consequence |
 |---|---|---|---|---|
 | D-001 | 2026-11-07 | PLANNED | Use a modular FastAPI monolith with one PostgreSQL database. | Fits two developers and atomic workflows; distribute only after measured pressure. |
-| D-002 | 2026-11-07 | IN_PROGRESS | React/TypeScript/Vite frontend, built into the production FastAPI image and served same-origin. | Frontend exists on the PR #2 branch; production image and same-origin serving remain planned. |
+| D-002 | 2026-11-07 | IN_PROGRESS | React/TypeScript/Vite frontend, built into the production FastAPI image and served same-origin. | Frontend is merged locally; PR #6 uses a health-only development proxy. Production image/static serving remain planned. |
 | D-003 | 2026-11-07 | PLANNED | Use synchronous SQLAlchemy/httpx/FastAPI paths initially. | Easier to reason about; strict timeouts; queue/async reconsidered from measurements. |
 | D-004 | 2026-11-07 | IN_PROGRESS | PostgreSQL with SQLAlchemy 2 and Alembic. | Local PostgreSQL 18.7/Compose is verified on PR #5; application integration, SQLAlchemy, and migrations remain planned. |
 | D-005 | 2026-11-07 | PLANNED | Retrieve real place candidates before LLM planning; model references allowlisted IDs only. | Prevents fabricated venue identity and bounds provider/model work. |
@@ -152,7 +176,8 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 | Repository scaffold and CI | IN_PROGRESS | User with Codex assistance; user reports Milestone 2 reviewed | [Backend workflow](../.github/workflows/backend-ci.yml), [frontend workflow](../.github/workflows/frontend-ci.yml); local Milestone 2/3 checks below | Hosted CI failure/success proof; broader gates remain planned |
 | Backend foundation / historical PR #3 | IMPLEMENTED | User with Codex assistance; reviewer not recorded | Local `main` merge `e08a3f0`; `8f2115c`; [backend setup](../backend/README.md); historical verification below | Test-client warning follow-up; CI and reviewer evidence not recorded |
 | Frontend foundation / historical PR #2 | IMPLEMENTED | Frontend contributor; reviewer not recorded | Local `main` merge `2281737`; [tests](../frontend/src/App.test.tsx); historical verification below | CI and reviewer evidence not recorded |
-| Local PostgreSQL / PR #5 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | `f715de3`, `6bb7bea`; [runbook and verification](runbooks/local-postgres.md) | Documentation review, teammate walkthrough, and merge evidence; no production claim |
+| Local PostgreSQL / historical PR #5 | IMPLEMENTED | User with Codex assistance; reviewer not recorded | Local `main` merge `2e4fa6f`; `f715de3`, `6bb7bea`, `7cf6e1f`; [runbook](runbooks/local-postgres.md) | Production hardening remains planned; reviewer evidence not recorded |
+| Frontend/backend health integration / PR #6 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | `d66391a`, `ab6e482`; [client](../frontend/src/api/health.ts), [UI](../frontend/src/features/connection/ConnectionStatus.tsx), live verification below | Documentation review, teammate review, and merge evidence |
 | Trip schema/migrations/CRUD | PLANNED | Unassigned | None | PostgreSQL integration + cross-owner denial |
 | Google OIDC/session/CSRF | PLANNED | Unassigned | None | Invalid state/claims and secure cookie tests |
 | Provider-neutral Places/Routes | PLANNED | Unassigned | None | Fake + live opt-in normalization/failure proof |
@@ -175,10 +200,53 @@ Both developers must understand the full architecture. This ledger identifies de
 | — | Not assigned | Developer B | Developer A | — | — |
 | 2026-11-12 | PR #2 frontend foundation | User with Codex assistance; name not recorded | Teammate review not verified | Tooling, landing page, tests, design refinements; documentation in progress | Strict TypeScript, component structure, CSS tokens, accessibility checks, and the static-concept boundary |
 | 2026-11-15 | PR #5 local PostgreSQL | User with Codex assistance; name not recorded | Teammate walkthrough/review pending | Compose/environment setup, authenticated SQL, lifecycle persistence checks, and runbook | Image vs container, volume vs backup, loopback publishing, database health vs application liveness, and local vs production security |
+| 2026-11-15 | PR #6 frontend/backend health integration | User with Codex assistance; name not recorded | Teammate review pending | Fetch boundary, runtime validation, status/retry UI, deterministic tests, live HTTP verification, and developer docs | HTTP vs network errors, same-origin proxy vs CORS, cancellation/races, and liveness vs readiness |
 
 For each meaningful PR, capture design, code, tests, debugging, and review work separately. Do not equate lines changed with ownership.
 
 ## 7. Evidence ledger
+
+### PR #6 integration verification — 2026-11-15
+
+- Branch: `feat/front-back-int`; source commits `d66391a` and `ab6e482`.
+  Owner: user with Codex assistance. Merge, review, CI, and deployment not verified.
+- macOS, Node **24.22.3**, Python **3.12.16**, uv **0.13.8**. A previously missing
+  Python runtime and ignored backend `.venv` were prepared with `uv python install
+  3.12` and `uv sync --frozen --all-groups`. No source/dependency/lockfile changes
+  were required for this setup.
+- Frontend: `npm run lint`, `npm run typecheck`, `npm run test -- --run`, and
+  `npm run build` passed. **32 tests**: 16 client, 11 connection UI, and 5 App tests.
+  Tests mock network/client boundaries; deadline and race checks use fake timers.
+- Backend: `uv lock --check`, Ruff format/check, `mypy app`, and `pytest` passed;
+  **3 tests, 1 existing Starlette/HTTPX deprecation warning**. Warning was not
+  suppressed and dependencies were not changed. Backend checks used uv 0.13.8
+  at its installed absolute path and the same committed lockfile.
+- Real, non-mocked Chrome verification started the existing FastAPI app at
+  `127.0.0.1:8000` and Vite at `127.0.0.1:5173`. Direct and proxied `/health`
+  returned HTTP **200**, `application/json`, and `{"status":"ok"}`.
+- Browser status: **Backend connected.** → FastAPI stopped → **The backend
+  returned HTTP 502. Check FastAPI and try again.** → FastAPI restarted and
+  **Retry connection** clicked → **Backend connected.** without reloading.
+- Observed browser health requests all used the frontend origin:
+  `http://127.0.0.1:5173/health`, with statuses **200 → 502 → 200**. No browser
+  page errors were reported. Backend unavailability is expected to cause a
+  proxy HTTP error; its exact status is not a universal contract.
+- Verification used temporary Playwright tooling, not an installed project
+  dependency or committed e2e suite. Each quality-check subprocess had a
+  60-second timeout; the live lifecycle script had a 45-second deadline and
+  automatically stopped the servers it created. It neither read local database
+  credentials nor controlled PostgreSQL.
+- Milestone 2 Chrome checks with simulated responses also verified layout at
+  320, 375, 768, and 1440 pixels, visible keyboard focus, and Enter-to-retry.
+  Production rendering issues no diagnostic requests; the built JavaScript was
+  checked for absence of diagnostic strings and the health URL.
+- Developer instructions and manual stop/start/retry steps are in the
+  [frontend README](../frontend/README.md#run-the-frontend-and-backend-together).
+  Only health liveness is connected. No CORS middleware, backend feature,
+  database query, auth, CI, new project dependency, or production serving was added.
+- Remaining limits: no Windows live integration, cross-browser/screen-reader
+  audit, committed e2e suite, database readiness check, or production deployment
+  verification. Historical dependency advisory notes remain in the frontend README.
 
 ### PR #4 Milestone 5 CI documentation and verification — 2026-11-16
 

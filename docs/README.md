@@ -1,12 +1,21 @@
 # Roam project documentation pack
 
-> Status: frontend/backend foundations in local `main`; PR #5 local database work verified on its feature branch
+> Status: frontend/backend/database foundations in local `main`; PR #6 HTTP health integration verified on its feature branch
 > Package date: 2026-11-07  
 > Intended audience: two college developers building and defending the project together
 
 This directory contains the source-of-truth project documentation for **Roam**, an AI-native travel planner. Agent instructions live at the repository root; design, workflow, handoff, and evidence records live here.
 
-The planned MVP includes a React/TypeScript frontend, modular FastAPI/Python backend, PostgreSQL, grounded AI planning, owner-only trips, partial replanning, and PDF downloads. The frontend and backend foundations are merged in local Git history. PR #5 adds locally verified PostgreSQL/Compose on its feature branch. PR #4 adds separate backend/frontend CI workflows on its working branch; hosted runs remain unverified. Application database integration, planning features, and deployment remain planned. See the [frontend setup](../frontend/README.md), [backend setup](../backend/README.md), [CI guide](CI.md), [database runbook](runbooks/local-postgres.md), and [current evidence](memory.md).
+The planned MVP includes a React/TypeScript frontend, modular FastAPI/Python
+backend, PostgreSQL, grounded AI planning, owner-only trips, partial replanning,
+and PDF downloads. Frontend/backend foundations and local PostgreSQL/Compose are
+merged in local Git history. PR #6 verifies the first browser-to-FastAPI health
+connection on its feature branch. Backend/frontend CI workflows are present from
+PR #4; hosted execution remains unverified. Application database integration,
+planning features, and deployment remain planned. See the
+[frontend setup and integration guide](../frontend/README.md),
+[backend setup](../backend/README.md), [CI guide](CI.md),
+[database runbook](runbooks/local-postgres.md), and [current evidence](memory.md).
 
 ## File index
 
@@ -77,5 +86,5 @@ roam/
     └── runbooks/local-postgres.md
 ```
 
-Scripts, the production Dockerfile, and backend database integration remain future work. CI workflows exist on the PR #4 branch; hosted execution is not yet verified. This tree shows the main project locations, not every file.
+Scripts, the production Dockerfile, and backend database integration remain future work. CI workflows are included from `origin/main`; hosted execution is not yet verified. This tree shows the main project locations, not every file.
 
