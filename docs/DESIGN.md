@@ -15,6 +15,16 @@ Compose setup on `feat/postgres-docker-setup`. It does not connect FastAPI to th
 database or introduce application tables/migrations. See the
 [local PostgreSQL runbook](runbooks/local-postgres.md) for configuration and evidence.
 
+Implementation note (2026-11-15): PR #6 on `feat/front-back-int` establishes the
+first frontend/backend HTTP connection using existing `GET /health` and
+`{"status":"ok"}`. Vite proxies that exact path from `127.0.0.1:5173` to
+`127.0.0.1:8000`; the browser uses a relative URL, so no CORS change is required.
+The development-only panel uses native fetch, validates response status/content
+type/shape, times out after five seconds, and supports explicit retry. Cleanup
+aborts obsolete requests and suppresses stale results. This is liveness only,
+not database readiness, production serving, or a new business API. See the
+[frontend workflow](../frontend/README.md#http-flow-and-manual-verification).
+
 ## 1. Context and design goals
 
 Roam creates realistic travel itineraries from user preferences. It combines uncertain external data and probabilistic model output with persistent user data, so its core design problem is not “call an LLM.” It is maintaining a trustworthy boundary:
@@ -53,7 +63,11 @@ flowchart LR
     U -->|downloads| D[PDF itinerary]
 ```
 
-The production Docker image contains the built React assets and FastAPI application. FastAPI serves the assets and `/api/v1` from one origin. This avoids cross-site cookie/CORS complexity, cuts hosting components, and makes a low-volume demo cheaper. During development, Vite runs separately and proxies API/auth routes.
+The planned production Docker image will contain the built React assets and
+FastAPI application, serving assets and `/api/v1` from one origin. This avoids
+cross-site cookie/CORS complexity and reduces hosting components. During current
+development, Vite runs separately and proxies only `/health`; API/auth proxy
+routes and production asset serving are not implemented yet.
 
 The web service is a **modular monolith**, not one undifferentiated file. Internal modules communicate through typed Python calls and interfaces. They share a deployment and database because the team and load do not justify distributed failure modes.
 

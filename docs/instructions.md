@@ -105,6 +105,14 @@ Rules:
 
 ## 5. Target local setup
 
+**Current frontend/backend connection (PR #6):** follow the
+[two-terminal frontend guide](../frontend/README.md#run-the-frontend-and-backend-together).
+Vite serves `127.0.0.1:5173` and proxies the existing `/health` path to FastAPI at
+`127.0.0.1:8000`. The development-only diagnostic validates the response and
+supports error recovery. No Docker, database, API key, CORS change, or root `.env`
+is needed for this integration. Servers keep running until stopped with Control+C;
+verification commands such as tests/builds exit when done.
+
 **Current local database setup (PR #5):** follow the [PostgreSQL runbook](runbooks/local-postgres.md)
 for Docker Desktop, local credentials, startup/shutdown, authenticated SQL,
 persistence verification, and troubleshooting. PostgreSQL is independent of the
@@ -119,9 +127,16 @@ with `{"status":"ok"}`. Run `uv run --locked pytest` from `backend/` for
 three endpoint tests using an in-process client; no running server is needed.
 The full-stack commands below remain planned.
 
-**Current frontend-only setup:** the PR #2 branch has a standalone landing page. Follow the [frontend README](../frontend/README.md) for Node 24.22.3, installation, development, and checks, including an option without nvm. No backend, database, Docker, `.env`, or API proxy is needed for this page. This has been checked locally; CI is not yet configured.
+**Current frontend setup:** the landing page still renders when FastAPI is
+stopped; its development connection panel then reports an error. Follow the
+[frontend README](../frontend/README.md) for Node 24.22.3 and commands with or
+without nvm. Vite now uses a health-only proxy and a strict port; CI is not configured here.
 
-The full-stack commands below remain a future target and cannot be used as a working setup yet. The current database and application foundations run independently; migrations and database integration do not exist yet. Configure a unique local password before starting Compose; copying `.env.example` alone is insufficient.
+The database-backed full-stack commands below remain a future target and cannot
+be used as a working setup yet. The frontend/backend health connection above
+works independently of PostgreSQL; migrations and database integration do not
+exist yet. Configure a unique local password before starting Compose; copying
+`.env.example` alone is insufficient.
 
 After Phase 0 scaffolding, a new contributor should be able to run:
 
@@ -145,7 +160,9 @@ npm ci
 npm run dev
 ```
 
-The Vite server should proxy `/api`, `/auth`, and health routes to FastAPI. Tests use isolated configuration/database state. Document exact local URLs and ports after scaffolding; do not bake them into domain code.
+Vite currently proxies only the exact `/health` path. Proxying future `/api` and
+`/auth` routes remains planned. Keep ports and addresses in development
+configuration, not domain code. Production same-origin serving is still future work.
 
 Provide top-level convenience commands after the underlying commands work:
 
@@ -266,6 +283,9 @@ Avoid “utils” dumping grounds. Name modules after domain purpose.
 - Enable TypeScript strict mode; avoid `any` and unchecked casts.
 - Keep route components thin and organize behavior by feature.
 - Use TanStack Query for server state and invalidation; use component/context state for short-lived UI state.
+- Narrow PR #6 exception: the single development-only health diagnostic uses
+  native fetch and local component state, as explicitly requested. Introduce
+  TanStack Query when actual server-state features justify it, not for this probe.
 - Prevent duplicate submissions and send stable idempotency keys for planner operations.
 - On `409 VERSION_CONFLICT`, preserve unsaved text where possible, reload canonical state, and explain the conflict.
 - Map stable server codes to useful actions; do not parse English error strings.

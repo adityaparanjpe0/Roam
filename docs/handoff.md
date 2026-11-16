@@ -1,6 +1,6 @@
 # Roam MVP handoff
 
-> Status: approved MVP plan; frontend/backend foundations are present in local `main`. PR #5 local PostgreSQL setup is verified on its feature branch; application database integration and deployment remain planned. See [memory.md](memory.md) for evidence.
+> Status: frontend/backend and local PostgreSQL foundations are present in local `main`. PR #6 health integration is verified on `feat/front-back-int`; application database integration and deployment remain planned. See [memory.md](memory.md) for evidence.
 > Owners: two developers; assign names in `memory.md` before the first feature branch  
 > Primary goal: build, deploy, measure, and deeply understand a credible AI-native full-stack project
 

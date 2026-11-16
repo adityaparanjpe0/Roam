@@ -1,12 +1,20 @@
 # Roam project documentation pack
 
-> Status: frontend/backend foundations in local `main`; PR #5 local database work verified on its feature branch
+> Status: frontend/backend/database foundations in local `main`; PR #6 HTTP health integration verified on its feature branch
 > Package date: 2026-11-07  
 > Intended audience: two college developers building and defending the project together
 
 This directory contains the source-of-truth project documentation for **Roam**, an AI-native travel planner. Agent instructions live at the repository root; design, workflow, handoff, and evidence records live here.
 
-The planned MVP includes a React/TypeScript frontend, modular FastAPI/Python backend, PostgreSQL, grounded AI planning, owner-only trips, partial replanning, and PDF downloads. The frontend and backend foundations are merged in local Git history. PR #5 adds locally verified PostgreSQL/Compose on its feature branch; application database integration, planning features, CI, and deployment remain planned. See the [frontend setup](../frontend/README.md), [backend setup](../backend/README.md), [database runbook](runbooks/local-postgres.md), and [current evidence](memory.md).
+The planned MVP includes a React/TypeScript frontend, modular FastAPI/Python
+backend, PostgreSQL, grounded AI planning, owner-only trips, partial replanning,
+and PDF downloads. Frontend/backend foundations and local PostgreSQL/Compose are
+merged in local Git history. PR #6 verifies the first browser-to-FastAPI health
+connection on its feature branch. Application database integration, planning
+features, CI, and deployment remain planned. See the
+[frontend setup and integration guide](../frontend/README.md),
+[backend setup](../backend/README.md), [database runbook](runbooks/local-postgres.md),
+and [current evidence](memory.md).
 
 ## File index
 
