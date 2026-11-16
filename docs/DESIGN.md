@@ -619,6 +619,9 @@ concurrency groups and ten-minute limits. Dependency caching stays disabled
 pending measured hosted installation time. These settings do not establish
 hosted success/failure or required-check enforcement evidence.
 
+The [CI guide](CI.md) documents the implemented checks and local reproduction;
+dated verification evidence remains in [project memory](memory.md).
+
 ### Unit and property tests
 
 - interval overlap and travel-gap boundaries;

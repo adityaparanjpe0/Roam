@@ -372,6 +372,9 @@ Test conventions:
 
 ## 14. CI design
 
+See the [CI guide](CI.md) for the PR flow, exact local commands, lockfile
+explanation, failure diagnosis, GitHub log navigation, and current limitations.
+
 **Current branch implementation (PR #4, Milestone 2):**
 [Backend CI](../.github/workflows/backend-ci.yml) defines one independent
 `Backend checks` job on Ubuntu 24.04 for pull requests targeting `main` and

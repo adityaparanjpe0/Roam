@@ -8,6 +8,13 @@
 
 ### Verified facts
 
+- PR #4 Milestone 5: user with Codex assistance added the [CI guide](CI.md)
+  and necessary documentation links/status corrections on 2026-11-16.
+  All 14 workflow command lines are present in the guide. Both packages' local
+  installs and checks passed again; detailed evidence is below. This supersedes
+  the earlier Milestone-5-not-started status. No hosted run, merge, deployment,
+  or Milestone 6 work is claimed.
+
 - PR #4 Milestone 4: user with Codex assistance reviewed both package CI
   workflows on 2026-11-16. Added explicit Bash shell defaults, backend runtime
   logging, and comments preserving all-path triggering. Existing read-only
@@ -172,6 +179,37 @@ Both developers must understand the full architecture. This ledger identifies de
 For each meaningful PR, capture design, code, tests, debugging, and review work separately. Do not equate lines changed with ownership.
 
 ## 7. Evidence ledger
+
+### PR #4 Milestone 5 CI documentation and verification — 2026-11-16
+
+- Owner: user with Codex assistance, on `chore/github-actions-ci`; user reports
+  Milestone 4 complete. Added `docs/CI.md` with the PR flow, workflow/job map,
+  exact local commands, lockfiles, troubleshooting, GitHub log navigation,
+  security/verification limits, and the reason deployment remains deferred.
+  Updated only affected documentation; workflow/application/dependency files
+  are unchanged. No commit, push, merge, PR creation, or Milestone 6 work.
+- Compared the guide against both workflow files: all 14 `run` command lines
+  match. Local Windows execution used existing Python 3.12.16/uv 0.13.8 and
+  portable Node 24.22.3/npm 11.19.1. Absolute Python/uv paths and `npm.cmd`
+  selected those runtimes; process-local temporary cache paths were used.
+  Unlike earlier offline verification, no offline/no-cache command flags were
+  added in this milestone. Commands are the ones in the guide and YAML.
+- Backend: `uv sync --locked --all-groups` passed (29 resolved, 28 installed
+  packages checked); Ruff formatting passed (8 files), Ruff lint passed, mypy
+  passed (6 files), pytest passed (3 tests). The existing Starlette/HTTPX
+  deprecation warning remains visible and unresolved.
+- Frontend: `npm ci --no-audit --no-fund` passed (223 packages), ESLint and
+  TypeScript passed, Vitest passed (3 tests in 1 file), and production build
+  passed (`tsc -b` followed by Vite 8.3.8). These used existing local downloads
+  and an existing backend environment, not a fresh hosted Ubuntu installation.
+- `git diff --check` passed. Reviewed documentation changes for credentials,
+  generated files, and misleading claims; checked local Markdown link targets.
+  Git confirms dependency directories, backend virtual environment, and
+  frontend build outputs remain ignored. No credentials or generated files
+  were found in the intended diff; this is not a dedicated secret-scanner pass.
+- Hosted workflow runs, triggers, cancellation, timeout/required-check
+  enforcement, fresh Ubuntu installs, and deployment remain unverified.
+  `actionlint` remains unavailable; no dependency security audit was run.
 
 ### PR #4 Milestone 4 CI reliability review — 2026-11-16
 
