@@ -119,7 +119,7 @@ with `{"status":"ok"}`. Run `uv run --locked pytest` from `backend/` for
 three endpoint tests using an in-process client; no running server is needed.
 The full-stack commands below remain planned.
 
-**Current frontend-only setup:** the PR #2 branch has a standalone landing page. Follow the [frontend README](../frontend/README.md) for Node 24.22.3, installation, development, and checks, including an option without nvm. No backend, database, Docker, `.env`, or API proxy is needed for this page. This has been checked locally; CI is not yet configured.
+**Current frontend-only setup:** the frontend foundation has a standalone landing page. Follow the [frontend README](../frontend/README.md) for Node 24.22.3, installation, development, and checks, including an option without nvm. No backend, database, Docker, `.env`, or API proxy is needed for this page. Local checks pass; PR #4 Milestone 3 adds a frontend CI workflow on the working branch, with hosted execution still unverified.
 
 The full-stack commands below remain a future target and cannot be used as a working setup yet. The current database and application foundations run independently; migrations and database integration do not exist yet. Configure a unique local password before starting Compose; copying `.env.example` alone is insufficient.
 
@@ -397,7 +397,34 @@ If sync reports a stale lockfile, update and review the dependency files locally
 do not remove `--locked` to make CI pass. Local results are recorded in
 [memory](memory.md); a GitHub run is still needed to verify hosted execution.
 
-The complete target pipeline below remains planned beyond the backend checks:
+**Frontend branch implementation (PR #4, Milestone 3):**
+[Frontend CI](../.github/workflows/frontend-ci.yml) defines a separate
+`Frontend checks` job on Ubuntu 24.04 with the same event filters, permissions,
+timeout, cancellation, and credential-persistence policy. It reads Node 24.22.3
+from the root `.nvmrc`, uses bundled npm, logs both runtime versions, and disables
+automatic package caching. From `frontend/`, its commands are:
+
+```sh
+node --version
+npm --version
+npm ci --no-audit --no-fund
+npm run lint
+npm run typecheck
+npm run test -- --run
+npm run build
+```
+
+`npm ci` requires the committed lockfile, rejects dependency declarations that
+disagree with it, replaces any existing `node_modules`, and does not rewrite the
+package manifests/lockfile. This gives each CI run a clean locked installation.
+`--no-audit --no-fund` omits install-time advisory requests and funding messages;
+it does not suppress installation, lint, type, test, or build errors. Dependency
+security scanning remains a separate planned gate. The explicit typecheck has a
+named failure step; the build also runs `tsc -b` before Vite. Vitest runs once and
+exits via `--run`. No new test framework or backend service is required.
+
+The complete target pipeline below remains the roadmap; only the backend and
+frontend package checks are implemented on this branch:
 
 1. documentation/secret/basic repository checks;
 2. backend format/lint/type/unit tests;

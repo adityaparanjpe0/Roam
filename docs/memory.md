@@ -8,6 +8,14 @@
 
 ### Verified facts
 
+- PR #4 Milestone 3: user with Codex assistance added the separate
+  [frontend CI workflow](../.github/workflows/frontend-ci.yml) on
+  `chore/github-actions-ci`. On 2026-11-16, clean `npm ci`, ESLint, TypeScript,
+  all three existing Vitest tests, and the production build passed on Windows
+  with Node 24.22.3/npm 11.19.1. Exact evidence is below. No hosted CI run or
+  merge is claimed. This supersedes the Milestone 2 frontend-CI-planned status;
+  Milestone 4 has not begun.
+
 - PR #4 Milestone 2: user with Codex assistance added the
   [backend CI workflow](../.github/workflows/backend-ci.yml) on
   `chore/github-actions-ci`. Local locked sync, Ruff, mypy, and all three health
@@ -40,7 +48,7 @@
 ### Not yet verified or implemented
 
 - The original documentation-only and backend-placeholder snapshots are superseded by the foundation merge records above and the PR #5 database verification. Production deployment remains planned.
-- Beyond the backend health endpoint tests and branch-only backend CI workflow, no database schema, migration, authentication, LLM integration, Places/Routes integration, validation engine, replanning engine, PDF generator, Docker image, deployment, benchmark, or production run is claimed. Hosted CI execution remains unverified.
+- Beyond the application foundations and branch-only backend/frontend CI workflows, no database schema, migration, authentication, LLM integration, Places/Routes integration, validation engine, replanning engine, PDF generator, Docker image, deployment, benchmark, or production run is claimed. Hosted CI execution remains unverified.
 - No provider credentials, billing account, quotas, hosting account, domain, or OAuth consent configuration is claimed.
 - Local frontend checks are recorded below. No performance, reliability, security certification, user-satisfaction, cost, or ATS outcome has been measured.
 - No resume bullet should use past-tense implementation claims based only on these documents.
@@ -125,7 +133,7 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 
 | Capability | Status | Owner | Evidence | Next acceptance gate |
 |---|---|---|---|---|
-| Repository scaffold and CI | IN_PROGRESS | User with Codex assistance; reviewer not recorded | [Backend workflow](../.github/workflows/backend-ci.yml); local Milestone 2 checks below | Hosted CI failure/success proof; frontend CI and broader gates remain planned |
+| Repository scaffold and CI | IN_PROGRESS | User with Codex assistance; user reports Milestone 2 reviewed | [Backend workflow](../.github/workflows/backend-ci.yml), [frontend workflow](../.github/workflows/frontend-ci.yml); local Milestone 2/3 checks below | Hosted CI failure/success proof; broader gates remain planned |
 | Backend foundation / historical PR #3 | IMPLEMENTED | User with Codex assistance; reviewer not recorded | Local `main` merge `e08a3f0`; `8f2115c`; [backend setup](../backend/README.md); historical verification below | Test-client warning follow-up; CI and reviewer evidence not recorded |
 | Frontend foundation / historical PR #2 | IMPLEMENTED | Frontend contributor; reviewer not recorded | Local `main` merge `2281737`; [tests](../frontend/src/App.test.tsx); historical verification below | CI and reviewer evidence not recorded |
 | Local PostgreSQL / PR #5 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | `f715de3`, `6bb7bea`; [runbook and verification](runbooks/local-postgres.md) | Documentation review, teammate walkthrough, and merge evidence; no production claim |
@@ -155,6 +163,47 @@ Both developers must understand the full architecture. This ledger identifies de
 For each meaningful PR, capture design, code, tests, debugging, and review work separately. Do not equate lines changed with ownership.
 
 ## 7. Evidence ledger
+
+### PR #4 Milestone 3 frontend CI verification — 2026-11-16
+
+- Owner: user with Codex assistance, on `chore/github-actions-ci`. User approved
+  and reported Milestone 2 reviewed before this work. No commit, push,
+  deployment, or Milestone 4 work performed by Codex for this milestone.
+- Added `Frontend CI` / `Frontend checks` on Ubuntu 24.04 for PRs targeting
+  `main` and pushes to `main`, independently of backend CI. Uses root `.nvmrc`
+  (Node 24.22.3), bundled npm, `contents: read`, no persisted checkout
+  credentials/cache, a ten-minute timeout, and cancellation of superseded runs.
+  No application secrets or paid APIs are required.
+- Official [setup-node v7.1.0 release](https://github.com/actions/setup-node/releases/tag/v7.1.0)
+  and commit `949feb2413d6458794dcd2491c4babbbce0c15c1` verified upstream;
+  checkout uses the same v7.0.1 commit as backend CI.
+- Node/npm were not on PATH. Downloaded the official portable Windows Node
+  24.22.3 archive into a temporary tools directory, checked its SHA-256 against
+  the distribution's `SHASUMS256.txt`, and used its bundled npm 11.19.1.
+  No global runtime installation or persistent PATH change was made.
+- From `frontend/`, with the temporary runtime directory prepended to the
+  process PATH, these commands all exited 0 (Windows invoked `npm.cmd`):
+
+  ```text
+  node --version
+  npm --version
+  npm ci --no-audit --no-fund
+  npm run lint
+  npm run typecheck
+  npm run test -- --run
+  npm run build
+  ```
+
+- Clean installation added 223 packages. Sandbox registry requests initially
+  failed with EACCES; the approved network-enabled retry passed. Lint and strict
+  TypeScript checks passed; Vitest 5.1.0 passed 3 tests in 1 file; Vite 8.3.8
+  built production assets after `tsc -b`. No application source, test framework,
+  dependency declarations, lockfiles, or backend workflow changed.
+- Workflow editor diagnostics and `git diff --check` passed. `actionlint` was
+  unavailable. No fresh Ubuntu/GitHub run, trigger/cancellation test, required
+  check enforcement, deployment, or current dependency audit is claimed.
+  Generated dependencies and build assets remain ignored. Historical frontend
+  advisory results below remain dated observations.
 
 ### PR #4 Milestone 2 backend CI verification — 2026-11-16
 
