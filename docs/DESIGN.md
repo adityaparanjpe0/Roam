@@ -601,6 +601,13 @@ The free-budget baseline may rely on host logs plus `planner_runs` and a small a
 
 ## 14. Testing strategy
 
+PR #4 Milestone 2 adds a [backend CI workflow](../.github/workflows/backend-ci.yml)
+on `chore/github-actions-ci`: Python 3.12, locked uv dependency installation,
+Ruff formatting/lint, strict mypy, and the existing dependency-free health tests.
+It targets pull requests into `main` and pushes to `main` on an Ubuntu runner.
+GitHub execution remains unverified until a run is recorded. Frontend CI,
+PostgreSQL integration/migrations, e2e, and production image checks remain planned.
+
 ### Unit and property tests
 
 - interval overlap and travel-gap boundaries;

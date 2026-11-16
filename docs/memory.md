@@ -1,12 +1,19 @@
 # Roam durable project memory
 
 > Purpose: preserve verified context across developers and AI sessions  
-> Last updated: 2026-11-15
+> Last updated: 2026-11-16
 > Rule: this file records decisions and evidence; it must not turn plans into facts
 
 ## 1. Current snapshot
 
 ### Verified facts
+
+- PR #4 Milestone 2: user with Codex assistance added the
+  [backend CI workflow](../.github/workflows/backend-ci.yml) on
+  `chore/github-actions-ci`. Local locked sync, Ruff, mypy, and all three health
+  tests passed on 2026-11-16; exact evidence is below. No commit, hosted CI run,
+  teammate review, or merge is claimed. Frontend CI remains planned for
+  Milestone 3. This supersedes only the earlier claim that no CI workflow exists.
 
 - Backend foundation: `b829d9b` (Python/uv/app setup), `9cc6424` (typed health
   endpoint), and `8f2115c` (tests/documentation) are included in local `main` via
@@ -33,7 +40,7 @@
 ### Not yet verified or implemented
 
 - The original documentation-only and backend-placeholder snapshots are superseded by the foundation merge records above and the PR #5 database verification. Production deployment remains planned.
-- Beyond the backend health endpoint tests, no database schema, migration, authentication, LLM integration, Places/Routes integration, validation engine, replanning engine, PDF generator, CI workflow, Docker image, deployment, benchmark, or production run is claimed.
+- Beyond the backend health endpoint tests and branch-only backend CI workflow, no database schema, migration, authentication, LLM integration, Places/Routes integration, validation engine, replanning engine, PDF generator, Docker image, deployment, benchmark, or production run is claimed. Hosted CI execution remains unverified.
 - No provider credentials, billing account, quotas, hosting account, domain, or OAuth consent configuration is claimed.
 - Local frontend checks are recorded below. No performance, reliability, security certification, user-satisfaction, cost, or ATS outcome has been measured.
 - No resume bullet should use past-tense implementation claims based only on these documents.
@@ -118,7 +125,7 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 
 | Capability | Status | Owner | Evidence | Next acceptance gate |
 |---|---|---|---|---|
-| Repository scaffold and CI | PLANNED | Unassigned | None | Clean checkout and CI failure/success proof |
+| Repository scaffold and CI | IN_PROGRESS | User with Codex assistance; reviewer not recorded | [Backend workflow](../.github/workflows/backend-ci.yml); local Milestone 2 checks below | Hosted CI failure/success proof; frontend CI and broader gates remain planned |
 | Backend foundation / historical PR #3 | IMPLEMENTED | User with Codex assistance; reviewer not recorded | Local `main` merge `e08a3f0`; `8f2115c`; [backend setup](../backend/README.md); historical verification below | Test-client warning follow-up; CI and reviewer evidence not recorded |
 | Frontend foundation / historical PR #2 | IMPLEMENTED | Frontend contributor; reviewer not recorded | Local `main` merge `2281737`; [tests](../frontend/src/App.test.tsx); historical verification below | CI and reviewer evidence not recorded |
 | Local PostgreSQL / PR #5 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | `f715de3`, `6bb7bea`; [runbook and verification](runbooks/local-postgres.md) | Documentation review, teammate walkthrough, and merge evidence; no production claim |
@@ -148,6 +155,47 @@ Both developers must understand the full architecture. This ledger identifies de
 For each meaningful PR, capture design, code, tests, debugging, and review work separately. Do not equate lines changed with ownership.
 
 ## 7. Evidence ledger
+
+### PR #4 Milestone 2 backend CI verification — 2026-11-16
+
+- Owner: user with Codex assistance, on `chore/github-actions-ci`; no commit,
+  push, PR creation, teammate review, merge, or GitHub run performed.
+- Workflow: `Backend CI` / `Backend checks`, Ubuntu 24.04, PRs targeting `main`
+  and pushes to `main`. Python comes from `backend/.python-version` (3.12),
+  uv is pinned to 0.13.8, and dependency installation uses
+  `uv sync --locked --all-groups`. No application logic/dependencies changed.
+- Official action release tags and full commits were checked against upstream:
+  [checkout v7.0.1](https://github.com/actions/checkout/releases/tag/v7.0.1),
+  [setup-python v7.1.0](https://github.com/actions/setup-python/releases/tag/v7.1.0),
+  [setup-uv v10.3.3](https://github.com/astral-sh/setup-uv/releases/tag/v10.3.3).
+  The workflow pins immutable commits, grants only `contents: read`, disables
+  persisted checkout credentials and dependency caching, cancels superseded
+  runs, and limits the job to ten minutes. It needs no application secrets,
+  PostgreSQL, Docker, deployment, or paid provider calls.
+- Local environment: Windows, existing Python 3.12.16 virtual environment,
+  uv 0.13.8, Ruff 0.17.5, mypy 1.20.2, pytest 9.2.0. From `backend/`, the
+  installed `C:/Users/rohan/.local/bin/uv.exe` executable ran these commands:
+
+  ```text
+  uv --no-cache sync --locked --all-groups --offline
+  uv --no-cache run --no-sync --offline ruff format --check .
+  uv --no-cache run --no-sync --offline ruff check .
+  uv --no-cache run --no-sync --offline mypy app
+  uv --no-cache run --no-sync --offline pytest
+  ```
+
+- All commands exited 0. Sync resolved 29 packages and checked 28 installed
+  packages; Ruff reported 8 files already formatted and no lint errors; mypy
+  passed for 6 source files; pytest passed all 3 tests. One existing
+  Starlette/HTTPX deprecation warning remains visible, with no suppression.
+- Offline/no-cache flags avoided network and persistent uv-cache access during
+  local verification; the workflow uses normal online dependency installation.
+  This is not fresh Linux installation evidence.
+- Editor diagnostics found no errors in the workflow; `git diff --check`
+  passed. `actionlint` was unavailable, so no actionlint pass is claimed.
+  Event triggering, action execution, fresh Ubuntu dependency installation,
+  hosted success/failure reporting, concurrency cancellation, and required-check
+  settings remain unverified. The broader CI plan remains incomplete.
 
 ### PR #5 local database verification — 2026-11-15
 

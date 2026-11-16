@@ -135,6 +135,11 @@ Phases are vertical slices. Each should end with a merged, demonstrable behavior
 
 ### Phase 0 — Repository and team operating system
 
+PR #4 Milestone 2 implements only the [backend CI workflow](../.github/workflows/backend-ci.yml)
+on the working branch. Hosted success/failure evidence and required-check settings
+remain unverified. Frontend CI is deferred to Milestone 3; the broader Phase 0
+acceptance criteria below are not yet complete.
+
 **Deliverables**
 
 - Initialize the monorepo, licenses, code owners/ownership ledger, issue templates, PR template, branch protection, and CI skeleton.

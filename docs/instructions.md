@@ -372,7 +372,32 @@ Test conventions:
 
 ## 14. CI design
 
-On every pull request:
+**Current branch implementation (PR #4, Milestone 2):**
+[Backend CI](../.github/workflows/backend-ci.yml) defines one independent
+`Backend checks` job on Ubuntu 24.04 for pull requests targeting `main` and
+pushes to `main`. It reads `backend/.python-version`, installs uv 0.13.8,
+and runs the following commands from `backend/`:
+
+```sh
+uv sync --locked --all-groups
+uv run --no-sync ruff format --check .
+uv run --no-sync ruff check .
+uv run --no-sync mypy app
+uv run --no-sync pytest
+```
+
+`--locked` rejects stale dependency declarations without rewriting `uv.lock`.
+`--no-sync` runs checks in the environment installed by the preceding sync.
+Each check is a separate required step: failures fail the job. The workflow
+uses read-only repository permissions, immutable action commits, no persisted
+checkout credentials, no dependency cache, a ten-minute timeout, and cancellation
+of superseded runs. No application secrets, database, Docker, or provider calls
+are required. Action/runtime/package downloads still require network access.
+If sync reports a stale lockfile, update and review the dependency files locally;
+do not remove `--locked` to make CI pass. Local results are recorded in
+[memory](memory.md); a GitHub run is still needed to verify hosted execution.
+
+The complete target pipeline below remains planned beyond the backend checks:
 
 1. documentation/secret/basic repository checks;
 2. backend format/lint/type/unit tests;
