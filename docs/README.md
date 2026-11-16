@@ -6,7 +6,7 @@
 
 This directory contains the source-of-truth project documentation for **Roam**, an AI-native travel planner. Agent instructions live at the repository root; design, workflow, handoff, and evidence records live here.
 
-The planned MVP includes a React/TypeScript frontend, modular FastAPI/Python backend, PostgreSQL, grounded AI planning, owner-only trips, partial replanning, and PDF downloads. The frontend and backend foundations are merged in local Git history. PR #5 adds locally verified PostgreSQL/Compose on its feature branch; application database integration, planning features, CI, and deployment remain planned. See the [frontend setup](../frontend/README.md), [backend setup](../backend/README.md), [database runbook](runbooks/local-postgres.md), and [current evidence](memory.md).
+The planned MVP includes a React/TypeScript frontend, modular FastAPI/Python backend, PostgreSQL, grounded AI planning, owner-only trips, partial replanning, and PDF downloads. The frontend and backend foundations are merged in local Git history. PR #5 adds locally verified PostgreSQL/Compose on its feature branch. PR #4 adds separate backend/frontend CI workflows on its working branch; hosted runs remain unverified. Application database integration, planning features, and deployment remain planned. See the [frontend setup](../frontend/README.md), [backend setup](../backend/README.md), [CI guide](CI.md), [database runbook](runbooks/local-postgres.md), and [current evidence](memory.md).
 
 ## File index
 
@@ -18,6 +18,7 @@ The planned MVP includes a React/TypeScript frontend, modular FastAPI/Python bac
 | [`SKILL.md`](../SKILL.md) | Codex-compatible assistants | Reusable Roam development workflows for features, migrations, providers, validation, PDF work, and pull requests |
 | [`DESIGN.md`](DESIGN.md) | Developers and interviewers | Architecture, data model, APIs, flows, security, reliability, cost, licensing, and scaling decisions |
 | [`instructions.md`](instructions.md) | Human contributors | Local setup target, engineering standards, GitHub workflow, CI, testing, migrations, and deployment practices |
+| [`CI.md`](CI.md) | Both developers | Current CI workflows, exact local commands, failure diagnosis, security decisions, and verification limits |
 | [`prompt.md`](prompt.md) | Future AI sessions | Copyable master prompt for bounded, evidence-based implementation work |
 | [`memory.md`](memory.md) | Both developers and assistants | Durable decisions, current status, open questions, ownership log, evidence ledger, and change log |
 | [`runbooks/local-postgres.md`](runbooks/local-postgres.md) | Both developers | Local database setup, operations, persistence evidence, and production-security boundary |
@@ -61,11 +62,13 @@ roam/
 ├── SKILL.md
 ├── README.md
 ├── .nvmrc
+├── .github/workflows/   # backend and frontend CI
 ├── frontend/
 ├── backend/             # FastAPI foundation; no database integration yet
 ├── docker-compose.yml  # local PostgreSQL only
 └── docs/
     ├── DESIGN.md
+    ├── CI.md
     ├── handoff.md
     ├── instructions.md
     ├── memory.md
@@ -74,5 +77,5 @@ roam/
     └── runbooks/local-postgres.md
 ```
 
-Scripts, CI, the production Dockerfile, and backend database integration remain future work. This tree shows the main project locations, not every file.
+Scripts, the production Dockerfile, and backend database integration remain future work. CI workflows exist on the PR #4 branch; hosted execution is not yet verified. This tree shows the main project locations, not every file.
 
