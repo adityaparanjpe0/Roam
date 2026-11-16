@@ -1,6 +1,7 @@
 name: Frontend CI
 
 on:
+  # Run for all PR changes so required checks are never skipped by path filters.
   pull_request:
     branches: [main]
   push:
@@ -20,6 +21,7 @@ jobs:
     timeout-minutes: 10
     defaults:
       run:
+        shell: bash
         working-directory: frontend
 
     steps:

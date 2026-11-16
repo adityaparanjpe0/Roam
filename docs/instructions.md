@@ -423,6 +423,30 @@ security scanning remains a separate planned gate. The explicit typecheck has a
 named failure step; the build also runs `tsc -b` before Vite. Vitest runs once and
 exits via `--run`. No new test framework or backend service is required.
 
+**Reliability review (PR #4, Milestone 4):** both workflows intentionally run
+for all changed paths, including frontend-only, backend-only, and documentation
+changes. Keep `Backend checks` and `Frontend checks` distinct and stable for
+future required-check settings. Do not use `pull_request_target`, path filters,
+`continue-on-error`, or success fallbacks to hide failures. Ordinary PRs run
+without application credentials or production environment variables.
+
+Both jobs explicitly select Bash; GitHub invokes explicit Bash steps with
+`-e` and `-o pipefail`, so command and pipeline errors propagate to the step.
+Named validation steps retain tool error output. Backend Python/uv and frontend
+Node/npm versions are logged to make runtime differences visible. Python follows
+the committed 3.12 minor; Node and uv use exact version pins. Locked dependency
+installation does not make the entire hosted runner image immutable.
+
+Concurrency groups include the workflow name and PR number/ref, so superseded
+runs cancel within each workflow without cancelling the other package's checks.
+Keep the ten-minute job limits and disabled download caches for now: there is no
+hosted timing evidence that cache maintenance would be worthwhile. Reconsider a
+lockfile-keyed download cache only after measuring CI installation time; do not
+cache virtual environments, `node_modules`, secrets, or application data.
+Recheck upstream action releases when updating SHA pins and their version
+comments together. Local validation cannot prove hosted triggers, cancellation,
+fresh Linux installation, or branch protection enforcement.
+
 The complete target pipeline below remains the roadmap; only the backend and
 frontend package checks are implemented on this branch:
 

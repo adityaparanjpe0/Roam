@@ -612,6 +612,13 @@ independently without application secrets or services. GitHub execution remains
 unverified until runs are recorded. PostgreSQL integration/migrations, e2e,
 and production image checks remain planned.
 
+PR #4 Milestone 4 reviews these package workflows without expanding CI scope:
+both run for all changed paths, use read-only tokens and immutable action pins,
+log tool runtimes, explicitly use Bash failure propagation, and retain separate
+concurrency groups and ten-minute limits. Dependency caching stays disabled
+pending measured hosted installation time. These settings do not establish
+hosted success/failure or required-check enforcement evidence.
+
 ### Unit and property tests
 
 - interval overlap and travel-gap boundaries;

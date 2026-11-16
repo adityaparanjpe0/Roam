@@ -8,6 +8,15 @@
 
 ### Verified facts
 
+- PR #4 Milestone 4: user with Codex assistance reviewed both package CI
+  workflows on 2026-11-16. Added explicit Bash shell defaults, backend runtime
+  logging, and comments preserving all-path triggering. Existing read-only
+  permissions, locked installs, supported action SHA pins, unique names,
+  ten-minute limits, separate cancellation groups, and disabled caches were
+  retained. Local package checks and Bash failure propagation passed; evidence
+  is below. This supersedes the earlier Milestone-4-not-started status.
+  Milestone 5 has not begun; hosted CI evidence remains unverified.
+
 - PR #4 Milestone 3: user with Codex assistance added the separate
   [frontend CI workflow](../.github/workflows/frontend-ci.yml) on
   `chore/github-actions-ci`. On 2026-11-16, clean `npm ci`, ESLint, TypeScript,
@@ -163,6 +172,41 @@ Both developers must understand the full architecture. This ledger identifies de
 For each meaningful PR, capture design, code, tests, debugging, and review work separately. Do not equate lines changed with ownership.
 
 ## 7. Evidence ledger
+
+### PR #4 Milestone 4 CI reliability review — 2026-11-16
+
+- Owner: user with Codex assistance, on `chore/github-actions-ci`. User reports
+  Milestones 2/3 complete. No commit, push, merge, deployment, application code,
+  dependency, lockfile, or infrastructure change made in this milestone.
+- Reviewed both workflows against current package/runtime configuration:
+  `contents: read`; ordinary PRs targeting `main` and pushes to `main`; no path
+  filters, `pull_request_target`, matrices, job dependencies, error suppression,
+  application secrets, or production environment variables. Workflow/job names
+  remain distinct and stable. Both run for frontend-only or backend-only changes
+  by configuration; hosted event execution has not been observed.
+- Rechecked upstream latest release pages: checkout v7.0.1, setup-python
+  v7.1.0, setup-node v7.1.0, and setup-uv v10.3.3. Existing SHA pins retained.
+  Retained `uv sync --locked --all-groups` and `npm ci --no-audit --no-fund`.
+  No hosted timing evidence justifies adding cache complexity yet; ten-minute
+  limits and workflow-specific concurrency cancellation remain unchanged.
+- Added explicit `shell: bash` to both jobs and Python/uv version logging to
+  backend CI. [GitHub's shell documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#defaultsrunshell)
+  specifies Bash invocation with `-e` and `-o pipefail`. Local Git Bash executed
+  `false | true` and `false; exit 0` with `--noprofile --norc -eo pipefail`;
+  both exited 1 as expected. No application test was deliberately changed.
+- Windows verification: Python 3.12.16/uv 0.13.8; portable Node 24.22.3/npm
+  11.19.1 from Milestone 3 with process-local PATH. From `backend/`, ran the
+  same five Milestone 2 local commands (`uv --no-cache`, locked sync and
+  `run --no-sync`, all with `--offline`): sync passed, Ruff format passed for
+  8 files, Ruff lint passed, mypy passed for 6 files, pytest passed 3 tests.
+  The existing Starlette/HTTPX deprecation warning remains unsuppressed.
+- From `frontend/`, `npm ci --no-audit --no-fund --offline` passed using the
+  temporary npm download cache (223 packages), then `npm run lint`,
+  `npm run typecheck`, `npm run test -- --run` (3 tests), and `npm run build`
+  all passed. Local offline installs do not prove a fresh online Ubuntu install.
+- Editor diagnostics for both workflows and `git diff --check` passed.
+  `actionlint` is unavailable. Hosted event/action execution, cancellation,
+  timeout enforcement, and required-check settings remain unverified.
 
 ### PR #4 Milestone 3 frontend CI verification — 2026-11-16
 

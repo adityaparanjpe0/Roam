@@ -140,6 +140,9 @@ PR #4 Milestones 2 and 3 implement separate
 [frontend](../.github/workflows/frontend-ci.yml) CI workflows on the working
 branch. Hosted success/failure evidence and required-check settings remain
 unverified; the broader Phase 0 acceptance criteria below are not yet complete.
+Milestone 4 reviewed both workflows and added explicit Bash failure propagation
+and backend runtime logging; caching remains disabled pending hosted timing
+evidence. Milestone 5 has not begun.
 
 **Deliverables**
 
