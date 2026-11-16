@@ -1,12 +1,56 @@
 # Roam durable project memory
 
 > Purpose: preserve verified context across developers and AI sessions  
-> Last updated: 2026-11-15
+> Last updated: 2026-11-16
 > Rule: this file records decisions and evidence; it must not turn plans into facts
 
 ## 1. Current snapshot
 
 ### Verified facts
+
+- Merge reconciliation (2026-11-16): `origin/main` at `80e3d3a` includes PR #4's
+  CI workflows and guide. The in-progress merge preserves those changes and
+  PR #6's integration work. Historical CI branch-only/unmerged statements below
+  are superseded for merge status; hosted execution and teammate approval remain
+  unverified. No workflow or application source was changed during resolution.
+- Post-resolution local checks (2026-11-16): the workflow-equivalent locked
+  installs, backend Ruff format/lint, mypy, and pytest passed (3 tests, existing
+  Starlette/HTTPX warning). Frontend clean install, ESLint, typecheck, Vitest
+  (32 tests), and production build passed with pinned Node 24.22.3. Both complete
+  CI and integration evidence sections were retained verbatim. These macOS
+  results do not verify hosted Ubuntu execution. The merge commit is pending
+  developer review; Codex did not commit or push.
+
+- PR #4 Milestone 5: user with Codex assistance added the [CI guide](CI.md)
+  and necessary documentation links/status corrections on 2026-11-16.
+  All 14 workflow command lines are present in the guide. Both packages' local
+  installs and checks passed again; detailed evidence is below. This supersedes
+  the earlier Milestone-5-not-started status. No hosted run, merge, deployment,
+  or Milestone 6 work is claimed.
+
+- PR #4 Milestone 4: user with Codex assistance reviewed both package CI
+  workflows on 2026-11-16. Added explicit Bash shell defaults, backend runtime
+  logging, and comments preserving all-path triggering. Existing read-only
+  permissions, locked installs, supported action SHA pins, unique names,
+  ten-minute limits, separate cancellation groups, and disabled caches were
+  retained. Local package checks and Bash failure propagation passed; evidence
+  is below. This supersedes the earlier Milestone-4-not-started status.
+  Milestone 5 has not begun; hosted CI evidence remains unverified.
+
+- PR #4 Milestone 3: user with Codex assistance added the separate
+  [frontend CI workflow](../.github/workflows/frontend-ci.yml) on
+  `chore/github-actions-ci`. On 2026-11-16, clean `npm ci`, ESLint, TypeScript,
+  all three existing Vitest tests, and the production build passed on Windows
+  with Node 24.22.3/npm 11.19.1. Exact evidence is below. No hosted CI run or
+  merge is claimed. This supersedes the Milestone 2 frontend-CI-planned status;
+  Milestone 4 has not begun.
+
+- PR #4 Milestone 2: user with Codex assistance added the
+  [backend CI workflow](../.github/workflows/backend-ci.yml) on
+  `chore/github-actions-ci`. Local locked sync, Ruff, mypy, and all three health
+  tests passed on 2026-11-16; exact evidence is below. No commit, hosted CI run,
+  teammate review, or merge is claimed. Frontend CI remains planned for
+  Milestone 3. This supersedes only the earlier claim that no CI workflow exists.
 
 - Backend foundation: `b829d9b` (Python/uv/app setup), `9cc6424` (typed health
   endpoint), and `8f2115c` (tests/documentation) are included in local `main` via
@@ -42,8 +86,9 @@
 - The original documentation-only and backend-placeholder snapshots are superseded by the foundation merge records above and the PR #5 database verification. Production deployment remains planned.
 - Beyond the foundations and HTTP health integration above, no database schema,
   migration, authentication, LLM/Places/Routes integration, validation/replanning
-  engine, PDF generator, CI workflow, production application image, deployment,
-  benchmark, or production run is claimed.
+  engine, PDF generator, production application image, deployment, benchmark, or
+  production run is claimed. Backend/frontend CI workflow files are present;
+  hosted CI execution remains unverified.
 - No provider credentials, billing account, quotas, hosting account, domain, or OAuth consent configuration is claimed.
 - Local frontend checks are recorded below. No performance, reliability, security certification, user-satisfaction, cost, or ATS outcome has been measured.
 - No resume bullet should use past-tense implementation claims based only on these documents.
@@ -128,7 +173,7 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 
 | Capability | Status | Owner | Evidence | Next acceptance gate |
 |---|---|---|---|---|
-| Repository scaffold and CI | PLANNED | Unassigned | None | Clean checkout and CI failure/success proof |
+| Repository scaffold and CI | IN_PROGRESS | User with Codex assistance; user reports Milestone 2 reviewed | [Backend workflow](../.github/workflows/backend-ci.yml), [frontend workflow](../.github/workflows/frontend-ci.yml); local Milestone 2/3 checks below | Hosted CI failure/success proof; broader gates remain planned |
 | Backend foundation / historical PR #3 | IMPLEMENTED | User with Codex assistance; reviewer not recorded | Local `main` merge `e08a3f0`; `8f2115c`; [backend setup](../backend/README.md); historical verification below | Test-client warning follow-up; CI and reviewer evidence not recorded |
 | Frontend foundation / historical PR #2 | IMPLEMENTED | Frontend contributor; reviewer not recorded | Local `main` merge `2281737`; [tests](../frontend/src/App.test.tsx); historical verification below | CI and reviewer evidence not recorded |
 | Local PostgreSQL / historical PR #5 | IMPLEMENTED | User with Codex assistance; reviewer not recorded | Local `main` merge `2e4fa6f`; `f715de3`, `6bb7bea`, `7cf6e1f`; [runbook](runbooks/local-postgres.md) | Production hardening remains planned; reviewer evidence not recorded |
@@ -202,6 +247,154 @@ For each meaningful PR, capture design, code, tests, debugging, and review work 
 - Remaining limits: no Windows live integration, cross-browser/screen-reader
   audit, committed e2e suite, database readiness check, or production deployment
   verification. Historical dependency advisory notes remain in the frontend README.
+
+### PR #4 Milestone 5 CI documentation and verification — 2026-11-16
+
+- Owner: user with Codex assistance, on `chore/github-actions-ci`; user reports
+  Milestone 4 complete. Added `docs/CI.md` with the PR flow, workflow/job map,
+  exact local commands, lockfiles, troubleshooting, GitHub log navigation,
+  security/verification limits, and the reason deployment remains deferred.
+  Updated only affected documentation; workflow/application/dependency files
+  are unchanged. No commit, push, merge, PR creation, or Milestone 6 work.
+- Compared the guide against both workflow files: all 14 `run` command lines
+  match. Local Windows execution used existing Python 3.12.16/uv 0.13.8 and
+  portable Node 24.22.3/npm 11.19.1. Absolute Python/uv paths and `npm.cmd`
+  selected those runtimes; process-local temporary cache paths were used.
+  Unlike earlier offline verification, no offline/no-cache command flags were
+  added in this milestone. Commands are the ones in the guide and YAML.
+- Backend: `uv sync --locked --all-groups` passed (29 resolved, 28 installed
+  packages checked); Ruff formatting passed (8 files), Ruff lint passed, mypy
+  passed (6 files), pytest passed (3 tests). The existing Starlette/HTTPX
+  deprecation warning remains visible and unresolved.
+- Frontend: `npm ci --no-audit --no-fund` passed (223 packages), ESLint and
+  TypeScript passed, Vitest passed (3 tests in 1 file), and production build
+  passed (`tsc -b` followed by Vite 8.3.8). These used existing local downloads
+  and an existing backend environment, not a fresh hosted Ubuntu installation.
+- `git diff --check` passed. Reviewed documentation changes for credentials,
+  generated files, and misleading claims; checked local Markdown link targets.
+  Git confirms dependency directories, backend virtual environment, and
+  frontend build outputs remain ignored. No credentials or generated files
+  were found in the intended diff; this is not a dedicated secret-scanner pass.
+- Hosted workflow runs, triggers, cancellation, timeout/required-check
+  enforcement, fresh Ubuntu installs, and deployment remain unverified.
+  `actionlint` remains unavailable; no dependency security audit was run.
+
+### PR #4 Milestone 4 CI reliability review — 2026-11-16
+
+- Owner: user with Codex assistance, on `chore/github-actions-ci`. User reports
+  Milestones 2/3 complete. No commit, push, merge, deployment, application code,
+  dependency, lockfile, or infrastructure change made in this milestone.
+- Reviewed both workflows against current package/runtime configuration:
+  `contents: read`; ordinary PRs targeting `main` and pushes to `main`; no path
+  filters, `pull_request_target`, matrices, job dependencies, error suppression,
+  application secrets, or production environment variables. Workflow/job names
+  remain distinct and stable. Both run for frontend-only or backend-only changes
+  by configuration; hosted event execution has not been observed.
+- Rechecked upstream latest release pages: checkout v7.0.1, setup-python
+  v7.1.0, setup-node v7.1.0, and setup-uv v10.3.3. Existing SHA pins retained.
+  Retained `uv sync --locked --all-groups` and `npm ci --no-audit --no-fund`.
+  No hosted timing evidence justifies adding cache complexity yet; ten-minute
+  limits and workflow-specific concurrency cancellation remain unchanged.
+- Added explicit `shell: bash` to both jobs and Python/uv version logging to
+  backend CI. [GitHub's shell documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#defaultsrunshell)
+  specifies Bash invocation with `-e` and `-o pipefail`. Local Git Bash executed
+  `false | true` and `false; exit 0` with `--noprofile --norc -eo pipefail`;
+  both exited 1 as expected. No application test was deliberately changed.
+- Windows verification: Python 3.12.16/uv 0.13.8; portable Node 24.22.3/npm
+  11.19.1 from Milestone 3 with process-local PATH. From `backend/`, ran the
+  same five Milestone 2 local commands (`uv --no-cache`, locked sync and
+  `run --no-sync`, all with `--offline`): sync passed, Ruff format passed for
+  8 files, Ruff lint passed, mypy passed for 6 files, pytest passed 3 tests.
+  The existing Starlette/HTTPX deprecation warning remains unsuppressed.
+- From `frontend/`, `npm ci --no-audit --no-fund --offline` passed using the
+  temporary npm download cache (223 packages), then `npm run lint`,
+  `npm run typecheck`, `npm run test -- --run` (3 tests), and `npm run build`
+  all passed. Local offline installs do not prove a fresh online Ubuntu install.
+- Editor diagnostics for both workflows and `git diff --check` passed.
+  `actionlint` is unavailable. Hosted event/action execution, cancellation,
+  timeout enforcement, and required-check settings remain unverified.
+
+### PR #4 Milestone 3 frontend CI verification — 2026-11-16
+
+- Owner: user with Codex assistance, on `chore/github-actions-ci`. User approved
+  and reported Milestone 2 reviewed before this work. No commit, push,
+  deployment, or Milestone 4 work performed by Codex for this milestone.
+- Added `Frontend CI` / `Frontend checks` on Ubuntu 24.04 for PRs targeting
+  `main` and pushes to `main`, independently of backend CI. Uses root `.nvmrc`
+  (Node 24.22.3), bundled npm, `contents: read`, no persisted checkout
+  credentials/cache, a ten-minute timeout, and cancellation of superseded runs.
+  No application secrets or paid APIs are required.
+- Official [setup-node v7.1.0 release](https://github.com/actions/setup-node/releases/tag/v7.1.0)
+  and commit `949feb2413d6458794dcd2491c4babbbce0c15c1` verified upstream;
+  checkout uses the same v7.0.1 commit as backend CI.
+- Node/npm were not on PATH. Downloaded the official portable Windows Node
+  24.22.3 archive into a temporary tools directory, checked its SHA-256 against
+  the distribution's `SHASUMS256.txt`, and used its bundled npm 11.19.1.
+  No global runtime installation or persistent PATH change was made.
+- From `frontend/`, with the temporary runtime directory prepended to the
+  process PATH, these commands all exited 0 (Windows invoked `npm.cmd`):
+
+  ```text
+  node --version
+  npm --version
+  npm ci --no-audit --no-fund
+  npm run lint
+  npm run typecheck
+  npm run test -- --run
+  npm run build
+  ```
+
+- Clean installation added 223 packages. Sandbox registry requests initially
+  failed with EACCES; the approved network-enabled retry passed. Lint and strict
+  TypeScript checks passed; Vitest 5.1.0 passed 3 tests in 1 file; Vite 8.3.8
+  built production assets after `tsc -b`. No application source, test framework,
+  dependency declarations, lockfiles, or backend workflow changed.
+- Workflow editor diagnostics and `git diff --check` passed. `actionlint` was
+  unavailable. No fresh Ubuntu/GitHub run, trigger/cancellation test, required
+  check enforcement, deployment, or current dependency audit is claimed.
+  Generated dependencies and build assets remain ignored. Historical frontend
+  advisory results below remain dated observations.
+
+### PR #4 Milestone 2 backend CI verification — 2026-11-16
+
+- Owner: user with Codex assistance, on `chore/github-actions-ci`; no commit,
+  push, PR creation, teammate review, merge, or GitHub run performed.
+- Workflow: `Backend CI` / `Backend checks`, Ubuntu 24.04, PRs targeting `main`
+  and pushes to `main`. Python comes from `backend/.python-version` (3.12),
+  uv is pinned to 0.13.8, and dependency installation uses
+  `uv sync --locked --all-groups`. No application logic/dependencies changed.
+- Official action release tags and full commits were checked against upstream:
+  [checkout v7.0.1](https://github.com/actions/checkout/releases/tag/v7.0.1),
+  [setup-python v7.1.0](https://github.com/actions/setup-python/releases/tag/v7.1.0),
+  [setup-uv v10.3.3](https://github.com/astral-sh/setup-uv/releases/tag/v10.3.3).
+  The workflow pins immutable commits, grants only `contents: read`, disables
+  persisted checkout credentials and dependency caching, cancels superseded
+  runs, and limits the job to ten minutes. It needs no application secrets,
+  PostgreSQL, Docker, deployment, or paid provider calls.
+- Local environment: Windows, existing Python 3.12.16 virtual environment,
+  uv 0.13.8, Ruff 0.17.5, mypy 1.20.2, pytest 9.2.0. From `backend/`, the
+  installed `C:/Users/rohan/.local/bin/uv.exe` executable ran these commands:
+
+  ```text
+  uv --no-cache sync --locked --all-groups --offline
+  uv --no-cache run --no-sync --offline ruff format --check .
+  uv --no-cache run --no-sync --offline ruff check .
+  uv --no-cache run --no-sync --offline mypy app
+  uv --no-cache run --no-sync --offline pytest
+  ```
+
+- All commands exited 0. Sync resolved 29 packages and checked 28 installed
+  packages; Ruff reported 8 files already formatted and no lint errors; mypy
+  passed for 6 source files; pytest passed all 3 tests. One existing
+  Starlette/HTTPX deprecation warning remains visible, with no suppression.
+- Offline/no-cache flags avoided network and persistent uv-cache access during
+  local verification; the workflow uses normal online dependency installation.
+  This is not fresh Linux installation evidence.
+- Editor diagnostics found no errors in the workflow; `git diff --check`
+  passed. `actionlint` was unavailable, so no actionlint pass is claimed.
+  Event triggering, action execution, fresh Ubuntu dependency installation,
+  hosted success/failure reporting, concurrency cancellation, and required-check
+  settings remain unverified. The broader CI plan remains incomplete.
 
 ### PR #5 local database verification — 2026-11-15
 

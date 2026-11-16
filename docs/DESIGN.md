@@ -615,6 +615,27 @@ The free-budget baseline may rely on host logs plus `planner_runs` and a small a
 
 ## 14. Testing strategy
 
+PR #4 Milestone 2 adds a [backend CI workflow](../.github/workflows/backend-ci.yml)
+on `chore/github-actions-ci`: Python 3.12, locked uv dependency installation,
+Ruff formatting/lint, strict mypy, and the existing dependency-free health tests.
+It targets pull requests into `main` and pushes to `main` on an Ubuntu runner.
+PR #4 Milestone 3 adds a separate [frontend CI workflow](../.github/workflows/frontend-ci.yml)
+using Node from `.nvmrc`, `npm ci`, ESLint, TypeScript, the existing Vitest tests,
+and the Vite production build. Both workflows use the same event filters and run
+independently without application secrets or services. GitHub execution remains
+unverified until runs are recorded. PostgreSQL integration/migrations, e2e,
+and production image checks remain planned.
+
+PR #4 Milestone 4 reviews these package workflows without expanding CI scope:
+both run for all changed paths, use read-only tokens and immutable action pins,
+log tool runtimes, explicitly use Bash failure propagation, and retain separate
+concurrency groups and ten-minute limits. Dependency caching stays disabled
+pending measured hosted installation time. These settings do not establish
+hosted success/failure or required-check enforcement evidence.
+
+The [CI guide](CI.md) documents the implemented checks and local reproduction;
+dated verification evidence remains in [project memory](memory.md).
+
 ### Unit and property tests
 
 - interval overlap and travel-gap boundaries;

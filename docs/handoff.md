@@ -135,6 +135,17 @@ Phases are vertical slices. Each should end with a merged, demonstrable behavior
 
 ### Phase 0 — Repository and team operating system
 
+PR #4 Milestones 2 and 3 implement separate
+[backend](../.github/workflows/backend-ci.yml) and
+[frontend](../.github/workflows/frontend-ci.yml) CI workflows on the working
+branch. Hosted success/failure evidence and required-check settings remain
+unverified; the broader Phase 0 acceptance criteria below are not yet complete.
+Milestone 4 reviewed both workflows and added explicit Bash failure propagation
+and backend runtime logging; caching remains disabled pending hosted timing
+evidence. Milestone 5 documents the actual workflows and local verification in
+the [CI guide](CI.md) and [evidence ledger](memory.md). Hosted CI remains
+unverified, and Milestone 6 has not begun.
+
 **Deliverables**
 
 - Initialize the monorepo, licenses, code owners/ownership ledger, issue templates, PR template, branch protection, and CI skeleton.

@@ -130,7 +130,9 @@ The full-stack commands below remain planned.
 **Current frontend setup:** the landing page still renders when FastAPI is
 stopped; its development connection panel then reports an error. Follow the
 [frontend README](../frontend/README.md) for Node 24.22.3 and commands with or
-without nvm. Vite now uses a health-only proxy and a strict port; CI is not configured here.
+without nvm. Vite uses a health-only proxy and a strict port. PR #4 provides
+backend/frontend CI workflows; see the [CI guide](CI.md) for exact checks and
+limitations. Hosted execution remains unverified.
 
 The database-backed full-stack commands below remain a future target and cannot
 be used as a working setup yet. The frontend/backend health connection above
@@ -392,7 +394,86 @@ Test conventions:
 
 ## 14. CI design
 
-On every pull request:
+See the [CI guide](CI.md) for the PR flow, exact local commands, lockfile
+explanation, failure diagnosis, GitHub log navigation, and current limitations.
+
+**Current branch implementation (PR #4, Milestone 2):**
+[Backend CI](../.github/workflows/backend-ci.yml) defines one independent
+`Backend checks` job on Ubuntu 24.04 for pull requests targeting `main` and
+pushes to `main`. It reads `backend/.python-version`, installs uv 0.13.8,
+and runs the following commands from `backend/`:
+
+```sh
+uv sync --locked --all-groups
+uv run --no-sync ruff format --check .
+uv run --no-sync ruff check .
+uv run --no-sync mypy app
+uv run --no-sync pytest
+```
+
+`--locked` rejects stale dependency declarations without rewriting `uv.lock`.
+`--no-sync` runs checks in the environment installed by the preceding sync.
+Each check is a separate required step: failures fail the job. The workflow
+uses read-only repository permissions, immutable action commits, no persisted
+checkout credentials, no dependency cache, a ten-minute timeout, and cancellation
+of superseded runs. No application secrets, database, Docker, or provider calls
+are required. Action/runtime/package downloads still require network access.
+If sync reports a stale lockfile, update and review the dependency files locally;
+do not remove `--locked` to make CI pass. Local results are recorded in
+[memory](memory.md); a GitHub run is still needed to verify hosted execution.
+
+**Frontend branch implementation (PR #4, Milestone 3):**
+[Frontend CI](../.github/workflows/frontend-ci.yml) defines a separate
+`Frontend checks` job on Ubuntu 24.04 with the same event filters, permissions,
+timeout, cancellation, and credential-persistence policy. It reads Node 24.22.3
+from the root `.nvmrc`, uses bundled npm, logs both runtime versions, and disables
+automatic package caching. From `frontend/`, its commands are:
+
+```sh
+node --version
+npm --version
+npm ci --no-audit --no-fund
+npm run lint
+npm run typecheck
+npm run test -- --run
+npm run build
+```
+
+`npm ci` requires the committed lockfile, rejects dependency declarations that
+disagree with it, replaces any existing `node_modules`, and does not rewrite the
+package manifests/lockfile. This gives each CI run a clean locked installation.
+`--no-audit --no-fund` omits install-time advisory requests and funding messages;
+it does not suppress installation, lint, type, test, or build errors. Dependency
+security scanning remains a separate planned gate. The explicit typecheck has a
+named failure step; the build also runs `tsc -b` before Vite. Vitest runs once and
+exits via `--run`. No new test framework or backend service is required.
+
+**Reliability review (PR #4, Milestone 4):** both workflows intentionally run
+for all changed paths, including frontend-only, backend-only, and documentation
+changes. Keep `Backend checks` and `Frontend checks` distinct and stable for
+future required-check settings. Do not use `pull_request_target`, path filters,
+`continue-on-error`, or success fallbacks to hide failures. Ordinary PRs run
+without application credentials or production environment variables.
+
+Both jobs explicitly select Bash; GitHub invokes explicit Bash steps with
+`-e` and `-o pipefail`, so command and pipeline errors propagate to the step.
+Named validation steps retain tool error output. Backend Python/uv and frontend
+Node/npm versions are logged to make runtime differences visible. Python follows
+the committed 3.12 minor; Node and uv use exact version pins. Locked dependency
+installation does not make the entire hosted runner image immutable.
+
+Concurrency groups include the workflow name and PR number/ref, so superseded
+runs cancel within each workflow without cancelling the other package's checks.
+Keep the ten-minute job limits and disabled download caches for now: there is no
+hosted timing evidence that cache maintenance would be worthwhile. Reconsider a
+lockfile-keyed download cache only after measuring CI installation time; do not
+cache virtual environments, `node_modules`, secrets, or application data.
+Recheck upstream action releases when updating SHA pins and their version
+comments together. Local validation cannot prove hosted triggers, cancellation,
+fresh Linux installation, or branch protection enforcement.
+
+The complete target pipeline below remains the roadmap; only the backend and
+frontend package checks are implemented on this branch:
 
 1. documentation/secret/basic repository checks;
 2. backend format/lint/type/unit tests;
