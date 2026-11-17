@@ -1,12 +1,44 @@
 # Roam durable project memory
 
 > Purpose: preserve verified context across developers and AI sessions  
-> Last updated: 2026-11-16
+> Last updated: 2026-11-17
 > Rule: this file records decisions and evidence; it must not turn plans into facts
 
 ## 1. Current snapshot
 
 ### Verified facts
+
+- PR #7 Milestone 3 (2026-11-17), on `feat/database-foundation`: extends the
+  existing [backend CI job](../.github/workflows/backend-ci.yml) with an independent
+  PostgreSQL 18.7 service and a separate opt-in database/migration test step.
+  The check name, permissions, timeout, action pins, and other gates are preserved.
+  [Local workflow](../backend/README.md#complete-local-database-workflow--pr-7-milestone-3)
+  and [CI instructions](CI.md#postgresql-and-migrations) are updated. Locally,
+  **35 database-free tests passed** (47 skipped), and **47 database tests passed**
+  (35 deselected) using a separate disposable container. Static workflow validation
+  and env-file migration commands passed. Hosted execution, teammate schema review,
+  merge, and deployment remain unverified. Milestone 3 changes are uncommitted.
+- PR #7 Milestone 2 (2026-11-17), on `feat/database-foundation`: adds four typed
+  ORM models and Alembic **1.20.1**, locked with Mako **1.4.3** and MarkupSafe
+  **3.0.4**. Revision `0001` creates users, trips, trip days, and user-entered
+  activities. [ADR 0001](adr/0001-database-foundation.md) records exact initial
+  constraints and deferred fields/validation. PostgreSQL verification:
+  **82 passed**; default suite **35 passed / 47 skipped**. Milestone 1 was
+  committed by the developer as `9930403`; Milestone 2 was subsequently committed
+  by the developer as `4b6bdd7` before Milestone 3.
+  This supersedes the earlier models/Alembic-planned status below. No business
+  API, frontend, Compose, or CI workflow change is included in this milestone.
+- PR #7 Milestone 1 (2026-11-16), on `feat/database-foundation`: adds validated
+  environment configuration, synchronous SQLAlchemy/psycopg engine/session
+  infrastructure, shutdown disposal, and safe opt-in PostgreSQL tests. Installed
+  versions: SQLAlchemy **2.1.9**, psycopg / psycopg-binary **3.3.9**, locked by uv.
+  Existing `/health` remains independent. No ORM models, Alembic, business
+  endpoints, frontend changes, or CI workflow changes are included yet.
+- Local `main` / GitHub `main` were verified at `0fe36a5` before starting PR #7.
+  This includes the integration merge (actual GitHub PR #5) and CI merge
+  `80e3d3a` (actual GitHub PR #4). These records supersede the prior pending
+  merge statements below. Hosted workflow execution and teammate approval are
+  not inferred from source history.
 
 - Merge reconciliation (2026-11-16): `origin/main` at `80e3d3a` includes PR #4's
   CI workflows and guide. The in-progress merge preserves those changes and
@@ -84,8 +116,8 @@
 ### Not yet verified or implemented
 
 - The original documentation-only and backend-placeholder snapshots are superseded by the foundation merge records above and the PR #5 database verification. Production deployment remains planned.
-- Beyond the foundations and HTTP health integration above, no database schema,
-  migration, authentication, LLM/Places/Routes integration, validation/replanning
+- Beyond the foundations, HTTP health integration, and PR #7's four-table
+  schema/migration above, no authentication, LLM/Places/Routes integration, validation/replanning
   engine, PDF generator, production application image, deployment, benchmark, or
   production run is claimed. Backend/frontend CI workflow files are present;
   hosted CI execution remains unverified.
@@ -136,7 +168,7 @@ Material changes should receive an ADR under `docs/adr/` and a row here. Dates a
 | D-001 | 2026-11-07 | PLANNED | Use a modular FastAPI monolith with one PostgreSQL database. | Fits two developers and atomic workflows; distribute only after measured pressure. |
 | D-002 | 2026-11-07 | IN_PROGRESS | React/TypeScript/Vite frontend, built into the production FastAPI image and served same-origin. | Frontend is merged locally; PR #6 uses a health-only development proxy. Production image/static serving remain planned. |
 | D-003 | 2026-11-07 | PLANNED | Use synchronous SQLAlchemy/httpx/FastAPI paths initially. | Easier to reason about; strict timeouts; queue/async reconsidered from measurements. |
-| D-004 | 2026-11-07 | IN_PROGRESS | PostgreSQL with SQLAlchemy 2 and Alembic. | Local PostgreSQL 18.7/Compose is verified on PR #5; application integration, SQLAlchemy, and migrations remain planned. |
+| D-004 | 2026-11-07 | IN_PROGRESS | PostgreSQL with SQLAlchemy 2 and Alembic. | Local PostgreSQL/Compose, connections/sessions, four ORM models, and Alembic revision 0001 are verified. See ADR 0001. Database CI is configured; hosted proof/review and business APIs remain outstanding. |
 | D-005 | 2026-11-07 | PLANNED | Retrieve real place candidates before LLM planning; model references allowlisted IDs only. | Prevents fabricated venue identity and bounds provider/model work. |
 | D-006 | 2026-11-07 | PLANNED | Deterministic Python code is authoritative for authorization, locks, time, routes, known hours, and budget arithmetic. | Probabilistic output cannot enforce hard application invariants. |
 | D-007 | 2026-11-07 | PLANNED | Replanning uses a typed scoped patch against stable IDs and a base trip version. | Preserves unaffected work, supports locks, costs less, and is explainable. |
@@ -178,7 +210,8 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 | Frontend foundation / historical PR #2 | IMPLEMENTED | Frontend contributor; reviewer not recorded | Local `main` merge `2281737`; [tests](../frontend/src/App.test.tsx); historical verification below | CI and reviewer evidence not recorded |
 | Local PostgreSQL / historical PR #5 | IMPLEMENTED | User with Codex assistance; reviewer not recorded | Local `main` merge `2e4fa6f`; `f715de3`, `6bb7bea`, `7cf6e1f`; [runbook](runbooks/local-postgres.md) | Production hardening remains planned; reviewer evidence not recorded |
 | Frontend/backend health integration / PR #6 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | `d66391a`, `ab6e482`; [client](../frontend/src/api/health.ts), [UI](../frontend/src/features/connection/ConnectionStatus.tsx), live verification below | Documentation review, teammate review, and merge evidence |
-| Trip schema/migrations/CRUD | PLANNED | Unassigned | None | PostgreSQL integration + cross-owner denial |
+| Trip schema/migrations/CRUD | IN_PROGRESS | User with Codex assistance; reviewer pending | [Models](../backend/app/db/models/), [initial revision](../backend/migrations/versions/0001_create_users_trips_days_and_activities.py), PostgreSQL tests | CRUD and cross-owner authorization remain planned |
+| PostgreSQL foundation / PR #7 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | [Settings](../backend/app/core/config.py), [sessions](../backend/app/db/session.py), [ADR 0001](adr/0001-database-foundation.md), [CI](../.github/workflows/backend-ci.yml), evidence below | Milestone 3 review, hosted Backend checks success, and teammate schema walkthrough before merge |
 | Google OIDC/session/CSRF | PLANNED | Unassigned | None | Invalid state/claims and secure cookie tests |
 | Provider-neutral Places/Routes | PLANNED | Unassigned | None | Fake + live opt-in normalization/failure proof |
 | Grounded LLM generation | PLANNED | Unassigned | None | Unknown-ID rejection and atomic valid save |
@@ -205,6 +238,108 @@ Both developers must understand the full architecture. This ledger identifies de
 For each meaningful PR, capture design, code, tests, debugging, and review work separately. Do not equate lines changed with ownership.
 
 ## 7. Evidence ledger
+
+### PR #7 Milestone 3 verification — 2026-11-17
+
+- Owner: user with Codex assistance; teammate review pending. Branch verified as
+  `feat/database-foundation`, clean at developer commit `4b6bdd7` before changes.
+  This milestone changes the existing backend workflow and relevant documentation/
+  environment-example comments only. No application, test, migration, Compose,
+  dependency, frontend, or production infrastructure change was needed.
+- Ran workflow-equivalent `uv sync --locked --all-groups`, Ruff format/lint,
+  strict `mypy app`, and default pytest. All passed; pytest **35 passed, 47
+  skipped**, with the existing Starlette/HTTPX deprecation warning. The regular
+  Compose database remained stopped throughout this verification.
+- An independent `postgres:18.7-bookworm` container reproduced CI's health
+  options, test administrator, and random loopback-only published port, without
+  mounting the development volume. `uv run --no-sync pytest --run-db-tests
+  -m database`: **47 passed, 35 deselected**, including the fresh Alembic
+  upgrade/check/downgrade/upgrade test, ORM constraints, and transaction tests.
+  The existing test-client warning was also emitted during collection.
+- On another independent container, an owner-only temporary env file exercised
+  `uv run --env-file <temporary-file> --locked alembic upgrade head`, `current`,
+  and `check`; all returned zero, `current` reported `0001 (head)`, and no scratch
+  database remained. A temporary verification query initially mishandled a literal
+  percent sign; it was corrected to a bound SQL parameter and the CLI/cleanup
+  rehearsal passed. No repository code change was needed for that script issue.
+- Both temporary containers, their anonymous volumes, temporary env files, and
+  scratch databases were removed. The development container ID, stopped state,
+  mount information, and original Docker volume-name inventory matched before/
+  after. No development credentials were read or copied for these rehearsals.
+- A checksum-verified temporary actionlint **1.7.12** validated the backend
+  workflow successfully after the port context key was changed to a quoted
+  string. Optional ShellCheck/Pyflakes integration was disabled; this proves
+  static workflow/expression validity, not hosted GitHub execution. No validator
+  dependency or binary was added to the repository.
+- CI deliberately uses publicly derived disposable test credentials, never
+  repository/application secrets. Only the database-test step receives its
+  maintenance URL; database-free checks receive no application database URL.
+  Existing default local pytest behavior and fixture safety guards are preserved.
+- Still required before merge: hosted `Backend checks` success and teammate
+  schema/migration walkthrough. Hosted Ubuntu behavior, Windows database testing,
+  production TLS/roles/backups, and deployment remain unverified. No commit,
+  push, merge, PR creation, or destructive development-database action by Codex.
+
+### PR #7 Milestone 2 verification — 2026-11-17
+
+- Owner: user with Codex assistance; teammate schema walkthrough/review pending.
+  Branch `feat/database-foundation`, based on developer commit `9930403`.
+  Models and migration live on this branch; no commit/push/merge by Codex.
+- Python **3.12.16**, uv **0.13.8**, existing PostgreSQL **18.7**. Alembic
+  **1.20.1** added without upgrading existing packages. No new endpoint or
+  FastAPI startup database requirement. No application schema change was applied
+  to the regular development database.
+- PostgreSQL opt-in suite: **82 passed**, including 39 model cases and a fresh
+  migration round trip, alongside prior connection/session/config/health tests.
+  Default pytest: **35 passed, 47 deliberately skipped**. One existing
+  Starlette/HTTPX deprecation warning remains. Tests prove ORM graph round trips,
+  defaults/UTC audits, integer costs and unknown-vs-zero semantics, JSON shape
+  bounds, identity/day uniqueness, orphan rejection, and database delete rules.
+- Frozen all-group dependency sync, lock check, Ruff format/lint, and strict
+  `mypy app` passed (16 source files). Editor diagnostics reported no errors in
+  the database source, migrations, or integration tests.
+- Migration tests apply revision 0001 to an empty independent database, compare
+  metadata including server defaults, downgrade to base, then upgrade/check
+  again. Actual CLI `upgrade head`, `current`, `check`, `downgrade base`, and
+  second `upgrade head` also returned zero on a separate owned scratch database.
+  A missing `DATABASE_URL` failed explicitly before connection.
+- Test credentials were derived in memory from existing local Compose settings;
+  no secrets were printed, tracked, or copied to `.env`. Scratch databases were
+  removed. Database catalog and development public-table lists matched before
+  and after the test run. Tests do not use SQLite or application `create_all()`.
+- Remaining: Milestone 3's PostgreSQL-backed CI/full developer workflow,
+  hosted/Windows verification, production roles/TLS/backups/deployment, and all
+  business API validation/authorization. `locked` and `version` are storage fields;
+  no mutation protection or optimistic concurrency is claimed yet. Revision
+  0001's downgrade destroys app data and is rehearsed only on disposable databases.
+
+### PR #7 Milestone 1 verification — 2026-11-16
+
+- macOS, Python **3.12.16**, uv **0.13.8**, PostgreSQL **18.7** from the existing
+  Compose service. Source/dependency changes are on `feat/database-foundation`;
+  no commit, push, merge, application migration, or cloud deployment is claimed.
+- Ruff formatting/lint and strict `mypy app` passed (10 source files). Default
+  pytest: **35 passed, 7 skipped**; PostgreSQL opt-in: **42 passed**. One existing
+  Starlette/HTTPX test-client deprecation warning remains unsuppressed.
+- Real tests exercised connection, rejected credentials, a test-only FastAPI
+  dependency, explicit commit visibility in another session, rollback on close
+  and exception, constraint failure rollback, and returned pool connections.
+- Independent CLI probes confirmed that `--run-db-tests` fails with no admin
+  URL even when `DATABASE_URL` exists, and rejects the development database as
+  its admin target. Unit tests cover cleanup registration/name guards and
+  connection-identity query overrides. Test URLs must be local and point to the
+  postgres maintenance database; local routing cannot be redirected by PGHOSTADDR.
+- Credentials for live verification were constructed in process memory from the
+  existing Compose configuration, never displayed, written to tracked files,
+  or copied into the local `.env`. The test-created database was removed; the
+  original database catalog and development public-table list were unchanged.
+- Engine creation and shutdown are database-independent until first DB use;
+  tests verify liveness without configuration, redaction, TLS query preservation,
+  shared engine initialization, and pool disposal. Remote TLS handshakes, cloud
+  roles, production readiness, Windows DB tests, and database CI remain unverified.
+- Alembic and the approved schema remain Milestone 2; full workflow/CI database
+  verification remains Milestone 3. The probe table exists only inside the
+  disposable test database; it is not an application schema-management mechanism.
 
 ### PR #6 integration verification — 2026-11-15
 

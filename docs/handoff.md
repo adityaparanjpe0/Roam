@@ -1,6 +1,14 @@
 # Roam MVP handoff
 
 > Status: frontend/backend and local PostgreSQL foundations are present in local `main`. PR #6 health integration is verified on `feat/front-back-int`; application database integration and deployment remain planned. See [memory.md](memory.md) for evidence.
+
+PR #7 Milestones 1–3 add a connection/session foundation, four
+ORM models, and an initial Alembic migration on `feat/database-foundation`.
+See [ADR 0001](adr/0001-database-foundation.md) for the deliberately partial
+schema. Backend CI now configures disposable PostgreSQL/migration tests;
+hosted verification and teammate schema review remain required. Business APIs
+remain future work.
+This does not change the MVP scope or claim production deployment.
 > Owners: two developers; assign names in `memory.md` before the first feature branch  
 > Primary goal: build, deploy, measure, and deeply understand a credible AI-native full-stack project
 

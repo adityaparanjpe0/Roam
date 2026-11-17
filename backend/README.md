@@ -46,8 +46,10 @@ are already ignored by the repository. No manual activation is needed with
 `uv run`. In VS Code, select `backend/.venv/Scripts/python.exe` on Windows or
 `backend/.venv/bin/python` on macOS/Linux as the Python interpreter.
 
-Runtime dependencies are FastAPI (HTTP framework), Pydantic (typed response
-schemas), and Uvicorn (application server). The development
+Runtime dependencies include FastAPI (HTTP framework), Pydantic (typed response
+schemas/settings), Uvicorn (application server), SQLAlchemy 2.x (synchronous
+database sessions), psycopg with its binary extra (PostgreSQL driver), and
+Alembic (schema migrations). The development
 group provides Ruff (format/lint), mypy (type checking), pytest, and HTTPX
 (FastAPI test-client support).
 
@@ -86,6 +88,132 @@ future design options; neither is implemented in this PR.
 
 ## Checks
 
+### Database foundation — PR #7, Milestone 1
+
+The connection/session foundation and Milestone 2's four ORM models and initial
+Alembic migration exist. No business endpoint queries PostgreSQL.
+`/health` stays independent of database configuration and availability.
+
+Start the existing database using the [PostgreSQL runbook](../docs/runbooks/local-postgres.md).
+In your ignored root `.env`, add `DATABASE_URL` using the format documented in
+[`.env.example`](../.env.example). Use `127.0.0.1` and the published host port
+(5432 by default, 55432 on the verified workstation). The name `db` is for
+clients sharing the Compose network, not a backend running on the host.
+URL-encode reserved characters in credentials. Do not print or commit the URL.
+Restart the backend after changing the URL: its engine is cached per process.
+
+Load the file explicitly when a database command needs it:
+
+```sh
+uv run --env-file ../.env --locked <command>
+```
+
+The settings model reads environment variables, not `.env` automatically.
+It rejects invalid/unsupported URLs, missing credentials, and query parameters
+that override the URL's connection identity. Non-local hosts require
+`sslmode=verify-full`; certificate options such as `sslrootcert` remain available.
+This validation supports a future verified-TLS deployment but is not evidence
+of a tested cloud connection. Production still needs restricted application
+roles, appropriate certificates, secret storage, backups, and deployment verification.
+
+[`get_db_session`](app/db/session.py) is a synchronous FastAPI dependency. It
+yields one session and always closes it, rolling back uncommitted work. A future
+service must commit deliberately or use `with session.begin():`; dependency
+cleanup never commits. The engine is created lazily once per process, with
+thread-safe initialization and a maximum of five pooled connections/no overflow.
+Initial limits are five seconds for connection/pool waits, ten seconds for SQL
+statements, and three seconds for lock waits. Tune these from measurements before
+production workloads or long migrations; do not add more pools speculatively.
+Shutdown disposes an existing pool in a threadpool without forcing a connection
+on startup or blocking the application event loop. SQL echo is off, parameters
+are hidden in SQLAlchemy errors, and configuration errors omit input values.
+
+Ordinary `uv run --locked pytest` runs the database-free tests and explicitly
+skips PostgreSQL tests. To opt in, set a separate `TEST_DATABASE_ADMIN_URL` in
+your local `.env`. It must target the local **postgres maintenance database**,
+not `roam_dev`, and the role must be able to create databases. Do not use
+production credentials. Then run:
+
+```sh
+uv run --env-file ../.env --locked pytest --run-db-tests
+```
+
+The fixture creates a UUID-named `roam_test_...` database, runs tests there, and
+drops only that registered database afterward. It never falls back to
+`DATABASE_URL`, truncates development tables, or removes a Docker volume.
+Missing/unsafe admin configuration fails explicitly when the flag is supplied.
+Unit tests verify these guards. Transaction tests use a disposable SQL probe
+table; application schema tests run the real Alembic migrations. No application
+schema is created with `Base.metadata.create_all()`.
+
+Observed on macOS, 2026-11-17: **35 passed / 47 intentionally skipped** without
+the flag; **82 passed** with PostgreSQL enabled. One existing Starlette/HTTPX
+deprecation warning remains. Windows database testing and hosted database CI
+are not yet verified. Milestone 3 configures the existing backend CI job to run
+these tests using its own disposable PostgreSQL service; a hosted run still
+needs to pass before merge. See the [CI guide](../docs/CI.md).
+
+### Models and migrations — PR #7, Milestone 2
+
+`app/db/models/` maps users → owned trips → trip days → activities. Database
+constraints enforce foreign keys, unique identities/days, bounded dates/party
+sizes, nonnegative money, and valid intervals. Read [ADR 0001](../docs/adr/0001-database-foundation.md)
+for exact fields, JSON limits, and deferred application validation. There are no
+trip endpoints, authentication, provider records, or lock/version enforcement yet.
+
+From `backend/`, with PostgreSQL running and your ignored `.env` configured:
+
+```sh
+uv run --env-file ../.env --locked alembic upgrade head
+uv run --env-file ../.env --locked alembic current
+uv run --env-file ../.env --locked alembic check
+```
+
+These commands target `DATABASE_URL`. Confirm its database name locally before
+applying them; do not print its password. `upgrade head` applies pending schema
+revisions; `current` reports the applied revision (`0001` initially); `check`
+reports model/schema drift supported by Alembic. It does not detect every CHECK
+constraint change, so review migrations and retain behavior tests. Migrations
+are never run on application startup. The milestone verification migrates only
+scratch databases; it does not apply revision 0001 to your development database.
+
+For future schema changes: update the model, generate a new revision against an
+up-to-date local development schema, inspect the SQL/constraints and downgrade,
+then test it on a fresh disposable database before review:
+
+```sh
+uv run --env-file ../.env --locked alembic revision --autogenerate -m "Describe schema change"
+```
+
+Format/lint the generated file. Never edit a revision already applied outside
+your branch. Add `upgrade` and `downgrade` together, documenting data-loss limits.
+The initial downgrade **deletes all application tables and data**. Do not run it
+on your regular database to test migrations. The safe rehearsal is:
+
+```sh
+uv run --env-file ../.env --locked pytest --run-db-tests tests/integration/test_migrations.py
+```
+
+That test creates a separate empty UUID-named database, checks upgrade → downgrade
+→ upgrade plus metadata agreement, closes connections, and drops only its own
+database. Model tests use migrations and an outer rollback-only transaction;
+even a test's session commit stays isolated inside a savepoint.
+
+Changing JSON preferences/interests requires assigning a new dict/list rather
+than mutating one in place. Audit `updated_at` updates automatically through
+SQLAlchemy; direct SQL must set it explicitly. Money uses integer minor units
+per person in the trip currency (`NULL` unknown; zero known free).
+
+Troubleshooting: missing `DATABASE_URL` fails before a connection; use explicit
+`--env-file`. Connection refused usually means a stopped database or incorrect
+host port. Missing tables usually means migrations have not been applied.
+An unknown revision means code and schema history disagree: sync the branch and
+inspect `alembic current`/`history`; do not delete revisions or use `stamp` to
+hide the mismatch. A migration lock/statement timeout requires investigating
+the lock/workload, not repeated retries or deleting the database.
+
+### Existing quality gates
+
 Run from the backend directory:
 
 ```text
@@ -95,7 +223,8 @@ uv run --locked ruff check .
 uv run --locked mypy app
 ```
 
-Run all automated tests (no Uvicorn server needs to be running):
+Run database-free tests (no Uvicorn server is needed; PostgreSQL tests are skipped
+unless explicitly enabled as described above):
 
 ```text
 uv run --locked pytest
@@ -119,7 +248,67 @@ not suppressed; review a compatible test-client dependency update separately.
 
 Format changes with `uv run --locked ruff format .`.
 
-## Structure
+## Complete local database workflow — PR #7, Milestone 3
+
+Each developer keeps their own ignored root `.env`. `DATABASE_URL` targets the
+regular development database; `TEST_DATABASE_ADMIN_URL` targets the local
+`postgres` maintenance database using a role with CREATEDB. Both use the host's
+published port. Tests never fall back from the latter to the former.
+See [the example](../.env.example) for placeholder URL formats; URL-encode
+reserved characters in credentials. No API key or cloud account is required.
+
+From the repository root, start PostgreSQL and install the locked backend:
+
+```sh
+docker compose config --quiet
+docker compose up -d --wait --wait-timeout 90 db
+cd backend
+uv sync --frozen --all-groups
+```
+
+After confirming locally that `DATABASE_URL` names your intended development
+database, apply the schema and verify its revision:
+
+```sh
+uv run --env-file ../.env --locked alembic upgrade head
+uv run --env-file ../.env --locked alembic current
+uv run --env-file ../.env --locked alembic check
+```
+
+Initially expect revision `0001 (head)` and no new upgrade operations. These
+commands finish and return to the prompt. The first upgrade creates application
+tables; it does not insert users, trips, or activities. For a safe test of actual
+database operations, run:
+
+```sh
+uv run --locked pytest
+uv run --env-file ../.env --locked pytest --run-db-tests -m database
+```
+
+The first command intentionally skips database tests; the second selects them
+and uses disposable databases. To run all tests together, omit `-m database`
+from the second command. Missing/invalid test admin configuration is an error,
+not a reason to use the development URL or remove safety checks.
+
+To start FastAPI (a long-running command), use a separate terminal:
+
+```sh
+uv run --env-file ../.env --locked uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+`GET /health` remains liveness only; use the database tests to verify connectivity
+and storage. Stop Uvicorn with Ctrl+C. From the repository root, stop PostgreSQL
+with `docker compose stop db`; the named volume retains data. See the
+[PostgreSQL runbook](../docs/runbooks/local-postgres.md) for port conflicts,
+authentication, persistence verification, and volume precautions.
+
+CI runs the same database tests against an independent disposable service;
+see [CI details and local reproduction](../docs/CI.md#postgresql-and-migrations).
+Before merging, require the hosted `Backend checks` run to pass and walk through
+the schema with your teammate. Deployment still requires verified TLS, separate
+runtime/migration privileges, backups/restores, and a controlled release process.
+
+## Source layout
 
 - `app/main.py` creates the single FastAPI application object that Uvicorn imports.
 - `app/__init__.py` marks the application as a Python package.

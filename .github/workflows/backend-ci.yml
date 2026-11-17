@@ -19,6 +19,23 @@ jobs:
     name: Backend checks
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:18.7-bookworm
+        env:
+          POSTGRES_USER: roam_ci
+          POSTGRES_DB: postgres
+          # Public, disposable test credential; never use it outside this CI job.
+          POSTGRES_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}-ci-only
+        ports:
+          # Random host port, published only on the runner's loopback interface.
+          - "127.0.0.1::5432"
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U roam_ci -d postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+          --health-start-period 30s
     defaults:
       run:
         shell: bash
@@ -59,5 +76,10 @@ jobs:
       - name: Check types
         run: uv run --no-sync mypy app
 
-      - name: Run tests
+      - name: Run database-free tests
         run: uv run --no-sync pytest
+
+      - name: Run PostgreSQL and migration tests
+        env:
+          TEST_DATABASE_ADMIN_URL: postgresql+psycopg://roam_ci:${{ github.run_id }}-${{ github.run_attempt }}-ci-only@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres
+        run: uv run --no-sync pytest --run-db-tests -m database
