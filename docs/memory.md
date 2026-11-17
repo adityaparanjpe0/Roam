@@ -8,6 +8,29 @@
 
 ### Verified facts
 
+- PR #8 Milestone 2 (2026-11-17), owner: user with Codex assistance, on
+  `feat/trip-creation-form`: adds [editable/draft types and fresh defaults](../frontend/src/features/trip/tripCreationModels.ts),
+  [local state](../frontend/src/features/trip/TripCreation.tsx), and an isolated
+  [controlled form foundation](../frontend/src/features/trip/TripCreationForm.tsx).
+  Numeric editing values remain strings; the target normalized draft uses integer
+  USD cents and nullable optional constraints. No normalization or validation
+  function is implemented yet. Only the destination field is rendered in isolation;
+  the landing page is unchanged. Remaining fields, validation, review, and PR #11
+  request integration remain planned. This supersedes the no-trip-form-foundation
+  status only; no completed form, persistence, or API contract is claimed.
+  Verification on Windows: focused tests **5 passed**; full Vitest suite **37
+  passed in 4 files**; `npm run lint`, `npm run typecheck`, and `npm run build`
+  passed. Editor diagnostics reported no errors in the new feature, and
+  `git diff --check` passed. Checks used existing Node **24.11.1** / npm
+  **11.6.2**, not the required Node **24.22.3**, which was not installed.
+  Verification with the pinned runtime remains outstanding. No dependency
+  installation, browser visual review, commit, push, or merge was performed.
+
+- Local Git reconciliation (2026-11-17): this branch includes database-foundation
+  merge `3fbf770` and verification commit `2a159bc`. This supersedes older
+  uncommitted/unmerged PR #7 statements below for local Git history only; hosted
+  CI execution and teammate review are not inferred.
+
 - PR #7 Milestone 3 (2026-11-17), on `feat/database-foundation`: extends the
   existing [backend CI job](../.github/workflows/backend-ci.yml) with an independent
   PostgreSQL 18.7 service and a separate opt-in database/migration test step.
