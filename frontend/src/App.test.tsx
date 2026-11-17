@@ -72,6 +72,8 @@ test('exposes the core trip form without issuing requests when editing', () => {
   expect(screen.getByRole('region', { name: 'Create a trip' })).toContainElement(form)
   fireEvent.change(within(form).getByLabelText('Destination (required)'), { target: { value: 'Lisbon' } })
   fireEvent.change(within(form).getByLabelText('Budget per person (USD, required)'), { target: { value: '500' } })
+  fireEvent.click(within(form).getByRole('checkbox', { name: 'Food' }))
+  fireEvent.change(within(form).getByLabelText('Additional preferences or constraints (optional)'), { target: { value: 'A relaxed pace' } })
   fireEvent.submit(form)
 
   expect(within(form).getByLabelText('Destination (required)')).toHaveValue('Lisbon')

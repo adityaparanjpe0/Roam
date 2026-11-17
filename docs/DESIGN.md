@@ -27,14 +27,19 @@ not database readiness, production serving, or a new business API. See the
 
 ## 1. Context and design goals
 
-PR #8 Milestones 2–3 (2026-11-17) add a frontend form-state foundation under
+PR #8 Milestones 2–4 (2026-11-17) add a frontend form-state foundation under
 `frontend/src/features/trip/`: editable string values, a separate target normalized
 draft type, and local React state. Milestone 3 mounts five controlled core fields
 (destination, dates, travelers, and total per-person USD budget) on the landing
 page, with a responsive layout and an anchor entry link. Existing navigation and
 landing content remain available. Native input hints are present, but automatic
-submit validation is disabled until the dedicated validation milestone. Interests,
-constraints, full validation, numeric conversion, and local review remain planned.
+submit validation is disabled until the dedicated validation milestone. Milestone
+4 adds eight native interest checkboxes and an optional multiline constraints
+field. The typed frontend interest options are food, sightseeing, outdoors (Nature),
+nightlife, shopping, culture (Art and culture), adventure, and relaxation. This
+supersedes the initial six-tag frontend proposal; it does not define a backend
+allowlist or alter activity categories. Full validation, numeric conversion, and
+local review remain planned.
 The draft is not an API contract; PR #11 must establish request mapping and
 title/timezone handling. The form makes no requests and persists no data.
 

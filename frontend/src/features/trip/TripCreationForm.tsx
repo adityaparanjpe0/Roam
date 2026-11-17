@@ -1,5 +1,6 @@
 import { useId } from 'react'
-import type { TripFormValues } from './tripCreationModels'
+import { INTEREST_OPTIONS } from './tripCreationModels'
+import type { Interest, TripFormValues } from './tripCreationModels'
 import './TripCreation.css'
 
 interface TripCreationFormProps {
@@ -7,7 +8,7 @@ interface TripCreationFormProps {
   onChange: (values: TripFormValues) => void
 }
 
-/** Controlled core fields; validation and local review come later. */
+/** Controlled trip details; validation and local review come later. */
 function TripCreationForm({ values, onChange }: TripCreationFormProps) {
   const id = useId()
   const headingId = `${id}-heading`
@@ -17,12 +18,22 @@ function TripCreationForm({ values, onChange }: TripCreationFormProps) {
   const endDateId = `${id}-end-date`
   const travelerCountId = `${id}-travelers`
   const budgetId = `${id}-budget`
+  const interestsHelpId = `${id}-interests-help`
+  const constraintsId = `${id}-constraints`
+
+  function updateInterest(interest: Interest, checked: boolean) {
+    const interests = checked
+      ? values.interests.includes(interest) ? values.interests : [...values.interests, interest]
+      : values.interests.filter((selected) => selected !== interest)
+
+    onChange({ ...values, interests })
+  }
 
   return (
     <form className="trip-form" aria-labelledby={headingId} aria-describedby={helpId} noValidate onSubmit={(event) => event.preventDefault()}>
       <h2 id={headingId}>Trip details</h2>
       <p className="trip-form-help" id={helpId}>Your details stay on this page and are not saved. Itinerary planning is coming later.</p>
-      <p className="trip-form-help">All five fields are required.</p>
+      <p className="trip-form-help">Required fields are marked. Additional preferences are optional.</p>
       <div className="trip-form-fields">
         <div className="trip-form-field trip-form-field-wide">
           <label htmlFor={destinationId}>Destination (required)</label>
@@ -96,6 +107,38 @@ function TripCreationForm({ values, onChange }: TripCreationFormProps) {
             onChange={(event) => onChange({ ...values, budgetUsd: event.currentTarget.value })}
           />
           <p id={`${budgetId}-help`}>Total budget for one person for the entire trip in US dollars, not a daily amount.</p>
+        </div>
+        <fieldset className="trip-interests trip-form-field-wide" aria-describedby={interestsHelpId}>
+          <legend>Interests (required)</legend>
+          <p className="trip-form-help" id={interestsHelpId}>Choose one or more interests for your trip.</p>
+          <div className="trip-interest-options">
+            {INTEREST_OPTIONS.map((interest) => (
+              <label className="trip-interest-option" key={interest.value}>
+                <input
+                  type="checkbox"
+                  name="interests"
+                  value={interest.value}
+                  checked={values.interests.includes(interest.value)}
+                  onChange={(event) => updateInterest(interest.value, event.currentTarget.checked)}
+                />
+                <span>{interest.label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <div className="trip-form-field trip-form-field-wide">
+          <label htmlFor={constraintsId}>Additional preferences or constraints (optional)</label>
+          <textarea
+            id={constraintsId}
+            name="constraints"
+            rows={5}
+            maxLength={4000}
+            placeholder="e.g. Step-free access, a relaxed pace, or vegetarian meals"
+            aria-describedby={`${constraintsId}-help`}
+            value={values.constraints}
+            onChange={(event) => onChange({ ...values, constraints: event.currentTarget.value })}
+          />
+          <p id={`${constraintsId}-help`}>Share anything else you’d like considered. Up to 4,000 characters.</p>
         </div>
       </div>
     </form>

@@ -118,3 +118,75 @@ test('editing and clearing dates and numeric fields preserves the other inputs',
   }
   expect(destination).toHaveValue('Lisbon')
 })
+
+test('shows eight unchecked interests in a named group and an empty optional textarea', () => {
+  render(<TripCreation />)
+  const group = screen.getByRole('group', { name: 'Interests (required)' })
+  expect(group).toHaveAccessibleDescription('Choose one or more interests for your trip.')
+  expect(within(group).getAllByRole('checkbox')).toHaveLength(8)
+
+  for (const name of ['Food', 'Sightseeing', 'Nature', 'Nightlife', 'Shopping', 'Art and culture', 'Adventure', 'Relaxation']) {
+    expect(within(group).getByRole('checkbox', { name })).not.toBeChecked()
+  }
+  const constraints = screen.getByRole('textbox', { name: 'Additional preferences or constraints (optional)' })
+  expect(constraints).toHaveValue('')
+  expect(constraints).not.toBeRequired()
+  expect(constraints.tagName).toBe('TEXTAREA')
+})
+
+test('selects multiple interests and deselects them independently', () => {
+  render(<TripCreation />)
+  const food = screen.getByRole('checkbox', { name: 'Food' })
+  const nature = screen.getByRole('checkbox', { name: 'Nature' })
+  fireEvent.click(food)
+  fireEvent.click(nature)
+  expect(food).toBeChecked()
+  expect(nature).toBeChecked()
+  fireEvent.click(food)
+  expect(food).not.toBeChecked()
+  expect(nature).toBeChecked()
+  fireEvent.click(nature)
+  expect(nature).not.toBeChecked()
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+})
+
+test('interest and multiline preference changes preserve all other editable values', () => {
+  render(<TripCreation />)
+  const fields = [
+    { label: 'Destination (required)', value: 'Lisbon' },
+    { label: 'Start date (required)', value: '2027-03-27' },
+    { label: 'End date (required)', value: '2027-03-30' },
+    { label: 'Number of travelers (required)', value: '3' },
+    { label: 'Budget per person (USD, required)', value: '750.50' },
+  ]
+  for (const field of fields) {
+    fireEvent.change(screen.getByLabelText(field.label), { target: { value: field.value } })
+  }
+  const constraints = screen.getByLabelText('Additional preferences or constraints (optional)')
+  const notes = 'Step-free access\nVegetarian meals'
+  fireEvent.change(constraints, { target: { value: notes } })
+  const culture = screen.getByRole('checkbox', { name: 'Art and culture' })
+  fireEvent.click(culture)
+  expect(constraints).toHaveValue(notes)
+  for (const field of fields) {
+    expect(screen.getByLabelText(field.label)).toHaveProperty('value', field.value)
+  }
+  fireEvent.change(screen.getByLabelText('Destination (required)'), { target: { value: 'Porto' } })
+  fireEvent.change(constraints, { target: { value: '' } })
+  expect(culture).toBeChecked()
+  expect(screen.getByLabelText('Destination (required)')).toHaveValue('Porto')
+  expect(constraints).toHaveValue('')
+})
+
+test('interest updates use stable values without mutating the previous selection', () => {
+  const values = createInitialTripFormValues()
+  values.interests = ['food']
+  const onChange = vi.fn()
+  render(<TripCreationForm values={values} onChange={onChange} />)
+
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Nature' }))
+  expect(onChange).toHaveBeenLastCalledWith({ ...values, interests: ['food', 'outdoors'] })
+  expect(values.interests).toEqual(['food'])
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Food' }))
+  expect(onChange).toHaveBeenLastCalledWith({ ...values, interests: [] })
+})

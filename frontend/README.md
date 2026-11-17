@@ -179,7 +179,7 @@ See [project memory](../docs/memory.md) for exact results and limitations.
 
 ## UI review checklist
 
-### Core trip form — PR #8 Milestone 3
+### Trip form — PR #8 Milestones 3–4
 
 Run `npm run dev` from `frontend/` with the pinned Node version, then open
 `http://127.0.0.1:5173/#create-trip`, or follow **Enter trip details** on the
@@ -189,7 +189,9 @@ health diagnostic may report an error if it is stopped.
 The [form](src/features/trip/TripCreationForm.tsx) receives editable values and
 an update callback from [local React state](src/features/trip/TripCreation.tsx).
 Destination, start/end dates, travelers, and total per-person USD budget are
-controlled and start blank. Numeric editing values stay strings. The
+controlled and start blank. Numeric editing values stay strings. Eight interest
+checkboxes support independent selection/deselection, and an optional multiline
+preferences/constraints field starts empty. The
 [draft type](src/features/trip/tripCreationModels.ts) is a future normalization
 target; this milestone does not produce or submit one.
 
@@ -203,10 +205,16 @@ Manual checks:
 4. Check widths of 320, 375, 768, 1024, and 1440 pixels, plus zoom/enlarged text.
    Inputs should stack on mobile, pair on desktop, and stay within the page.
 5. Refresh: values reset. Confirm existing navigation, preview, and footer work.
+6. Select several interests, then deselect one. Others must stay selected and all
+   previously entered fields must remain unchanged. Use Tab/Shift+Tab to move
+   between checkboxes and Space to toggle; the visible checkmark indicates state.
+7. Enter multiple lines of preferences, then change interests and core fields.
+   Text/newlines and selections must survive those edits. Clear the optional text
+   field; no validation message should appear yet.
 
 There is no submit/review action yet. Native input hints are provided, but
 automatic submit validation is disabled. Full validation is reserved for Milestone
-5; interests, optional constraints, review, and backend integration remain planned.
+5; normalized draft creation, review, and backend integration remain planned.
 No routing dependency, API call, or persistence was added for the form.
 
 ### Existing landing page

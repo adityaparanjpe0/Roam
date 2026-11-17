@@ -1,11 +1,17 @@
-// Initial frontend vocabulary; the future API must validate its own allowlist.
-export type Interest =
-  | 'sightseeing'
-  | 'food'
-  | 'culture'
-  | 'outdoors'
-  | 'shopping'
-  | 'other'
+// Frontend vocabulary only; the future API must validate its own allowlist.
+// Keep stable values separate from visible labels.
+export const INTEREST_OPTIONS = [
+  { value: 'food', label: 'Food' },
+  { value: 'sightseeing', label: 'Sightseeing' },
+  { value: 'outdoors', label: 'Nature' },
+  { value: 'nightlife', label: 'Nightlife' },
+  { value: 'shopping', label: 'Shopping' },
+  { value: 'culture', label: 'Art and culture' },
+  { value: 'adventure', label: 'Adventure' },
+  { value: 'relaxation', label: 'Relaxation' },
+] as const
+
+export type Interest = typeof INTEREST_OPTIONS[number]['value']
 
 /** Editable values can be blank or incomplete and are not submission data. */
 export interface TripFormValues {

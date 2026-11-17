@@ -8,6 +8,30 @@
 
 ### Verified facts
 
+- PR #8 Milestone 4 (2026-11-17), owner: user with Codex assistance, on
+  `feat/trip-creation-form`: adds eight native controlled interest checkboxes
+  and an optional multiline constraints field to the
+  [existing form](../frontend/src/features/trip/TripCreationForm.tsx). The
+  [options and derived Interest type](../frontend/src/features/trip/tripCreationModels.ts)
+  share one definition; selected IDs stay in `Interest[]`. Labels are Food,
+  Sightseeing, Nature, Nightlife, Shopping, Art and culture, Adventure, Relaxation.
+  Nature retains `outdoors` and Art and culture retains `culture`; the initial
+  unused `other` option is replaced by the requested expanded vocabulary. This
+  supersedes the initial frontend tags only; backend semantics remain deferred.
+  Changes replace the interest array without mutating previous state and preserve
+  other fields. Native checkmarks and selected borders indicate selection; a
+  fieldset/legend names the group. The textarea starts empty and retains newlines,
+  with the existing 4,000-character storage-aligned limit. No validation messages,
+  API/persistence, recommendations, search, or dependencies were added. Milestone
+  5 has not begun; Milestone 3 completion is human-reported.
+  Verification: lint, strict typecheck, **44 tests in 4 files**, production build,
+  and `git diff --check` passed using existing Node **24.11.1** / npm **11.6.2**.
+  Required Node **24.22.3** verification remains outstanding. Browser checks proved
+  Space selects/deselects and Tab reaches the next checkbox; multiline input was
+  retained. No page overflow at 320/375/768/1440px; interests were one column on
+  mobile and two on wider screens. Full screen-reader/cross-browser review remains
+  outstanding. No commit, push, or merge was performed.
+
 - PR #8 Milestone 3 (2026-11-17), owner: user with Codex assistance, on
   `feat/trip-creation-form`: [the core form](../frontend/src/features/trip/TripCreationForm.tsx)
   now contains five labeled controlled inputs, with native date/number controls
