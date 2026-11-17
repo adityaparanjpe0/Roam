@@ -82,8 +82,9 @@ reads. Future queries must include owner ID and resource ID.
 The initial downgrade removes all four tables and their data. Rehearse it only
 on disposable databases. It is not a production rollback strategy. Production
 still needs tested backups/restores, role separation, deployment secrets/TLS,
-and staged migrations appropriate to real data. CI migration execution remains
-Milestone 3 work.
+and staged migrations appropriate to real data. Milestone 3 configures CI
+migration tests using an independent disposable PostgreSQL service; a hosted
+run is still required to verify GitHub orchestration.
 
 ## Evidence
 

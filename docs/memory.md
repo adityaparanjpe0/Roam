@@ -8,13 +8,24 @@
 
 ### Verified facts
 
+- PR #7 Milestone 3 (2026-11-17), on `feat/database-foundation`: extends the
+  existing [backend CI job](../.github/workflows/backend-ci.yml) with an independent
+  PostgreSQL 18.7 service and a separate opt-in database/migration test step.
+  The check name, permissions, timeout, action pins, and other gates are preserved.
+  [Local workflow](../backend/README.md#complete-local-database-workflow--pr-7-milestone-3)
+  and [CI instructions](CI.md#postgresql-and-migrations) are updated. Locally,
+  **35 database-free tests passed** (47 skipped), and **47 database tests passed**
+  (35 deselected) using a separate disposable container. Static workflow validation
+  and env-file migration commands passed. Hosted execution, teammate schema review,
+  merge, and deployment remain unverified. Milestone 3 changes are uncommitted.
 - PR #7 Milestone 2 (2026-11-17), on `feat/database-foundation`: adds four typed
   ORM models and Alembic **1.20.1**, locked with Mako **1.4.3** and MarkupSafe
   **3.0.4**. Revision `0001` creates users, trips, trip days, and user-entered
   activities. [ADR 0001](adr/0001-database-foundation.md) records exact initial
   constraints and deferred fields/validation. PostgreSQL verification:
   **82 passed**; default suite **35 passed / 47 skipped**. Milestone 1 was
-  committed by the developer as `9930403`; Milestone 2 changes are uncommitted.
+  committed by the developer as `9930403`; Milestone 2 was subsequently committed
+  by the developer as `4b6bdd7` before Milestone 3.
   This supersedes the earlier models/Alembic-planned status below. No business
   API, frontend, Compose, or CI workflow change is included in this milestone.
 - PR #7 Milestone 1 (2026-11-16), on `feat/database-foundation`: adds validated
@@ -105,8 +116,8 @@
 ### Not yet verified or implemented
 
 - The original documentation-only and backend-placeholder snapshots are superseded by the foundation merge records above and the PR #5 database verification. Production deployment remains planned.
-- Beyond the foundations and HTTP health integration above, no database schema,
-  migration, authentication, LLM/Places/Routes integration, validation/replanning
+- Beyond the foundations, HTTP health integration, and PR #7's four-table
+  schema/migration above, no authentication, LLM/Places/Routes integration, validation/replanning
   engine, PDF generator, production application image, deployment, benchmark, or
   production run is claimed. Backend/frontend CI workflow files are present;
   hosted CI execution remains unverified.
@@ -157,7 +168,7 @@ Material changes should receive an ADR under `docs/adr/` and a row here. Dates a
 | D-001 | 2026-11-07 | PLANNED | Use a modular FastAPI monolith with one PostgreSQL database. | Fits two developers and atomic workflows; distribute only after measured pressure. |
 | D-002 | 2026-11-07 | IN_PROGRESS | React/TypeScript/Vite frontend, built into the production FastAPI image and served same-origin. | Frontend is merged locally; PR #6 uses a health-only development proxy. Production image/static serving remain planned. |
 | D-003 | 2026-11-07 | PLANNED | Use synchronous SQLAlchemy/httpx/FastAPI paths initially. | Easier to reason about; strict timeouts; queue/async reconsidered from measurements. |
-| D-004 | 2026-11-07 | IN_PROGRESS | PostgreSQL with SQLAlchemy 2 and Alembic. | Local PostgreSQL/Compose, connections/sessions, four ORM models, and Alembic revision 0001 are verified. See ADR 0001. Business APIs and database CI remain planned. |
+| D-004 | 2026-11-07 | IN_PROGRESS | PostgreSQL with SQLAlchemy 2 and Alembic. | Local PostgreSQL/Compose, connections/sessions, four ORM models, and Alembic revision 0001 are verified. See ADR 0001. Database CI is configured; hosted proof/review and business APIs remain outstanding. |
 | D-005 | 2026-11-07 | PLANNED | Retrieve real place candidates before LLM planning; model references allowlisted IDs only. | Prevents fabricated venue identity and bounds provider/model work. |
 | D-006 | 2026-11-07 | PLANNED | Deterministic Python code is authoritative for authorization, locks, time, routes, known hours, and budget arithmetic. | Probabilistic output cannot enforce hard application invariants. |
 | D-007 | 2026-11-07 | PLANNED | Replanning uses a typed scoped patch against stable IDs and a base trip version. | Preserves unaffected work, supports locks, costs less, and is explainable. |
@@ -200,7 +211,7 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 | Local PostgreSQL / historical PR #5 | IMPLEMENTED | User with Codex assistance; reviewer not recorded | Local `main` merge `2e4fa6f`; `f715de3`, `6bb7bea`, `7cf6e1f`; [runbook](runbooks/local-postgres.md) | Production hardening remains planned; reviewer evidence not recorded |
 | Frontend/backend health integration / PR #6 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | `d66391a`, `ab6e482`; [client](../frontend/src/api/health.ts), [UI](../frontend/src/features/connection/ConnectionStatus.tsx), live verification below | Documentation review, teammate review, and merge evidence |
 | Trip schema/migrations/CRUD | IN_PROGRESS | User with Codex assistance; reviewer pending | [Models](../backend/app/db/models/), [initial revision](../backend/migrations/versions/0001_create_users_trips_days_and_activities.py), PostgreSQL tests | CRUD and cross-owner authorization remain planned |
-| PostgreSQL foundation / PR #7 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | [Settings](../backend/app/core/config.py), [sessions](../backend/app/db/session.py), [ADR 0001](adr/0001-database-foundation.md), evidence below | Milestone 2 review; database CI and full workflow documentation in Milestone 3 |
+| PostgreSQL foundation / PR #7 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | [Settings](../backend/app/core/config.py), [sessions](../backend/app/db/session.py), [ADR 0001](adr/0001-database-foundation.md), [CI](../.github/workflows/backend-ci.yml), evidence below | Milestone 3 review, hosted Backend checks success, and teammate schema walkthrough before merge |
 | Google OIDC/session/CSRF | PLANNED | Unassigned | None | Invalid state/claims and secure cookie tests |
 | Provider-neutral Places/Routes | PLANNED | Unassigned | None | Fake + live opt-in normalization/failure proof |
 | Grounded LLM generation | PLANNED | Unassigned | None | Unknown-ID rejection and atomic valid save |
@@ -227,6 +238,47 @@ Both developers must understand the full architecture. This ledger identifies de
 For each meaningful PR, capture design, code, tests, debugging, and review work separately. Do not equate lines changed with ownership.
 
 ## 7. Evidence ledger
+
+### PR #7 Milestone 3 verification — 2026-11-17
+
+- Owner: user with Codex assistance; teammate review pending. Branch verified as
+  `feat/database-foundation`, clean at developer commit `4b6bdd7` before changes.
+  This milestone changes the existing backend workflow and relevant documentation/
+  environment-example comments only. No application, test, migration, Compose,
+  dependency, frontend, or production infrastructure change was needed.
+- Ran workflow-equivalent `uv sync --locked --all-groups`, Ruff format/lint,
+  strict `mypy app`, and default pytest. All passed; pytest **35 passed, 47
+  skipped**, with the existing Starlette/HTTPX deprecation warning. The regular
+  Compose database remained stopped throughout this verification.
+- An independent `postgres:18.7-bookworm` container reproduced CI's health
+  options, test administrator, and random loopback-only published port, without
+  mounting the development volume. `uv run --no-sync pytest --run-db-tests
+  -m database`: **47 passed, 35 deselected**, including the fresh Alembic
+  upgrade/check/downgrade/upgrade test, ORM constraints, and transaction tests.
+  The existing test-client warning was also emitted during collection.
+- On another independent container, an owner-only temporary env file exercised
+  `uv run --env-file <temporary-file> --locked alembic upgrade head`, `current`,
+  and `check`; all returned zero, `current` reported `0001 (head)`, and no scratch
+  database remained. A temporary verification query initially mishandled a literal
+  percent sign; it was corrected to a bound SQL parameter and the CLI/cleanup
+  rehearsal passed. No repository code change was needed for that script issue.
+- Both temporary containers, their anonymous volumes, temporary env files, and
+  scratch databases were removed. The development container ID, stopped state,
+  mount information, and original Docker volume-name inventory matched before/
+  after. No development credentials were read or copied for these rehearsals.
+- A checksum-verified temporary actionlint **1.7.12** validated the backend
+  workflow successfully after the port context key was changed to a quoted
+  string. Optional ShellCheck/Pyflakes integration was disabled; this proves
+  static workflow/expression validity, not hosted GitHub execution. No validator
+  dependency or binary was added to the repository.
+- CI deliberately uses publicly derived disposable test credentials, never
+  repository/application secrets. Only the database-test step receives its
+  maintenance URL; database-free checks receive no application database URL.
+  Existing default local pytest behavior and fixture safety guards are preserved.
+- Still required before merge: hosted `Backend checks` success and teammate
+  schema/migration walkthrough. Hosted Ubuntu behavior, Windows database testing,
+  production TLS/roles/backups, and deployment remain unverified. No commit,
+  push, merge, PR creation, or destructive development-database action by Codex.
 
 ### PR #7 Milestone 2 verification — 2026-11-17
 

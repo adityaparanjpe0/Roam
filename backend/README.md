@@ -149,7 +149,9 @@ schema is created with `Base.metadata.create_all()`.
 Observed on macOS, 2026-11-17: **35 passed / 47 intentionally skipped** without
 the flag; **82 passed** with PostgreSQL enabled. One existing Starlette/HTTPX
 deprecation warning remains. Windows database testing and hosted database CI
-are not yet verified; the latter is planned for Milestone 3.
+are not yet verified. Milestone 3 configures the existing backend CI job to run
+these tests using its own disposable PostgreSQL service; a hosted run still
+needs to pass before merge. See the [CI guide](../docs/CI.md).
 
 ### Models and migrations — PR #7, Milestone 2
 
@@ -246,7 +248,67 @@ not suppressed; review a compatible test-client dependency update separately.
 
 Format changes with `uv run --locked ruff format .`.
 
-## Structure
+## Complete local database workflow — PR #7, Milestone 3
+
+Each developer keeps their own ignored root `.env`. `DATABASE_URL` targets the
+regular development database; `TEST_DATABASE_ADMIN_URL` targets the local
+`postgres` maintenance database using a role with CREATEDB. Both use the host's
+published port. Tests never fall back from the latter to the former.
+See [the example](../.env.example) for placeholder URL formats; URL-encode
+reserved characters in credentials. No API key or cloud account is required.
+
+From the repository root, start PostgreSQL and install the locked backend:
+
+```sh
+docker compose config --quiet
+docker compose up -d --wait --wait-timeout 90 db
+cd backend
+uv sync --frozen --all-groups
+```
+
+After confirming locally that `DATABASE_URL` names your intended development
+database, apply the schema and verify its revision:
+
+```sh
+uv run --env-file ../.env --locked alembic upgrade head
+uv run --env-file ../.env --locked alembic current
+uv run --env-file ../.env --locked alembic check
+```
+
+Initially expect revision `0001 (head)` and no new upgrade operations. These
+commands finish and return to the prompt. The first upgrade creates application
+tables; it does not insert users, trips, or activities. For a safe test of actual
+database operations, run:
+
+```sh
+uv run --locked pytest
+uv run --env-file ../.env --locked pytest --run-db-tests -m database
+```
+
+The first command intentionally skips database tests; the second selects them
+and uses disposable databases. To run all tests together, omit `-m database`
+from the second command. Missing/invalid test admin configuration is an error,
+not a reason to use the development URL or remove safety checks.
+
+To start FastAPI (a long-running command), use a separate terminal:
+
+```sh
+uv run --env-file ../.env --locked uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+`GET /health` remains liveness only; use the database tests to verify connectivity
+and storage. Stop Uvicorn with Ctrl+C. From the repository root, stop PostgreSQL
+with `docker compose stop db`; the named volume retains data. See the
+[PostgreSQL runbook](../docs/runbooks/local-postgres.md) for port conflicts,
+authentication, persistence verification, and volume precautions.
+
+CI runs the same database tests against an independent disposable service;
+see [CI details and local reproduction](../docs/CI.md#postgresql-and-migrations).
+Before merging, require the hosted `Backend checks` run to pass and walk through
+the schema with your teammate. Deployment still requires verified TLS, separate
+runtime/migration privileges, backups/restores, and a controlled release process.
+
+## Source layout
 
 - `app/main.py` creates the single FastAPI application object that Uvicorn imports.
 - `app/__init__.py` marks the application as a Python package.

@@ -106,7 +106,7 @@ Rules:
 
 ## 5. Target local setup
 
-**Database foundation (PR #7, Milestones 1–2):** SQLAlchemy/psycopg sessions,
+**Database foundation (PR #7, Milestones 1–3):** SQLAlchemy/psycopg sessions,
 four ORM models, and initial Alembic revision 0001 are available; business APIs
 remain planned. Follow the [backend database guide](../backend/README.md#database-foundation--pr-7-milestone-1)
 for `DATABASE_URL`, explicit uv environment-file loading, and isolated opt-in
@@ -114,8 +114,10 @@ tests, and the [migration workflow](../backend/README.md#models-and-migrations--
 before changing schema. Apply migrations explicitly; never create tables on app
 startup or edit already-shared revisions. Rehearse downgrades only with the
 scratch-database migration test; revision 0001's downgrade deletes all app data.
-Default pytest remains database-free. The existing backend workflow does
-not yet run database tests; adding PostgreSQL-backed CI is Milestone 3 work.
+Default pytest remains database-free. The existing backend workflow now adds a
+disposable PostgreSQL service and an opt-in database/migration test step; hosted
+execution still needs verification. Follow the [complete local workflow](../backend/README.md#complete-local-database-workflow--pr-7-milestone-3)
+and [CI reproduction guide](CI.md#postgresql-and-migrations).
 
 **Current frontend/backend connection (PR #6):** follow the
 [two-terminal frontend guide](../frontend/README.md#run-the-frontend-and-backend-together).
@@ -410,7 +412,7 @@ Test conventions:
 See the [CI guide](CI.md) for the PR flow, exact local commands, lockfile
 explanation, failure diagnosis, GitHub log navigation, and current limitations.
 
-**Current branch implementation (PR #4, Milestone 2):**
+**Current branch implementation (PR #4 foundation, extended by PR #7):**
 [Backend CI](../.github/workflows/backend-ci.yml) defines one independent
 `Backend checks` job on Ubuntu 24.04 for pull requests targeting `main` and
 pushes to `main`. It reads `backend/.python-version`, installs uv 0.13.8,
@@ -422,6 +424,7 @@ uv run --no-sync ruff format --check .
 uv run --no-sync ruff check .
 uv run --no-sync mypy app
 uv run --no-sync pytest
+uv run --no-sync pytest --run-db-tests -m database
 ```
 
 `--locked` rejects stale dependency declarations without rewriting `uv.lock`.
@@ -429,8 +432,12 @@ uv run --no-sync pytest
 Each check is a separate required step: failures fail the job. The workflow
 uses read-only repository permissions, immutable action commits, no persisted
 checkout credentials, no dependency cache, a ten-minute timeout, and cancellation
-of superseded runs. No application secrets, database, Docker, or provider calls
-are required. Action/runtime/package downloads still require network access.
+of superseded runs. PR #7 adds a health-checked PostgreSQL 18.7 service on a
+random loopback port. Only the last test step receives a local maintenance URL
+with public disposable CI credentials; it creates/drops its own scratch
+databases and tests fresh migration upgrades. No development volume, production
+secret, running application, or provider call is used. GitHub's Linux runner
+provides Docker. Action/runtime/package downloads still require network access.
 If sync reports a stale lockfile, update and review the dependency files locally;
 do not remove `--locked` to make CI pass. Local results are recorded in
 [memory](memory.md); a GitHub run is still needed to verify hosted execution.

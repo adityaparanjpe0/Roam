@@ -26,7 +26,7 @@ and PR/ref without cancelling the other workflow.
 
 | Workflow | Job ID / check name | Purpose |
 |---|---|---|
-| [Backend CI](../.github/workflows/backend-ci.yml) | `backend` / `Backend checks` | Locked Python dependencies, Ruff format/lint, strict mypy, pytest |
+| [Backend CI](../.github/workflows/backend-ci.yml) | `backend` / `Backend checks` | Locked Python dependencies, Ruff format/lint, strict mypy, database-free pytest, PostgreSQL/ORM/migration tests |
 | [Frontend CI](../.github/workflows/frontend-ci.yml) | `frontend` / `Frontend checks` | Locked npm installation, ESLint, TypeScript, Vitest, production build |
 
 ## Reproduce locally
@@ -69,7 +69,58 @@ npm run build
 uses that installed environment without another dependency installation.
 Vitest's `--run` exits after one run. The frontend build runs `tsc -b` before
 `vite build`; the separate typecheck gives type errors their own named step.
-The checks need no running application, database, `.env`, or provider keys.
+No check needs a running application or provider key. The frontend and default
+backend tests need no database or `.env`. Backend CI additionally runs the
+database tests described below.
+
+## PostgreSQL and migrations
+
+The existing `Backend checks` job starts `postgres:18.7-bookworm`, matching local
+Compose. A health check waits for startup. Docker publishes container port 5432
+on a randomly assigned **loopback-only** host port; the test step obtains that
+port through `job.services.postgres.ports['5432']`. This uses GitHub's documented
+[service-container networking](https://docs.github.com/en/actions/tutorials/use-containerized-services/create-postgresql-service-containers).
+
+The service initializes a test-only `roam_ci` administrator and the `postgres`
+maintenance database. Its password is derived from the public workflow run ID
+and attempt, so it is **not a secret or a production credential**. The service
+contains only synthetic test data and is discarded after the job. No root `.env`,
+GitHub repository secret, development volume, or cloud database is used. The
+test administrator can create/drop databases; that privilege must not be copied
+to a deployed application role.
+
+CI keeps the ordinary test step without database configuration, then runs:
+
+```sh
+uv run --no-sync pytest --run-db-tests -m database
+```
+
+Only that step receives `TEST_DATABASE_ADMIN_URL`, targeting the service's local
+maintenance database. Fixtures create UUID-named scratch databases, apply real
+Alembic migrations, test models/relationships/constraints/transactions, and remove
+only databases registered by the current fixture. The migration test starts
+empty and checks upgrade → metadata agreement → downgrade → upgrade. A failed
+assertion or migration fails the existing job; no failure is suppressed. This
+test is the fresh-database migration gate, so a second standalone migration step
+is unnecessary. `DATABASE_URL` is not set for the CI job.
+
+To reproduce the database step locally, first configure your own ignored
+`TEST_DATABASE_ADMIN_URL` as described in the [backend guide](../backend/README.md#database-foundation--pr-7-milestone-1).
+From the repository root:
+
+```sh
+docker compose config --quiet
+docker compose up -d --wait --wait-timeout 90 db
+cd backend
+uv sync --locked --all-groups
+uv run --env-file ../.env --no-sync pytest --run-db-tests -m database
+```
+
+The extra `--env-file` loads local settings explicitly; GitHub supplies its test
+URL directly. Never use production credentials. Downgrade rehearsals belong in
+the scratch fixture, not the regular development database. Default pytest still
+skips database tests unless `--run-db-tests` is supplied. Local reproduction is
+evidence for commands/tests; only a GitHub run verifies hosted orchestration.
 
 ## The two lockfiles
 
@@ -95,6 +146,7 @@ runtime versions. Read the first useful error above the final exit-code summary.
 |---|---|
 | Dependency installation | Check runtime versions, registry access, and manifest/lockfile agreement. For an intentional Python dependency change, run `uv lock` and review the diff. For npm, update the lockfile through an intentional `npm install` and review both files. Never hand-edit resolved versions or delete a lockfile as a workaround. |
 | pytest | Read the failed assertion and traceback. Reproduce narrowly with `uv run --no-sync pytest tests/test_health.py -v`. Fix the cause; do not remove assertions. The current Starlette/HTTPX deprecation warning is visible and remains unresolved. |
+| PostgreSQL/migration tests | Check service health and the first migration/assertion failure. Locally verify the separate maintenance URL, published port, and CREATEDB permission. Reproduce using the opt-in command above, optionally selecting `tests/integration/test_migrations.py`. Do not point tests at the development database or delete a volume to fix CI. |
 | Ruff format/lint | Use the reported file, line, and rule code. `uv run --no-sync ruff format .` applies formatting; review the changes and rerun checks. Resolve lint findings rather than disabling rules indiscriminately. |
 | mypy | Inspect the reported type mismatch, optional value, or missing annotation. Correct the type/data flow and rerun `uv run --no-sync mypy app`; do not add blanket ignores. |
 | npm lint | ESLint reports the file, line, and rule. Fix that issue and rerun `npm run lint`. |
@@ -112,8 +164,9 @@ See [GitHub's workflow log guide](https://docs.github.com/en/actions/how-tos/mon
 
 - Workflows use ordinary `pull_request` events, never `pull_request_target`.
   The GitHub-provided token has only `contents: read`; checkout does not persist
-  it. No custom credentials, application secrets, or production variables are
-  configured. Dependency code still runs during installation and tests.
+  it. Only public disposable database credentials are configured; there are no
+  application secrets or production variables. Dependency code still runs
+  during installation and tests.
 - Official actions are pinned to immutable commit SHAs with release comments.
   Review upstream releases when updating those pins. Runtime/package downloads
   require network access; lockfiles do not eliminate supply-chain risk.
@@ -122,7 +175,7 @@ See [GitHub's workflow log guide](https://docs.github.com/en/actions/how-tos/mon
   until hosted timing evidence justifies it. Running both packages costs more
   minutes but keeps check scheduling predictable; account allowances determine
   actual GitHub Actions charges.
-- This CI has no PostgreSQL/migration checks, browser e2e, container build,
+- This CI has PostgreSQL/migration tests, but no browser e2e, application container build,
   dependency vulnerability/license scan, or paid provider calls. Do not include
   secrets or personal data in logs or test fixtures. The npm install flags do
   not constitute a vulnerability audit.

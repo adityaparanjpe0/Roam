@@ -67,8 +67,11 @@ account, API key, backend change, or host PostgreSQL installation is required.
 The root `.env` supplies Compose interpolation; only the explicitly listed
 variables are passed to the container. Exported shell variables can override the
 file, so check your terminal environment if settings appear inconsistent. Do not
-source `.env` as a shell script. A `DATABASE_URL` is not needed yet: the current
-FastAPI app does not connect to PostgreSQL.
+source `.env` as a shell script. Compose itself does not need `DATABASE_URL`.
+PR #7 adds backend database settings and migrations: configure `DATABASE_URL`
+for those commands and a separate local maintenance `TEST_DATABASE_ADMIN_URL`
+for opt-in tests. Follow the [complete backend workflow](../../backend/README.md#complete-local-database-workflow--pr-7-milestone-3).
+`GET /health` still does not connect to PostgreSQL.
 
 ## Start and verify
 
