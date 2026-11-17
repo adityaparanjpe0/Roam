@@ -81,6 +81,7 @@ Commit `.env.example` with placeholders and descriptions. Never commit `.env` or
 | `APP_ENV` | `development`, `test`, `production` | No |
 | `APP_BASE_URL` | Exact public/local origin used for redirects and links | No |
 | `DATABASE_URL` | PostgreSQL connection URI | Yes |
+| `TEST_DATABASE_ADMIN_URL` | Opt-in tests only: local postgres maintenance URL; never a fallback for the application | Yes |
 | `OAUTH_STATE_SECRET` | Signs/binds short-lived OAuth state | Yes |
 | `SESSION_TOKEN_PEPPER` | HMAC/pepper for stored session-token hashes | Yes |
 | `GOOGLE_OIDC_CLIENT_ID` | Google sign-in client ID | Treat as config |
@@ -104,6 +105,13 @@ Rules:
 - Rotate any credential immediately if it enters Git history or logs; deleting the file is insufficient.
 
 ## 5. Target local setup
+
+**Database connection foundation (PR #7, Milestone 1):** SQLAlchemy and psycopg
+sessions are available, but application models/migrations and business APIs are
+not implemented yet. Follow the [backend database guide](../backend/README.md#database-foundation--pr-7-milestone-1)
+for `DATABASE_URL`, explicit uv environment-file loading, and isolated opt-in
+tests. Default pytest remains database-free. The existing backend workflow does
+not yet run database tests; adding PostgreSQL-backed CI is Milestone 3 work.
 
 **Current frontend/backend connection (PR #6):** follow the
 [two-terminal frontend guide](../frontend/README.md#run-the-frontend-and-backend-together).

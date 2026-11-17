@@ -46,8 +46,9 @@ are already ignored by the repository. No manual activation is needed with
 `uv run`. In VS Code, select `backend/.venv/Scripts/python.exe` on Windows or
 `backend/.venv/bin/python` on macOS/Linux as the Python interpreter.
 
-Runtime dependencies are FastAPI (HTTP framework), Pydantic (typed response
-schemas), and Uvicorn (application server). The development
+Runtime dependencies include FastAPI (HTTP framework), Pydantic (typed response
+schemas/settings), Uvicorn (application server), SQLAlchemy 2.x (synchronous
+database sessions), and psycopg with its binary extra (PostgreSQL driver). The development
 group provides Ruff (format/lint), mypy (type checking), pytest, and HTTPX
 (FastAPI test-client support).
 
@@ -86,6 +87,71 @@ future design options; neither is implemented in this PR.
 
 ## Checks
 
+### Database foundation — PR #7, Milestone 1
+
+The connection/session foundation exists; application ORM models and Alembic
+migrations are **not added yet**. No business endpoint queries PostgreSQL.
+`/health` stays independent of database configuration and availability.
+
+Start the existing database using the [PostgreSQL runbook](../docs/runbooks/local-postgres.md).
+In your ignored root `.env`, add `DATABASE_URL` using the format documented in
+[`.env.example`](../.env.example). Use `127.0.0.1` and the published host port
+(5432 by default, 55432 on the verified workstation). The name `db` is for
+clients sharing the Compose network, not a backend running on the host.
+URL-encode reserved characters in credentials. Do not print or commit the URL.
+Restart the backend after changing the URL: its engine is cached per process.
+
+Load the file explicitly when a database command needs it:
+
+```sh
+uv run --env-file ../.env --locked <command>
+```
+
+The settings model reads environment variables, not `.env` automatically.
+It rejects invalid/unsupported URLs, missing credentials, and query parameters
+that override the URL's connection identity. Non-local hosts require
+`sslmode=verify-full`; certificate options such as `sslrootcert` remain available.
+This validation supports a future verified-TLS deployment but is not evidence
+of a tested cloud connection. Production still needs restricted application
+roles, appropriate certificates, secret storage, backups, and deployment verification.
+
+[`get_db_session`](app/db/session.py) is a synchronous FastAPI dependency. It
+yields one session and always closes it, rolling back uncommitted work. A future
+service must commit deliberately or use `with session.begin():`; dependency
+cleanup never commits. The engine is created lazily once per process, with
+thread-safe initialization and a maximum of five pooled connections/no overflow.
+Initial limits are five seconds for connection/pool waits, ten seconds for SQL
+statements, and three seconds for lock waits. Tune these from measurements before
+production workloads or long migrations; do not add more pools speculatively.
+Shutdown disposes an existing pool in a threadpool without forcing a connection
+on startup or blocking the application event loop. SQL echo is off, parameters
+are hidden in SQLAlchemy errors, and configuration errors omit input values.
+
+Ordinary `uv run --locked pytest` runs the database-free tests and explicitly
+skips PostgreSQL tests. To opt in, set a separate `TEST_DATABASE_ADMIN_URL` in
+your local `.env`. It must target the local **postgres maintenance database**,
+not `roam_dev`, and the role must be able to create databases. Do not use
+production credentials. Then run:
+
+```sh
+uv run --env-file ../.env --locked pytest --run-db-tests
+```
+
+The fixture creates a UUID-named `roam_test_...` database, runs tests there, and
+drops only that registered database afterward. It never falls back to
+`DATABASE_URL`, truncates development tables, or removes a Docker volume.
+Missing/unsafe admin configuration fails explicitly when the flag is supplied.
+Unit tests verify these guards. Milestone 1 creates only a disposable SQL probe
+table to verify transactions; application schema tests will use Alembic in
+Milestone 2, not `Base.metadata.create_all()`.
+
+Observed on macOS, 2026-11-16: **35 passed / 7 intentionally skipped** without
+the flag; **42 passed** with PostgreSQL enabled. One existing Starlette/HTTPX
+deprecation warning remains. Windows database testing and hosted database CI
+are not yet verified; the latter is planned for Milestone 3.
+
+### Existing quality gates
+
 Run from the backend directory:
 
 ```text
@@ -95,7 +161,8 @@ uv run --locked ruff check .
 uv run --locked mypy app
 ```
 
-Run all automated tests (no Uvicorn server needs to be running):
+Run database-free tests (no Uvicorn server is needed; PostgreSQL tests are skipped
+unless explicitly enabled as described above):
 
 ```text
 uv run --locked pytest
