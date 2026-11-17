@@ -1,21 +1,27 @@
 """Create an isolated database; never migrate, clear, or drop the developer database."""
 
 import os
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from contextlib import AbstractContextManager, contextmanager
 from uuid import uuid4
 
 import pytest
+from alembic import command
 from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.engine import URL
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 from sqlalchemy.pool import NullPool
 
 from app.db.session import dispose_database_engine, get_engine
 from tests.db_support import ensure_owned_database, parse_test_admin_url
+from tests.migration_support import migration_config
 
 
 @pytest.fixture(scope="session")
-def isolated_database_url(request: pytest.FixtureRequest) -> Iterator[URL]:
+def scratch_database(
+    request: pytest.FixtureRequest,
+) -> Iterator[Callable[[], AbstractContextManager[URL]]]:
     if not request.config.getoption("--run-db-tests"):
         pytest.fail(
             "Database fixtures require the explicit --run-db-tests option.",
@@ -39,10 +45,12 @@ def isolated_database_url(request: pytest.FixtureRequest) -> Iterator[URL]:
         hide_parameters=True,
     )
     created: set[str] = set()
-    name = f"roam_test_{uuid4().hex}"
-    # Only an internally generated identifier is interpolated, using SQLAlchemy quoting.
-    quoted_name = admin.dialect.identifier_preparer.quote(name)
-    try:
+
+    @contextmanager
+    def create() -> Iterator[URL]:
+        name = f"roam_test_{uuid4().hex}"
+        # Internally generated identifiers only, quoted by SQLAlchemy.
+        quoted_name = admin.dialect.identifier_preparer.quote(name)
         try:
             with admin.connect() as connection:
                 connection.exec_driver_sql(f"CREATE DATABASE {quoted_name}")
@@ -54,16 +62,26 @@ def isolated_database_url(request: pytest.FixtureRequest) -> Iterator[URL]:
                 pytrace=False,
             )
 
-        yield admin_url.set(database=name)
-    finally:
         try:
-            if name in created:
-                ensure_owned_database(name, created)
-                with admin.connect() as connection:
-                    connection.exec_driver_sql(f"DROP DATABASE {quoted_name}")
-                created.remove(name)
+            yield admin_url.set(database=name)
         finally:
-            admin.dispose()
+            ensure_owned_database(name, created)
+            with admin.connect() as connection:
+                connection.exec_driver_sql(f"DROP DATABASE {quoted_name}")
+            created.remove(name)
+
+    try:
+        yield create
+    finally:
+        admin.dispose()
+
+
+@pytest.fixture(scope="session")
+def isolated_database_url(
+    scratch_database: Callable[[], AbstractContextManager[URL]],
+) -> Iterator[URL]:
+    with scratch_database() as url:
+        yield url
 
 
 @pytest.fixture
@@ -97,3 +115,19 @@ def session_probe(database_engine: Engine) -> Iterator[None]:
     finally:
         with database_engine.begin() as connection:
             connection.execute(text("DROP TABLE session_probe"))
+
+
+@pytest.fixture
+def model_session(database_engine: Engine) -> Iterator[Session]:
+    # All application tables come from migrations, never metadata.create_all().
+    with database_engine.connect() as connection:
+        command.upgrade(migration_config(connection), "head")
+        transaction = connection.begin()
+        try:
+            with Session(
+                connection, join_transaction_mode="create_savepoint"
+            ) as session:
+                yield session
+        finally:
+            # Undo committed savepoints too, preserving test isolation.
+            transaction.rollback()

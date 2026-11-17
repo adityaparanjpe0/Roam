@@ -106,11 +106,15 @@ Rules:
 
 ## 5. Target local setup
 
-**Database connection foundation (PR #7, Milestone 1):** SQLAlchemy and psycopg
-sessions are available, but application models/migrations and business APIs are
-not implemented yet. Follow the [backend database guide](../backend/README.md#database-foundation--pr-7-milestone-1)
+**Database foundation (PR #7, Milestones 1–2):** SQLAlchemy/psycopg sessions,
+four ORM models, and initial Alembic revision 0001 are available; business APIs
+remain planned. Follow the [backend database guide](../backend/README.md#database-foundation--pr-7-milestone-1)
 for `DATABASE_URL`, explicit uv environment-file loading, and isolated opt-in
-tests. Default pytest remains database-free. The existing backend workflow does
+tests, and the [migration workflow](../backend/README.md#models-and-migrations--pr-7-milestone-2)
+before changing schema. Apply migrations explicitly; never create tables on app
+startup or edit already-shared revisions. Rehearse downgrades only with the
+scratch-database migration test; revision 0001's downgrade deletes all app data.
+Default pytest remains database-free. The existing backend workflow does
 not yet run database tests; adding PostgreSQL-backed CI is Milestone 3 work.
 
 **Current frontend/backend connection (PR #6):** follow the
@@ -144,8 +148,9 @@ limitations. Hosted execution remains unverified.
 
 The database-backed full-stack commands below remain a future target and cannot
 be used as a working setup yet. The frontend/backend health connection above
-works independently of PostgreSQL; migrations and database integration do not
-exist yet. Configure a unique local password before starting Compose; copying
+works independently of PostgreSQL; database-backed business APIs and the
+production container remain planned. Models/migrations now exist as described
+above. Configure a unique local password before starting Compose; copying
 `.env.example` alone is insufficient.
 
 After Phase 0 scaffolding, a new contributor should be able to run:

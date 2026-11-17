@@ -48,7 +48,8 @@ are already ignored by the repository. No manual activation is needed with
 
 Runtime dependencies include FastAPI (HTTP framework), Pydantic (typed response
 schemas/settings), Uvicorn (application server), SQLAlchemy 2.x (synchronous
-database sessions), and psycopg with its binary extra (PostgreSQL driver). The development
+database sessions), psycopg with its binary extra (PostgreSQL driver), and
+Alembic (schema migrations). The development
 group provides Ruff (format/lint), mypy (type checking), pytest, and HTTPX
 (FastAPI test-client support).
 
@@ -89,8 +90,8 @@ future design options; neither is implemented in this PR.
 
 ### Database foundation — PR #7, Milestone 1
 
-The connection/session foundation exists; application ORM models and Alembic
-migrations are **not added yet**. No business endpoint queries PostgreSQL.
+The connection/session foundation and Milestone 2's four ORM models and initial
+Alembic migration exist. No business endpoint queries PostgreSQL.
 `/health` stays independent of database configuration and availability.
 
 Start the existing database using the [PostgreSQL runbook](../docs/runbooks/local-postgres.md).
@@ -141,14 +142,73 @@ The fixture creates a UUID-named `roam_test_...` database, runs tests there, and
 drops only that registered database afterward. It never falls back to
 `DATABASE_URL`, truncates development tables, or removes a Docker volume.
 Missing/unsafe admin configuration fails explicitly when the flag is supplied.
-Unit tests verify these guards. Milestone 1 creates only a disposable SQL probe
-table to verify transactions; application schema tests will use Alembic in
-Milestone 2, not `Base.metadata.create_all()`.
+Unit tests verify these guards. Transaction tests use a disposable SQL probe
+table; application schema tests run the real Alembic migrations. No application
+schema is created with `Base.metadata.create_all()`.
 
-Observed on macOS, 2026-11-16: **35 passed / 7 intentionally skipped** without
-the flag; **42 passed** with PostgreSQL enabled. One existing Starlette/HTTPX
+Observed on macOS, 2026-11-17: **35 passed / 47 intentionally skipped** without
+the flag; **82 passed** with PostgreSQL enabled. One existing Starlette/HTTPX
 deprecation warning remains. Windows database testing and hosted database CI
 are not yet verified; the latter is planned for Milestone 3.
+
+### Models and migrations — PR #7, Milestone 2
+
+`app/db/models/` maps users → owned trips → trip days → activities. Database
+constraints enforce foreign keys, unique identities/days, bounded dates/party
+sizes, nonnegative money, and valid intervals. Read [ADR 0001](../docs/adr/0001-database-foundation.md)
+for exact fields, JSON limits, and deferred application validation. There are no
+trip endpoints, authentication, provider records, or lock/version enforcement yet.
+
+From `backend/`, with PostgreSQL running and your ignored `.env` configured:
+
+```sh
+uv run --env-file ../.env --locked alembic upgrade head
+uv run --env-file ../.env --locked alembic current
+uv run --env-file ../.env --locked alembic check
+```
+
+These commands target `DATABASE_URL`. Confirm its database name locally before
+applying them; do not print its password. `upgrade head` applies pending schema
+revisions; `current` reports the applied revision (`0001` initially); `check`
+reports model/schema drift supported by Alembic. It does not detect every CHECK
+constraint change, so review migrations and retain behavior tests. Migrations
+are never run on application startup. The milestone verification migrates only
+scratch databases; it does not apply revision 0001 to your development database.
+
+For future schema changes: update the model, generate a new revision against an
+up-to-date local development schema, inspect the SQL/constraints and downgrade,
+then test it on a fresh disposable database before review:
+
+```sh
+uv run --env-file ../.env --locked alembic revision --autogenerate -m "Describe schema change"
+```
+
+Format/lint the generated file. Never edit a revision already applied outside
+your branch. Add `upgrade` and `downgrade` together, documenting data-loss limits.
+The initial downgrade **deletes all application tables and data**. Do not run it
+on your regular database to test migrations. The safe rehearsal is:
+
+```sh
+uv run --env-file ../.env --locked pytest --run-db-tests tests/integration/test_migrations.py
+```
+
+That test creates a separate empty UUID-named database, checks upgrade → downgrade
+→ upgrade plus metadata agreement, closes connections, and drops only its own
+database. Model tests use migrations and an outer rollback-only transaction;
+even a test's session commit stays isolated inside a savepoint.
+
+Changing JSON preferences/interests requires assigning a new dict/list rather
+than mutating one in place. Audit `updated_at` updates automatically through
+SQLAlchemy; direct SQL must set it explicitly. Money uses integer minor units
+per person in the trip currency (`NULL` unknown; zero known free).
+
+Troubleshooting: missing `DATABASE_URL` fails before a connection; use explicit
+`--env-file`. Connection refused usually means a stopped database or incorrect
+host port. Missing tables usually means migrations have not been applied.
+An unknown revision means code and schema history disagree: sync the branch and
+inspect `alembic current`/`history`; do not delete revisions or use `stamp` to
+hide the mismatch. A migration lock/statement timeout requires investigating
+the lock/workload, not repeated retries or deleting the database.
 
 ### Existing quality gates
 

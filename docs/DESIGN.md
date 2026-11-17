@@ -105,9 +105,12 @@ This is a tradeoff, not a claim that synchronous work scales indefinitely. If me
 
 ## 4. Canonical data model
 
-PR #7 Milestone 1 (2026-11-16), on `feat/database-foundation`, implements only
-the synchronous PostgreSQL connection/session foundation. The tables below
-remain proposed until the schema/migration milestone. Existing `/health` remains
+PR #7 Milestones 1–2, on `feat/database-foundation`, implement the synchronous
+PostgreSQL connection/session foundation and initial Alembic revision `0001`
+for `users`, `trips`, `trip_days`, and `activities`. Other tables below remain
+planned. Exact initial bounds, deletion rules, JSON shape guards, and deferred
+validation are recorded in [ADR 0001](adr/0001-database-foundation.md).
+Existing `/health` remains
 database-independent; no business route consumes the database dependency yet.
 The lazy, thread-safe engine uses psycopg, bounded connection/pool/statement/lock
 waits, hidden SQL parameters, and explicit shutdown disposal. Session cleanup
@@ -201,6 +204,13 @@ This table is a provider-neutral reference/cache, not a license to warehouse ven
 Unique: `(provider, provider_place_id)`. At the time this design was written, Google's published policy states place IDs are exempt from caching restrictions and describes limited caching exceptions for some other data. The team must review the current service-specific terms before deciding which `cached_fields` persist and for how long. When rights are unclear, store the ID and refresh display fields; do not assume an itinerary or PDF creates a broader storage right.
 
 ### `activities`
+
+The initial schema stores only `user_entered` activities, with `user`/`unknown`
+cost confidence. `place_reference_id`, `provider_grounded`, and provider/model
+confidence values below are target additions for the provider milestone;
+there is no provider-reference table or unsupported foreign key in revision 0001.
+The `locked` and `version` fields store state only; mutation enforcement remains
+future service work. No business write API is exposed yet.
 
 | Column | Type | Rules |
 |---|---|---|
