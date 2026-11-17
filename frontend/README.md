@@ -179,6 +179,38 @@ See [project memory](../docs/memory.md) for exact results and limitations.
 
 ## UI review checklist
 
+### Core trip form — PR #8 Milestone 3
+
+Run `npm run dev` from `frontend/` with the pinned Node version, then open
+`http://127.0.0.1:5173/#create-trip`, or follow **Enter trip details** on the
+landing page. FastAPI is not required for the form; the independent development
+health diagnostic may report an error if it is stopped.
+
+The [form](src/features/trip/TripCreationForm.tsx) receives editable values and
+an update callback from [local React state](src/features/trip/TripCreation.tsx).
+Destination, start/end dates, travelers, and total per-person USD budget are
+controlled and start blank. Numeric editing values stay strings. The
+[draft type](src/features/trip/tripCreationModels.ts) is a future normalization
+target; this milestone does not produce or submit one.
+
+Manual checks:
+
+1. Enter and clear all five fields; editing one must preserve the others.
+2. Enter zero and a decimal budget. The budget is for the entire trip per person,
+   not per day or for the group. Placeholder examples must not be initial values.
+3. Use labels and Tab/Shift+Tab to reach inputs; native date controls can contain
+   multiple internal tab stops. Verify focus indicators remain visible.
+4. Check widths of 320, 375, 768, 1024, and 1440 pixels, plus zoom/enlarged text.
+   Inputs should stack on mobile, pair on desktop, and stay within the page.
+5. Refresh: values reset. Confirm existing navigation, preview, and footer work.
+
+There is no submit/review action yet. Native input hints are provided, but
+automatic submit validation is disabled. Full validation is reserved for Milestone
+5; interests, optional constraints, review, and backend integration remain planned.
+No routing dependency, API call, or persistence was added for the form.
+
+### Existing landing page
+
 - Check widths of 320, 375, 768, 1024, and 1440 pixels for clipping or horizontal overflow.
 - Use Tab from page load: the skip link should become visible. Enter should focus the main content; the next Tab should reach the primary CTA.
 - Verify the CTA reaches planned features and the footer link returns to the top.

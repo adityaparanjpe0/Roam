@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import App from './App'
 
@@ -60,5 +60,20 @@ test('omits the connection diagnostic and its requests outside development', () 
   render(<App />)
 
   expect(screen.queryByRole('complementary', { name: 'Backend connection' })).not.toBeInTheDocument()
+  expect(fetch).not.toHaveBeenCalled()
+})
+
+test('exposes the core trip form without issuing requests when editing', () => {
+  vi.stubEnv('DEV', false)
+  render(<App />)
+
+  expect(screen.getByRole('link', { name: 'Enter trip details' })).toHaveAttribute('href', '#create-trip')
+  const form = screen.getByRole('form', { name: 'Trip details' })
+  expect(screen.getByRole('region', { name: 'Create a trip' })).toContainElement(form)
+  fireEvent.change(within(form).getByLabelText('Destination (required)'), { target: { value: 'Lisbon' } })
+  fireEvent.change(within(form).getByLabelText('Budget per person (USD, required)'), { target: { value: '500' } })
+  fireEvent.submit(form)
+
+  expect(within(form).getByLabelText('Destination (required)')).toHaveValue('Lisbon')
   expect(fetch).not.toHaveBeenCalled()
 })

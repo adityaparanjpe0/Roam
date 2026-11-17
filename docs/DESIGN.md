@@ -27,12 +27,16 @@ not database readiness, production serving, or a new business API. See the
 
 ## 1. Context and design goals
 
-PR #8 Milestone 2 (2026-11-17) adds an isolated frontend form-state foundation
-under `frontend/src/features/trip/`: editable string values, a separate target
-normalized draft type, and local React state with one controlled destination
-field. It is not mounted on the landing page. Validation, numeric conversion,
-remaining fields, and local review remain planned. The draft is not an API
-contract; PR #11 must establish request mapping and title/timezone handling.
+PR #8 Milestones 2–3 (2026-11-17) add a frontend form-state foundation under
+`frontend/src/features/trip/`: editable string values, a separate target normalized
+draft type, and local React state. Milestone 3 mounts five controlled core fields
+(destination, dates, travelers, and total per-person USD budget) on the landing
+page, with a responsive layout and an anchor entry link. Existing navigation and
+landing content remain available. Native input hints are present, but automatic
+submit validation is disabled until the dedicated validation milestone. Interests,
+constraints, full validation, numeric conversion, and local review remain planned.
+The draft is not an API contract; PR #11 must establish request mapping and
+title/timezone handling. The form makes no requests and persists no data.
 
 Roam creates realistic travel itineraries from user preferences. It combines uncertain external data and probabilistic model output with persistent user data, so its core design problem is not “call an LLM.” It is maintaining a trustworthy boundary:
 

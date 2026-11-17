@@ -64,5 +64,57 @@ test('prevents default form submission and exposes no submit action yet', () => 
 
   expect(fireEvent.submit(form)).toBe(false)
   expect(within(form).queryByRole('button')).not.toBeInTheDocument()
-  expect(form).toHaveAccessibleDescription('Form foundation only. Details are not saved or submitted.')
+  expect(form).toHaveAccessibleDescription('Your details stay on this page and are not saved. Itinerary planning is coming later.')
+})
+
+test('all five core inputs start blank and have visible required labels', () => {
+  render(<TripCreation />)
+
+  for (const label of [
+    'Destination (required)',
+    'Start date (required)',
+    'End date (required)',
+    'Number of travelers (required)',
+    'Budget per person (USD, required)',
+  ]) {
+    const input = screen.getByLabelText(label)
+    expect(input).toHaveProperty('value', '')
+    expect(input).toBeRequired()
+  }
+  expect(screen.getByLabelText('Start date (required)')).toHaveAttribute('type', 'date')
+  expect(screen.getByLabelText('End date (required)')).toHaveAttribute('type', 'date')
+  expect(screen.getAllByRole('spinbutton')).toHaveLength(2)
+  expect(screen.getByLabelText('Budget per person (USD, required)')).toHaveAccessibleDescription(
+    'Total budget for one person for the entire trip in US dollars, not a daily amount.',
+  )
+})
+
+test('editing and clearing dates and numeric fields preserves the other inputs', () => {
+  render(<TripCreation />)
+  const fields = [
+    { label: 'Start date (required)', value: '2027-03-27' },
+    { label: 'End date (required)', value: '2027-03-30' },
+    { label: 'Number of travelers (required)', value: '3' },
+    { label: 'Budget per person (USD, required)', value: '750.50' },
+  ]
+  const destination = screen.getByLabelText('Destination (required)')
+  fireEvent.change(destination, { target: { value: 'Lisbon' } })
+
+  for (const field of fields) {
+    fireEvent.change(screen.getByLabelText(field.label), { target: { value: field.value } })
+  }
+  for (const field of fields) {
+    expect(screen.getByLabelText(field.label)).toHaveProperty('value', field.value)
+  }
+  expect(destination).toHaveValue('Lisbon')
+  const budget = screen.getByLabelText('Budget per person (USD, required)')
+  fireEvent.change(budget, { target: { value: '0' } })
+  expect(budget).toHaveValue(0)
+
+  for (const field of fields) {
+    const input = screen.getByLabelText(field.label)
+    fireEvent.change(input, { target: { value: '' } })
+    expect(input).toHaveProperty('value', '')
+  }
+  expect(destination).toHaveValue('Lisbon')
 })

@@ -8,6 +8,29 @@
 
 ### Verified facts
 
+- PR #8 Milestone 3 (2026-11-17), owner: user with Codex assistance, on
+  `feat/trip-creation-form`: [the core form](../frontend/src/features/trip/TripCreationForm.tsx)
+  now contains five labeled controlled inputs, with native date/number controls
+  and [responsive token-based CSS](../frontend/src/features/trip/TripCreation.css).
+  [The landing page](../frontend/src/routes/LandingPage.tsx) mounts it at
+  `#create-trip` and adds an entry link while preserving existing navigation/content.
+  Defaults remain blank and numeric editing values remain strings. Required/min/
+  max/step attributes provide input hints; `noValidate` prevents native submit
+  validation, and submission still only prevents navigation. No submit button,
+  interests/constraints UI, custom validation, normalized draft creation, review,
+  API request, or persistence was added. Milestone 2 was reviewed per the user;
+  Milestone 4 has not begun. This supersedes Milestone 2's isolated/unmounted status.
+  Windows verification: lint, strict typecheck, **40 tests in 4 files**, production
+  build, and `git diff --check` passed. Existing Node **24.11.1** / npm **11.6.2**
+  were used; verification on required Node **24.22.3** remains outstanding.
+  Browser measurements at 320/375/768/1024/1440px found no page overflow or clipped
+  form inputs; mobile had one column and wider screens two. All five fields accepted
+  values in the browser. Sampled keyboard focus outlines were visible; native dates
+  have internal tab stops. Full keyboard/screen-reader and cross-browser review
+  remain outstanding. The existing development health check showed expected HTTP
+  502 with FastAPI stopped; it did not block the form. No dependencies were added,
+  and no commit, push, or merge was performed.
+
 - PR #8 Milestone 2 (2026-11-17), owner: user with Codex assistance, on
   `feat/trip-creation-form`: adds [editable/draft types and fresh defaults](../frontend/src/features/trip/tripCreationModels.ts),
   [local state](../frontend/src/features/trip/TripCreation.tsx), and an isolated
