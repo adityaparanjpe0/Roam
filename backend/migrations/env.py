@@ -5,7 +5,7 @@ from sqlalchemy import Connection
 
 from app.core.config import load_database_settings
 from app.db.base import Base
-from app.db.models import Activity, Trip, TripDay, User  # noqa: F401
+from app.db.models import Activity, AppSession, Trip, TripDay, User  # noqa: F401
 from app.db.session import create_database_engine
 
 

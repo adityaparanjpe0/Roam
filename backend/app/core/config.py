@@ -90,12 +90,50 @@ class OAuthConfigurationError(ValueError):
     """Auth configuration is absent/invalid; never include environment values."""
 
 
-class GoogleOAuthSettings(BaseModel):
-    """Explicit origins and backend credentials, loaded only on auth use."""
+class AppSettings(BaseModel):
+    """Cookie/origin policy independent of Google credential availability."""
 
     model_config = ConfigDict(frozen=True, hide_input_in_errors=True)
     app_env: Literal["development", "test", "production"]
     app_base_url: str
+
+    @model_validator(mode="after")
+    def validate_origin(self) -> "AppSettings":
+        try:
+            base = urlsplit(self.app_base_url)
+            valid = (
+                base.scheme in {"http", "https"}
+                and base.hostname
+                and base.username is None
+                and base.password is None
+                and not base.path
+                and not base.query
+                and not base.fragment
+                and (base.port is None or 1 <= base.port <= 65535)
+                and not any(
+                    char.isspace() or ord(char) < 32 or char == "\\"
+                    for char in self.app_base_url
+                )
+            )
+            local = base.hostname in {"127.0.0.1", "localhost", "::1"}
+            if not valid or (
+                base.scheme == "http" and (self.app_env == "production" or not local)
+            ):
+                raise ValueError
+        except ValueError:
+            raise ValueError(
+                "Use an exact HTTPS origin; HTTP is loopback development/test only."
+            ) from None
+        return self
+
+    @property
+    def secure_cookie(self) -> bool:
+        return self.app_base_url.startswith("https://")
+
+
+class GoogleOAuthSettings(AppSettings):
+    """Explicit callback and backend credentials, loaded only on OAuth use."""
+
     google_oidc_redirect_uri: str
     google_oidc_client_id: str
     google_oidc_client_secret: SecretStr
@@ -123,41 +161,11 @@ class GoogleOAuthSettings(BaseModel):
 
     @model_validator(mode="after")
     def validate_urls(self) -> "GoogleOAuthSettings":
-        try:
-            base = urlsplit(self.app_base_url)
-            valid = (
-                base.scheme in {"http", "https"}
-                and base.hostname
-                and base.username is None
-                and base.password is None
-                and not base.path
-                and not base.query
-                and not base.fragment
-                and (base.port is None or 1 <= base.port <= 65535)
-                and not any(
-                    char.isspace() or ord(char) < 32 or char == "\\"
-                    for char in self.app_base_url
-                )
-            )
-            local = base.hostname in {"127.0.0.1", "localhost", "::1"}
-            if not valid or (
-                base.scheme == "http" and (self.app_env == "production" or not local)
-            ):
-                raise ValueError
-            if self.google_oidc_redirect_uri != (
-                self.app_base_url + "/auth/google/callback"
-            ):
-                raise ValueError
-        except ValueError:
+        if self.google_oidc_redirect_uri != self.app_base_url + "/auth/google/callback":
             raise ValueError(
-                "Use an exact origin and its /auth/google/callback URL; "
-                "HTTP is allowed only for loopback development/test."
-            ) from None
+                "Use the configured origin's exact /auth/google/callback URL."
+            )
         return self
-
-    @property
-    def secure_cookie(self) -> bool:
-        return self.app_base_url.startswith("https://")
 
 
 def load_google_oauth_settings() -> GoogleOAuthSettings:
@@ -175,4 +183,18 @@ def load_google_oauth_settings() -> GoogleOAuthSettings:
     except ValidationError:
         raise OAuthConfigurationError(
             "Google sign-in is not configured. Check backend OAuth settings."
+        ) from None
+
+
+def load_app_settings() -> AppSettings:
+    try:
+        return AppSettings.model_validate(
+            {
+                "app_env": os.environ.get("APP_ENV", ""),
+                "app_base_url": os.environ.get("APP_BASE_URL", ""),
+            }
+        )
+    except ValidationError:
+        raise OAuthConfigurationError(
+            "Authentication origin settings are invalid."
         ) from None

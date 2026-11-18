@@ -1,4 +1,4 @@
-"""Google callbacks persist verified profiles; no application session is issued."""
+"""Google callbacks verify identity before atomically issuing a Roam session."""
 
 from functools import lru_cache
 from uuid import uuid4
@@ -7,12 +7,12 @@ from authlib.common.security import generate_token
 from fastapi import APIRouter, Request
 from fastapi.responses import (
     JSONResponse,
-    PlainTextResponse,
     RedirectResponse,
     Response,
 )
 from starlette.datastructures import QueryParams
 
+from app.api.sessions import session_cookie_names, set_session_cookies
 from app.core.config import OAuthConfigurationError, load_google_oauth_settings
 from app.core.oauth_flow import (
     FLOW_TTL_SECONDS,
@@ -27,7 +27,7 @@ from app.providers.google_oidc import (
     GoogleOidcClient,
 )
 from app.schemas.auth import AuthErrorDetail, AuthErrorResponse
-from app.services.auth import UserPersistenceUnavailable, save_verified_user
+from app.services.auth import UserPersistenceUnavailable, create_login_session
 
 router = APIRouter(prefix="/auth/google", tags=["auth"])
 
@@ -109,7 +109,8 @@ def start_google_login(request: Request) -> Response:
 
 @router.get(
     "/callback",
-    response_class=PlainTextResponse,
+    status_code=303,
+    response_class=RedirectResponse,
     responses={
         400: {"model": AuthErrorResponse},
         403: {"model": AuthErrorResponse},
@@ -161,12 +162,14 @@ def google_callback(request: Request) -> Response:
             identity = client.exchange_identity(authorization_code, flow)
             # This service opens its transaction only after all provider I/O and
             # signature/claim validation have succeeded.
-            save_verified_user(identity)
-            response: Response = PlainTextResponse(
-                "Google identity verified and profile saved. You are not signed in: "
-                "Roam application sessions are not implemented yet.",
+            bearer_name, _ = session_cookie_names(client.settings)
+            issued = create_login_session(identity, request.cookies.get(bearer_name))
+            response: Response = RedirectResponse(
+                client.settings.app_base_url + "/",
+                status_code=303,
                 headers=headers,
             )
+            set_session_cookies(response, client.settings, issued)
             _clear_flow_cookies(response)
             return response
     except InvalidLoginFlow:

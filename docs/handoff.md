@@ -200,9 +200,12 @@ identity verification, application sessions, CSRF, logout, and the frontend
 were still unimplemented at that milestone. Milestone 4 now verifies callbacks
 and persists users under the existing unique issuer/subject constraint, without
 Google-token storage or a new migration. State consumption is single-use in one
-process. Application sessions, logout, CSRF, frontend integration, throttling,
-and shared flow storage remain pending. A successful callback explicitly says
-the user is not signed in. See [ADR 0005](adr/0005-google-callback-user-persistence.md).
+process. Milestone 5 now adds PostgreSQL-backed opaque sessions, current-user
+dependency, `/api/auth/me`, CSRF-protected `/api/auth/logout`, rotation, and
+expiry through revision `0002`. Callback now issues cookies only after its
+transaction commits and redirects safely, superseding the earlier text-only
+response. Frontend integration, throttling, and shared OAuth flow storage remain
+pending; live Google flow is unverified. See [ADR 0006](adr/0006-application-sessions.md).
 Process-local pending flow data is not a saved user
 session; [ADR 0004](adr/0004-oidc-initiation-foundation.md) documents its limits.
 This milestone does not satisfy the full acceptance criteria below.

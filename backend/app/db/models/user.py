@@ -1,4 +1,4 @@
-"""Google identity storage; app sessions and account deletion remain pending."""
+"""Google identity storage; account deletion remains pending."""
 
 from typing import TYPE_CHECKING
 

@@ -11,6 +11,7 @@ from authlib.oauth2.rfc7636 import create_s256_code_challenge
 from fastapi.testclient import TestClient
 
 from app.api.auth import get_google_oidc_client, get_login_flow_store
+from app.api.sessions import get_session_settings
 from app.core.oauth_flow import LoginFlowStore
 from app.main import app
 from app.providers.google_oidc import GOOGLE_DISCOVERY_URL
@@ -31,6 +32,7 @@ METADATA: dict[str, object] = {
 def isolated_oauth(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     get_google_oidc_client.cache_clear()
     get_login_flow_store.cache_clear()
+    get_session_settings.cache_clear()
     for name, value in ENVIRONMENT.items():
         monkeypatch.setenv(name, value)
     sequence = count()
@@ -50,6 +52,7 @@ def isolated_oauth(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     yield
     get_google_oidc_client.cache_clear()
     get_login_flow_store.cache_clear()
+    get_session_settings.cache_clear()
 
 
 @pytest.fixture
@@ -302,6 +305,6 @@ def test_capacity_returns_429_without_eviction(
     assert "set-cookie" not in response.headers
 
 
-def test_app_session_endpoint_is_not_implemented() -> None:
+def test_unapproved_legacy_session_path_is_absent() -> None:
     with TestClient(app) as browser:
         assert browser.get("/api/v1/me").status_code == 404

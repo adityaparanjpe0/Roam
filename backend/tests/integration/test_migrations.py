@@ -2,19 +2,21 @@
 
 from collections.abc import Callable
 from contextlib import AbstractContextManager
+from uuid import uuid4
 
 import pytest
 from alembic import command
 from pydantic import SecretStr
-from sqlalchemy import inspect, text
+from sqlalchemy import insert, inspect, select, text
 from sqlalchemy.engine import URL
 
 from app.core.config import DatabaseSettings
+from app.db.models import User
 from app.db.session import create_database_engine
 from tests.migration_support import migration_config
 
 pytestmark = pytest.mark.database
-TABLES = {"users", "trips", "trip_days", "activities", "alembic_version"}
+TABLES = {"users", "sessions", "trips", "trip_days", "activities", "alembic_version"}
 
 
 def test_fresh_upgrade_downgrade_upgrade_and_metadata_match(
@@ -47,6 +49,43 @@ def test_fresh_upgrade_downgrade_upgrade_and_metadata_match(
                 connection.commit()
                 command.upgrade(config, "head")
                 assert set(inspect(connection).get_table_names()) == TABLES
+                command.check(config)
+                connection.commit()
+        finally:
+            engine.dispose()
+
+
+def test_session_revision_preserves_existing_users(
+    scratch_database: Callable[[], AbstractContextManager[URL]],
+) -> None:
+    with scratch_database() as url:
+        engine = create_database_engine(
+            DatabaseSettings(
+                database_url=SecretStr(url.render_as_string(hide_password=False))
+            )
+        )
+        try:
+            with engine.connect() as connection:
+                config = migration_config(connection)
+                command.upgrade(config, "0001")
+                user_id = uuid4()
+                connection.execute(
+                    insert(User).values(
+                        id=user_id,
+                        oidc_issuer="https://accounts.google.com",
+                        oidc_subject="existing-subject",
+                        email="existing@example.com",
+                    )
+                )
+                connection.commit()
+                command.upgrade(config, "head")
+                assert connection.scalar(select(User.id)) == user_id
+                connection.commit()
+                command.downgrade(config, "0001")
+                assert "sessions" not in inspect(connection).get_table_names()
+                assert connection.scalar(select(User.id)) == user_id
+                connection.commit()
+                command.upgrade(config, "head")
                 command.check(config)
                 connection.commit()
         finally:

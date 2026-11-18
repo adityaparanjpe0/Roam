@@ -179,7 +179,7 @@ If a requested change weakens an invariant, stop and request an explicit archite
 
 ## 11. API rules
 
-- All JSON APIs live under `/api/v1`; auth redirects may live under `/auth`; health routes are separate.
+- All JSON APIs live under `/api/v1`, except the human-requested PR #9 Milestone 5 session routes `/api/auth/me` and `/api/auth/logout` (see ADR 0006). Auth redirects may live under `/auth`; health routes are separate.
 - Use Pydantic models for requests and responses. Do not return ORM objects directly.
 - Use one documented error envelope with stable machine codes, human messages, request IDs, and safe field details.
 - Use the correct status classes: `400/422` invalid input, `401` unauthenticated, non-enumerating `404` unauthorized/not found, `409` version/idempotency conflict, `429` quota, `502/503/504` safe upstream/unavailable cases.

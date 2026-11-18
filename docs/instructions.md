@@ -83,7 +83,7 @@ Commit `.env.example` with placeholders and descriptions. Never commit `.env` or
 | `DATABASE_URL` | PostgreSQL connection URI | Yes |
 | `TEST_DATABASE_ADMIN_URL` | Opt-in tests only: local postgres maintenance URL; never a fallback for the application | Yes |
 | `OAUTH_STATE_SECRET` | Signs/binds short-lived OAuth state | Yes |
-| `SESSION_TOKEN_PEPPER` | HMAC/pepper for stored session-token hashes | Yes |
+| `SESSION_TOKEN_PEPPER` | Superseded proposal; not used/required for 256-bit random tokens hashed with SHA-256 (ADR 0006) | N/A |
 | `GOOGLE_OIDC_CLIENT_ID` | Google sign-in client ID | Treat as config |
 | `GOOGLE_OIDC_CLIENT_SECRET` | Google sign-in client secret | Yes |
 | `GOOGLE_OIDC_REDIRECT_URI` | Exact registered callback; local target `http://127.0.0.1:5173/auth/google/callback` | No |
@@ -104,15 +104,20 @@ Rules:
   settings/client, and requires a backend restart after environment changes.
   Missing/invalid values fail closed at `/auth/google/start` without breaking
   health-only startup. Follow the [local OAuth runbook](runbooks/google-oauth-local.md).
-  `OAUTH_STATE_SECRET` and `SESSION_TOKEN_PEPPER` above remain planned session/
-  flow decisions, not credentials required for initiation. Its opaque binding
+  `OAUTH_STATE_SECRET` is not needed for the current opaque binding;
+  `SESSION_TOKEN_PEPPER` is not used by application sessions. The opaque flow
   cookie stores no flow data and needs no signing secret.
   Do not generate unused secrets or put OAuth credentials in `VITE_` variables.
-  Milestone 4's callback requires the existing migrated PostgreSQL schema and
-  `DATABASE_URL` only after Google validation succeeds. It saves a profile,
-  not an application session. Never enable raw callback-query/body logging;
+  Milestone 5 requires schema revision `0002`; apply migrations explicitly before
+  using callback/session APIs. Callback user/session issuance is atomic after
+  Google validation. Session APIs are the explicitly requested `/api/auth/me`
+  and `/api/auth/logout`, not the earlier planned versioned paths. Never enable raw callback-query/body logging;
   Uvicorn scope redaction is implemented, but future proxies need their own
   redaction. Do not share callback URLs in screenshots/issues.
+  Session origin/cookie settings are loaded separately from Google credentials;
+  restart after configuration changes. Read the [session runbook](runbooks/application-sessions.md)
+  for HTTP-only bearer cookies and CSRF cookie/header requirements. No session
+  token is returned in JSON or stored in browser localStorage.
 
 - Target: configuration is parsed and validated once at startup with typed settings.
   Current database and auth loaders are intentionally lazy to preserve health-only

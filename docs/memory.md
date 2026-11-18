@@ -8,6 +8,45 @@
 
 ### Verified facts
 
+- PR #9 Milestone 5 (2026-11-17), owner: user with Codex assistance, on
+  `feat/google-auth-sessions`: human reported Milestone 4 complete/reviewed.
+  Added `sessions`/Alembic revision `0002`, opaque 256-bit CSPRNG bearer and CSRF
+  values with only SHA-256 digests in PostgreSQL, seven-day absolute and 24-hour
+  idle lifetimes, login rotation, generic invalid-session rejection, current-user
+  dependency, and server-side logout. The human explicitly requested
+  `/api/auth/me` and `/api/auth/logout`; those replace the earlier unimplemented
+  versioned session paths only. AGENTS/design/API docs record the exception.
+  The verified Google callback now atomically upserts profile/revokes presented
+  prior session/inserts a fresh session, sets cookies after commit, clears
+  transient flow cookies, and 303 redirects to the configured app origin root.
+  Primary cookie is HttpOnly; a separate readable cookie delivers a session-bound
+  CSRF value for the custom header. Both are host-only/Lax, Secure with `__Host-`
+  names for HTTPS. Unsafe methods through the auth dependency require matching
+  cookie/header/database hashes and exact Origin (Referer fallback only if
+  Origin absent). No secrets in JSON/localStorage; no Google-token persistence.
+  Row locks serialize validation/activity refresh with revocation; failed/CSRF
+  requests cannot refresh idle time. App origin policy loads independently of
+  Google credentials. No new dependencies or signing/pepper secret is needed.
+  See [ADR 0006](adr/0006-application-sessions.md) and the
+  [session runbook](runbooks/application-sessions.md). This supersedes Milestone
+  4's no-app-session/text-only callback behavior; OAuth validation is preserved.
+  Verification on Windows/Python 3.12.16: default pytest **214 passed / 75
+  intentionally skipped**; all tests with a disposable UTC PostgreSQL **17.0**
+  cluster **289 passed**, including 21 new session integration tests and the new
+  existing-user migration preservation test. Covers rollback, concurrent
+  validation/logout, copied-token replay, cross-session CSRF, idle/absolute
+  boundaries, DST-safe duration constraints, and callback → me → logout.
+  The cluster used generated withheld credentials, an independent loopback port,
+  and fixture-owned databases; it was stopped and removed afterward. No normal
+  development database was migrated. Ruff format (**57 files**), lint, strict
+  mypy (**33 app files**), frozen sync/lock check, editor diagnostics, OpenAPI
+  profile/route inspection, and `git diff --check` passed. One existing
+  Starlette/HTTPX deprecation warning remains unsuppressed. No frontend/proxy,
+  trip CRUD, roles, Google requests, real credentials read, commits, pushes, or
+  merges. Shared durable OAuth flow state, throttling, expired-session retention
+  tooling, frontend integration, hosted PostgreSQL 18.7 CI, and live HTTPS/Google
+  verification remain outstanding. Milestone 6 has not begun.
+
 - PR #9 Milestone 4 (2026-11-17), owner: user with Codex assistance, on
   `feat/google-auth-sessions`: human reported Milestone 3 complete/reviewed.
   Added `/auth/google/callback`, atomic single-use browser/state consumption,
@@ -385,8 +424,9 @@
 ### Not yet verified or implemented
 
 - The original documentation-only and backend-placeholder snapshots are superseded by the foundation merge records above and the PR #5 database verification. Production deployment remains planned.
-- Beyond the foundations, HTTP health integration, and PR #7's four-table
-  schema/migration above, no authentication, LLM/Places/Routes integration, validation/replanning
+- Backend Google verification and application sessions now have isolated evidence
+  below; live Google/frontend-integrated authentication remains unverified.
+  Beyond those foundations, no LLM/Places/Routes integration, validation/replanning
   engine, PDF generator, production application image, deployment, benchmark, or
   production run is claimed. Backend/frontend CI workflow files are present;
   hosted CI execution remains unverified.
@@ -441,7 +481,7 @@ Material changes should receive an ADR under `docs/adr/` and a row here. Dates a
 | D-005 | 2026-11-07 | PLANNED | Retrieve real place candidates before LLM planning; model references allowlisted IDs only. | Prevents fabricated venue identity and bounds provider/model work. |
 | D-006 | 2026-11-07 | PLANNED | Deterministic Python code is authoritative for authorization, locks, time, routes, known hours, and budget arithmetic. | Probabilistic output cannot enforce hard application invariants. |
 | D-007 | 2026-11-07 | PLANNED | Replanning uses a typed scoped patch against stable IDs and a base trip version. | Preserves unaffected work, supports locks, costs less, and is explainable. |
-| D-008 | 2026-11-07 | PLANNED | Google OIDC login plus opaque server-side session cookie. | Avoids password storage; supports revocation and same-origin security. |
+| D-008 | 2026-11-17 | IN_PROGRESS | Google OIDC verification plus opaque PostgreSQL-backed session cookie. | Backend session/CSRF tests verified in Milestone 5; frontend/live Google/production proof pending. See ADR 0006. |
 | D-009 | 2026-11-07 | PLANNED | Authorization is owner-based; no RBAC/admin role in MVP. | There is only one meaningful permission model; avoid decorative complexity. |
 | D-010 | 2026-11-07 | PLANNED | Browser generates PDF from canonical saved trip data. | No server renderer or per-export external cost; simple file sharing. |
 | D-011 | 2026-11-07 | PLANNED | Planning is a bounded synchronous operation with idempotency and no queue/worker. | Appropriate to demo load; durable async is the measured scaling step. |
@@ -481,7 +521,7 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 | Frontend/backend health integration / PR #6 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | `d66391a`, `ab6e482`; [client](../frontend/src/api/health.ts), [UI](../frontend/src/features/connection/ConnectionStatus.tsx), live verification below | Documentation review, teammate review, and merge evidence |
 | Trip schema/migrations/CRUD | IN_PROGRESS | User with Codex assistance; reviewer pending | [Models](../backend/app/db/models/), [initial revision](../backend/migrations/versions/0001_create_users_trips_days_and_activities.py), PostgreSQL tests | CRUD and cross-owner authorization remain planned |
 | PostgreSQL foundation / PR #7 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | [Settings](../backend/app/core/config.py), [sessions](../backend/app/db/session.py), [ADR 0001](adr/0001-database-foundation.md), [CI](../.github/workflows/backend-ci.yml), evidence below | Milestone 3 review, hosted Backend checks success, and teammate schema walkthrough before merge |
-| Google OIDC/session/CSRF | PLANNED | Unassigned | None | Invalid state/claims and secure cookie tests |
+| Google OIDC/session/CSRF | IN_PROGRESS | User with Codex assistance; Milestone 5 review pending | ADR 0006, isolated backend/PostgreSQL tests | Frontend, proxy, shared flow state, throttling, and live deployment verification |
 | Provider-neutral Places/Routes | PLANNED | Unassigned | None | Fake + live opt-in normalization/failure proof |
 | Grounded LLM generation | PLANNED | Unassigned | None | Unknown-ID rejection and atomic valid save |
 | Deterministic validator | PLANNED | Unassigned | None | Unit/property/integration invariant suite |

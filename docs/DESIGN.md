@@ -138,11 +138,13 @@ This is a tradeoff, not a claim that synchronous work scales indefinitely. If me
 
 PR #7 Milestones 1–3, on `feat/database-foundation`, implement the synchronous
 PostgreSQL connection/session foundation and initial Alembic revision `0001`
-for `users`, `trips`, `trip_days`, and `activities`. Other tables below remain
-planned. Exact initial bounds, deletion rules, JSON shape guards, and deferred
+for `users`, `trips`, `trip_days`, and `activities`. PR #9 Milestone 5 adds
+`sessions` in revision `0002`; other tables below remain planned.
+Exact initial bounds, deletion rules, JSON shape guards, and deferred
 validation are recorded in [ADR 0001](adr/0001-database-foundation.md).
 Existing `/health` remains
-database-independent; no business route consumes the database dependency yet.
+database-independent; authentication/session services now use the database,
+while trip business routes remain unimplemented.
 The lazy, thread-safe engine uses psycopg, bounded connection/pool/statement/lock
 waits, hidden SQL parameters, and explicit shutdown disposal. Session cleanup
 closes/rolls back; application services will own commit boundaries. Environment
@@ -187,7 +189,13 @@ Unique: `(oidc_issuer, oidc_subject)`. Email may change and must not identify ow
 | `revoked_at` | timestamptz nullable | logout/revocation |
 | `created_at` | timestamptz | not null |
 
-Session cleanup can be a maintenance command or opportunistic bounded delete initially; it does not justify a worker.
+PR #9 Milestone 5 implements this table in additive revision `0002`. Hashes are
+32-byte SHA-256 digests of independent CSPRNG-generated 256-bit bearer/CSRF
+values; raw tokens are never stored. Checks enforce digest lengths, timestamp
+ordering, and an absolute maximum of 168 hours (hours avoid DST calendar-day
+ambiguity). Services additionally reject 24-hour idle expiry. User/expiry indexes
+support access and future maintenance. Cleanup/retention tooling remains planned;
+expired/revoked rows cannot authenticate while retained. No worker is needed.
 
 ### `trips`
 
@@ -340,14 +348,19 @@ Primary key: `(user_id, usage_date_utc)`. Counters are incremented atomically. P
 
 Base path: `/api/v1`. JSON uses `snake_case`. Times are RFC 3339 instants; local dates are `YYYY-MM-DD`; currency amounts are `{ "minor": 8500, "currency": "USD" }` or explicit `*_minor` plus trip currency.
 
+Explicit human-requested Milestone 5 exception: current session APIs use
+`/api/auth/me` and `/api/auth/logout`. Earlier planned `/api/v1/me` and
+`/api/v1/auth/logout` were never implemented and are not compatibility aliases.
+Other business APIs retain `/api/v1`. See [ADR 0006](adr/0006-application-sessions.md).
+
 ### Authentication and health
 
 | Method | Path | Behavior |
 |---|---|---|
 | `GET` | `/auth/google/start` | Set signed/short-lived OAuth state and redirect to Google |
-| `GET` | `/auth/google/callback` | Milestone 4 validates response and upserts user; explicit not-signed-in text until sessions/safe redirect arrive in Milestone 5 |
-| `POST` | `/api/v1/auth/logout` | CSRF-protected revoke and clear cookie |
-| `GET` | `/api/v1/me` | Return minimal current-user profile and CSRF token/bootstrap data |
+| `GET` | `/auth/google/callback` | Validate identity; atomically upsert user, revoke presented prior session, create session; set cookies after commit; 303 to configured app origin root |
+| `POST` | `/api/auth/logout` | Authenticated, CSRF-protected server revocation; 204 and cleared cookies |
+| `GET` | `/api/auth/me` | 200 `{user: {id, email, display_name}}`; generic 401 when session invalid; no secrets/CSRF values in JSON |
 | `GET` | `/health` | PR #3 Milestone 2: unauthenticated liveness, HTTP 200 with `{"status":"ok"}`; no dependency calls |
 | `GET` | `/health/live` | Planned separate liveness path; not implemented in PR #3 |
 | `GET` | `/health/ready` | Planned bounded database readiness; no LLM/Maps call; not implemented in PR #3 |
@@ -616,10 +629,12 @@ Milestone 4 persists only verified identity/profile fields using PostgreSQL
 The existing unique constraint supplies identity lookup and serializes concurrent
 first logins; updates preserve UUID, issuer, subject, creation time, and trip
 ownership. Missing optional name preserves an existing name. The transaction
-opens only after provider verification. No schema change/migration is needed.
-The callback clears flow cookies and returns safe plain text explicitly saying
-the user is not signed in. No Google tokens, session cookie, or authenticated
-state is stored. Uvicorn's callback access-log scope has its query removed before
+opens only after provider verification. Milestone 4 needed no schema change.
+Milestone 5 adds session revision `0002` and extends that final transaction to
+issue a fresh opaque session and revoke any presented prior bearer. Cookies are
+set only after commit; callback now clears flow cookies and returns a fixed 303
+to the configured app origin root, superseding Milestone 4's not-signed-in text.
+No Google tokens are persisted. Uvicorn's callback access-log scope has its query removed before
 handling; raw query data is privately parsed and discarded afterward. Future
 proxies must independently redact callback queries. See
 [ADR 0005](adr/0005-google-callback-user-persistence.md).
@@ -635,6 +650,28 @@ Use Google OpenID Connect/OAuth authorization-code flow through a maintained Pyt
 OAuth access/refresh tokens are not needed for ongoing Google API access when Google is used only for sign-in. Do not retain them unless a later user-authorized Google feature genuinely requires them.
 
 ### Session and CSRF
+
+Milestone 5 implements seven-day absolute and 24-hour idle lifetimes. Every
+lookup locks the matching session row, checks revocation/expiry and current
+user, validates CSRF for unsafe methods, then refreshes last-seen in one short
+transaction. Invalid/CSRF-rejected requests do not refresh activity. Logout and
+rotation serialize with lookup, so a stale validation cannot revive revocation.
+`get_current_user` supplies a safe identity value; it automatically requires CSRF
+on unsafe methods. Future resource routes must still enforce ownership.
+
+Bearer cookies are HttpOnly; the separate CSRF delivery cookie is deliberately
+JavaScript-readable. Both are host-only, Path=/, SameSite=Lax, finite-lived,
+and Secure with `__Host-` names for HTTPS. Only explicit loopback development/test
+allows non-Secure names. Unsafe requests must supply the CSRF cookie value as
+`X-CSRF-Token`; both digests must match the authenticated session's stored
+`csrf_hash`, with constant-time comparisons, plus exact configured Origin
+(same-origin Referer fallback only if Origin is absent). This is stateful
+synchronizer-token protection delivered via a cookie, not unbound double submit.
+Tokens are never returned in JSON or placed in localStorage. Missing CSRF cookie
+requires signing in again; GET /me does not rotate it and invalidate other tabs.
+Application-session validation needs only APP_ENV/APP_BASE_URL/DATABASE_URL,
+not Google credentials or provider availability. SHA-256 is suitable for random
+256-bit tokens; no pepper/signing secret is needed. See [ADR 0006](adr/0006-application-sessions.md).
 
 - `HttpOnly`, `Secure` except localhost, `SameSite=Lax`, narrow path/domain, finite idle and absolute expiry.
 - Rotate on login and meaningful security changes; revoke on logout.

@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Iterator
-from uuid import uuid4
+from datetime import UTC, datetime
 
 import pytest
 from fastapi.testclient import TestClient
@@ -13,6 +13,7 @@ from app.api.auth import get_google_oidc_client
 from app.core.auth_logging import RedactOAuthCallbackQuery
 from app.core.oauth_flow import LoginFlowStore
 from app.domain.identity import VerifiedIdentity
+from app.domain.session import IssuedSession
 from app.main import app
 from app.providers.google_oidc import (
     EmailNotVerified,
@@ -53,32 +54,33 @@ def callback(
         calls.append(code)
         return IDENTITY
 
-    def persist(identity: VerifiedIdentity) -> object:
+    def persist(
+        identity: VerifiedIdentity, previous_token: str | None
+    ) -> IssuedSession:
         assert calls == ["synthetic-code"]  # Provider verification precedes DB work.
         saved.append(identity)
-        return uuid4()
+        return IssuedSession("a" * 43, "b" * 43, datetime(2030, 1, 8, tzinfo=UTC))
 
     monkeypatch.setattr(client, "exchange_identity", exchange)
-    monkeypatch.setattr("app.api.auth.save_verified_user", persist)
-    with TestClient(app) as browser:
+    monkeypatch.setattr("app.api.auth.create_login_session", persist)
+    with TestClient(app, follow_redirects=False) as browser:
         browser.cookies.set("roam_oauth", BINDING)
         yield browser, calls, saved, now
 
 
-def test_callback_saves_profile_but_issues_no_login(callback: tuple) -> None:
+def test_callback_sets_session_cookies_only_after_success(callback: tuple) -> None:
     browser, calls, saved, _ = callback
     response = browser.get(
         "/auth/google/callback", params={"code": "synthetic-code", "state": STATE}
     )
-    assert response.status_code == 200
-    assert "not signed in" in response.text
-    assert response.headers["content-type"].startswith("text/plain")
+    assert response.status_code == 303
+    assert response.headers["location"] == ENVIRONMENT["APP_BASE_URL"] + "/"
+    assert response.content == b""
     assert response.headers["cache-control"] == "no-store"
     assert response.headers["referrer-policy"] == "no-referrer"
     assert saved == [IDENTITY] and calls == ["synthetic-code"]
-    assert all(
-        "Max-Age=0" in cookie for cookie in response.headers.get_list("set-cookie")
-    )
+    assert browser.cookies.get("roam_session") == "a" * 43
+    assert browser.cookies.get("roam_csrf") == "b" * 43
     assert "subject" not in response.text and IDENTITY.email not in response.text
     assert browser.get("/api/v1/me").status_code == 404
 
@@ -86,7 +88,7 @@ def test_callback_saves_profile_but_issues_no_login(callback: tuple) -> None:
 def test_consumed_callback_cannot_exchange_again(callback: tuple) -> None:
     browser, calls, saved, _ = callback
     query = {"code": "synthetic-code", "state": STATE}
-    assert browser.get("/auth/google/callback", params=query).status_code == 200
+    assert browser.get("/auth/google/callback", params=query).status_code == 303
     browser.cookies.set("roam_oauth", BINDING)
     assert browser.get("/auth/google/callback", params=query).status_code == 400
     assert calls == ["synthetic-code"] and saved == [IDENTITY]
@@ -200,10 +202,10 @@ def test_database_failure_does_not_issue_authentication(
 ) -> None:
     browser, calls, _, _ = callback
 
-    def fail(identity: VerifiedIdentity) -> None:
+    def fail(identity: VerifiedIdentity, previous_token: str | None) -> None:
         raise UserPersistenceUnavailable("SENSITIVE")
 
-    monkeypatch.setattr("app.api.auth.save_verified_user", fail)
+    monkeypatch.setattr("app.api.auth.create_login_session", fail)
     response = browser.get(
         "/auth/google/callback", params={"state": STATE, "code": "synthetic-code"}
     )

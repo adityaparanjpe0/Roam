@@ -1,10 +1,11 @@
-# Local Google OAuth configuration and callback — PR #9, Milestones 2–4
+# Local Google OAuth configuration and callback — PR #9, Milestones 2–5
 
 Milestone 2 prepared Google credentials and the configuration contract.
 Milestone 3 adds the synchronous login-start route, typed settings, Authlib 1.9.9,
 and bounded discovery through HTTPX. Milestone 4 adds callback verification and
-PostgreSQL user persistence. It does not issue application sessions or change
-Vite routing. Stop before Milestone 5. Human review/completion of Milestones 2–3
+PostgreSQL user persistence. Milestone 5 adds independent database-backed
+application sessions, CSRF protection, current-user lookup, and logout. Vite
+routing/UI remain unchanged. Stop before Milestone 6. Human review/completion of Milestones 2–4
 is reported; actual console
 settings and live Google behavior have not been inspected by the agent.
 
@@ -21,7 +22,7 @@ and [ADR 0003](../adr/0003-local-oauth-configuration.md).
 | React / browser origin | `http://127.0.0.1:5173` | Configured in Vite |
 | FastAPI upstream | `http://127.0.0.1:8000` | Documented development server |
 | Login path | `/auth/google/start` | Implemented FastAPI route; returns 302 or safe 429/503 |
-| Callback path | `/auth/google/callback` | Implemented in FastAPI; validates and saves profile without signing in |
+| Callback path | `/auth/google/callback` | Implemented in FastAPI; validates identity, commits user/session, sets cookies, redirects safely |
 | Authorized redirect URI | `http://127.0.0.1:5173/auth/google/callback` | Agreed registration target; still needs Vite proxy |
 
 The backend registers `/health`, `/auth/google/start`, and `/auth/google/callback`.
@@ -32,8 +33,8 @@ even though FastAPI handles the callback behind the future proxy. Do not
 substitute port 8000 or add a trailing slash. Use `127.0.0.1` consistently;
 `localhost` is a different host. Do not add the frontend `#create-trip` fragment
 to the redirect URI. Registration, authorization, and code exchange must use
-the same exact URI. The callback still cannot complete login without the
-application sessions reserved for Milestone 5.
+the same exact URI. The backend can now issue application sessions; end-to-end
+browser login still needs the future Vite proxy/frontend integration.
 
 ## Manual Google Auth Platform checklist
 
@@ -122,13 +123,12 @@ route; it never falls back to a test user or permissive settings.
 | `GOOGLE_OIDC_REDIRECT_URI` | `http://127.0.0.1:5173/auth/google/callback` | No |
 | `GOOGLE_OIDC_CLIENT_ID` | Value from your development Web application client | No, but keep backend configuration here |
 | `GOOGLE_OIDC_CLIENT_SECRET` | Secret from that same client | Yes |
-| `DATABASE_URL` | Existing PostgreSQL URL, needed for future users/sessions | Yes |
+| `DATABASE_URL` | PostgreSQL URL with current migrations through `0002`; users and sessions | Yes |
 
 `TEST_DATABASE_ADMIN_URL` is only for opt-in isolated database tests, never a
-runtime auth URL. `OAUTH_STATE_SECRET` and `SESSION_TOKEN_PEPPER` in the broader
-design are future flow/session configuration, not Google-issued credentials;
-do not generate them for this milestone before the library/storage choices
-establish which are required. No `VITE_GOOGLE_*` OAuth variables are needed.
+runtime auth URL. Neither `OAUTH_STATE_SECRET` nor `SESSION_TOKEN_PEPPER` is
+needed: flow binding is opaque and application sessions hash CSPRNG-generated
+256-bit tokens. No signing/JWT secret is added. No `VITE_GOOGLE_*` OAuth variables are needed.
 Do not add the client secret to frontend environment files or browser storage.
 
 The root `.env` is not automatically loaded by backend settings.
@@ -199,11 +199,14 @@ concurrent first logins return one UUID. Returning users keep their UUID,
 creation time, identity key, and trips. Only email/name/update time change;
 an absent optional name preserves the existing one.
 
-The response clears flow cookies and returns plain text explicitly saying the
-profile was saved but the user is NOT signed in. No user identity/profile is
-returned, no application session is set, and no Google tokens are persisted.
-Use existing migrated `DATABASE_URL` for runtime persistence; never use the
-test maintenance URL as the application's URL. See
+Milestone 5 supersedes the text-only callback: the same final transaction now
+also revokes any presented prior session and creates the new opaque session.
+Only after commit does the response set application/CSRF cookies, clear flow
+cookies, and return a fixed 303 to the configured app origin root. Google tokens
+are still never persisted. Apply additive revision `0002` for sessions; the
+existing user schema is unchanged. Use migrated `DATABASE_URL` for runtime;
+never use the test maintenance URL as the application's URL. See the
+[session runbook](application-sessions.md) and
 [ADR 0005](../adr/0005-google-callback-user-persistence.md).
 
 Uvicorn's access-log scope has callback query strings removed before handling.
@@ -211,8 +214,8 @@ The middleware discards the privately parsed query afterward. Future Vite and
 production proxies must independently redact callback queries; do not log them
 or share callback URLs. Vite still has no `/auth` proxy, and live Google flow is
 unverified. Do not change the registered URI as a workaround or claim completed
-login. Session issuance, logout, CSRF, throttling, shared flow state, and frontend
-integration remain future work.
+live browser login. Session issuance, expiry, logout, and CSRF now have backend
+tests; throttling, shared OAuth flow state, and frontend integration remain future work.
 
 ## Secret protection and future security gates
 
@@ -236,13 +239,15 @@ If a real secret is exposed, rotate it in Google; merely deleting it from Git
 does not revoke it. Anyone with the secret must be treated as a trusted backend
 operator. Use a separate production client with HTTPS redirect registration.
 
-The loopback HTTP exception is for local development only. Callback validation
-does not provide hashed application sessions, session-cookie expiration,
-logout revocation, or API CSRF protection; those remain future implementation.
+The loopback HTTP exception is for local development only. Application-session
+cookies are HttpOnly, host-only, SameSite=Lax and Secure for HTTPS; a distinct
+readable cookie delivers the session-bound CSRF value for an unsafe request
+header. No tokens are returned in JSON or stored in localStorage. See the
+[session security decision](../adr/0006-application-sessions.md).
 Google consent does not authorize access to
 another Roam user's trips. CI must use fakes without real Google credentials.
 
-The human reports Milestones 2–3 complete/reviewed. Milestone 4 verifies callback
+The human reports Milestones 2–4 complete/reviewed. Milestone 4 verifies callback
 behavior with synthetic signed tokens and persistence tests against disposable
-PostgreSQL. Live Google login and completed authentication remain unverified.
-Stop before Milestone 5.
+PostgreSQL. Milestone 5 adds tested backend sessions; live Google login and
+frontend-integrated authentication remain unverified. Stop before Milestone 6.

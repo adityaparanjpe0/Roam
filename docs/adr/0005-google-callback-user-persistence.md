@@ -4,6 +4,11 @@
 - Status: implemented for human-authorized PR #9 Milestone 4 only; review pending
 - Owner: user with Codex assistance
 
+Milestone 4 is human-reported complete/reviewed. The text-only/no-session
+callback behavior below is historical and is superseded by Milestone 5's
+[application-session decision](0006-application-sessions.md). Its Google
+validation and identity upsert decisions remain in effect.
+
 ## Existing schema and identity
 
 Inspection of `User` and Alembic revision `0001` confirms the existing non-null
