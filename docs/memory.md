@@ -8,6 +8,36 @@
 
 ### Verified facts
 
+- PR #8 Milestone 8 (2026-11-17), owner: user with Codex assistance, on
+  `feat/trip-creation-form`: polishes feature-scoped text wrapping, mobile action
+  width, input/interest hover feedback, keyboard checkbox-row outlines with native
+  fallback, button active/disabled CSS, and the emphasized not-saved review notice.
+  Review heading now describes that notice. An initially empty persistent atomic
+  alert reports the current error count; regression tests cover silence before
+  submission/count correction and the review heading's accessible description.
+  [The trip form guide](trip-creation-form.md) documents fields, the local draft
+  contract, validation/normalization, PR #11 connection responsibilities, and manual
+  responsive/accessibility checks. [Unreleased changelog](../CHANGELOG.md) records
+  completed frontend work without claiming a release. No loading behavior was
+  added because validation/review are synchronous. Landing styles/navigation,
+  validation policies, dependencies, infrastructure, and backend remain unchanged.
+  Verification: **142 tests in 5 files** passed, along with lint, strict typecheck,
+  production build, and `git diff --check`, using Node **24.11.1** / npm **11.6.2**.
+  Required Node **24.22.3** verification remains outstanding. Browser checks found
+  no page overflow at 320/375/768/1024/1440px, including a 4,000-character unbroken
+  review note. Keyboard traversal covered all controls and native date segments;
+  Space toggled interests and Enter completed review/edit with correct focus.
+  Measured helper/error/button text contrast: **5.09:1 / 5.17:1 / 5.62:1**.
+  Hover and temporary disabled-style probes behaved as intended; the actual local
+  action remains enabled. At doubled root font size/320px, card scroll width now
+  equals card width (form/review 207px), fixing prior form content overflow (285px
+  in a 207px card). Preserved landing header/hero still causes page-level overflow
+  in that text-enlargement probe. Actual browser zoom, screen-reader speech,
+  forced-colors/native-picker/cross-browser behavior remain unverified; no full
+  accessibility-conformance claim is made. Milestone 7 completion is human-reported;
+  Milestone 9 has not begun. No dependency install, commit, push, merge, PR creation,
+  backend integration, or release was performed.
+
 - PR #8 Milestone 7 (2026-11-17), owner: user with Codex assistance, on
   `feat/trip-creation-form`: inspected and reused existing Vitest/Testing Library/
   jest-dom/jsdom configuration, cleanup, scripts, and frontend CI's non-interactive

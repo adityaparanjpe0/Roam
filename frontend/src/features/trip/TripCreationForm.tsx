@@ -27,6 +27,7 @@ function TripCreationForm({ values, onChange, onSubmit, errors = {}, focusOnMoun
   const budgetId = `${id}-budget`
   const interestsHelpId = `${id}-interests-help`
   const constraintsId = `${id}-constraints`
+  const errorCount = Object.keys(errors).length
 
   useEffect(() => {
     if (focusOnMount) formRef.current?.querySelector<HTMLInputElement>('input[name="destination"]')?.focus()
@@ -67,7 +68,9 @@ function TripCreationForm({ values, onChange, onSubmit, errors = {}, focusOnMoun
       <p className="trip-form-help" id={helpId}>Your details stay on this page and are not saved. Itinerary planning is coming later.</p>
       <p className="trip-form-help">Required fields are marked. Additional preferences are optional.</p>
       <p className="trip-form-help">The review ignores surrounding spaces; your entered text stays unchanged when you return to edit.</p>
-      {Object.keys(errors).length > 0 && <p className="trip-error-summary" role="alert">Check the highlighted fields before continuing.</p>}
+      <p className="trip-error-summary" role="alert" aria-atomic="true">
+        {errorCount > 0 && `${errorCount} ${errorCount === 1 ? 'field needs' : 'fields need'} attention. Check the highlighted fields before continuing.`}
+      </p>
       <div className="trip-form-fields">
         <div className="trip-form-field trip-form-field-wide">
           <label htmlFor={destinationId}>Destination (required)</label>

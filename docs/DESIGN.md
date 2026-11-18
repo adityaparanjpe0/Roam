@@ -27,7 +27,7 @@ not database readiness, production serving, or a new business API. See the
 
 ## 1. Context and design goals
 
-PR #8 Milestones 2–6 (2026-11-17) add a frontend form-state foundation under
+PR #8 Milestones 2–8 (2026-11-17) add a frontend form-state foundation under
 `frontend/src/features/trip/`: editable string values, a separate target normalized
 draft type, and local React state. Milestone 3 mounts five controlled core fields
 (destination, dates, travelers, and total per-person USD budget) on the landing
@@ -51,6 +51,10 @@ the normalized snapshot; editable state remains in the container for lossless
 return to the form. Future backend validation must independently enforce rules,
 and PR #11 must own pending/error/server-success handling rather than equating
 local review with persistence.
+Milestone 8 polishes feature-scoped responsive/focus states, keeps an initially
+empty atomic error-count live region, and connects the review heading to its
+not-saved notice. The [trip form guide](trip-creation-form.md) documents fields,
+the local draft contract, manual checks, and measured accessibility limitations.
 The draft is not an API contract; PR #11 must establish request mapping and
 title/timezone handling. The form makes no requests and persists no data.
 

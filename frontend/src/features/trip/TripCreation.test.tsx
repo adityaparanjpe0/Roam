@@ -70,7 +70,7 @@ test('prevents native submission and provides a local validation action', () => 
 
 test('shows associated field errors after submit and focuses the first invalid input', () => {
   render(<TripCreation />)
-  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  expect(screen.getByRole('alert')).toBeEmptyDOMElement()
   fireEvent.click(screen.getByRole('button', { name: 'Review trip details' }))
   expect(screen.getByRole('alert')).toHaveTextContent('Check the highlighted fields')
   const destination = screen.getByLabelText('Destination (required)')
@@ -106,6 +106,9 @@ test('reviews normalized details and returns to all original editable values', (
   fireEvent.click(screen.getByRole('button', { name: 'Review trip details' }))
   const review = screen.getByRole('region', { name: 'Review your trip' })
   expect(within(review).getByRole('heading', { name: 'Review your trip' })).toHaveFocus()
+  expect(within(review).getByRole('heading', { name: 'Review your trip' })).toHaveAccessibleDescription(
+    'This is a local review. Your trip has not been saved. Refreshing this page clears your details.',
+  )
   expect(review).toHaveAccessibleDescription('This is a local review. Your trip has not been saved. Refreshing this page clears your details.')
   expect(within(review).getByText('Lisbon', { exact: true })).toBeInTheDocument()
   expect(within(review).getByText('2027-03-27')).toHaveAttribute('datetime', '2027-03-27')
@@ -279,7 +282,7 @@ test('selects multiple interests and deselects them independently', () => {
   expect(nature).toBeChecked()
   fireEvent.click(nature)
   expect(nature).not.toBeChecked()
-  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  expect(screen.getByRole('alert')).toBeEmptyDOMElement()
 })
 
 test('interest and multiline preference changes preserve all other editable values', () => {
@@ -352,7 +355,7 @@ test.each([
   fireEvent.click(screen.getByRole('checkbox', { name: 'Food' }))
   const input = screen.getByLabelText(label)
   fireEvent.change(input, { target: { value } })
-  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  expect(screen.getByRole('alert')).toBeEmptyDOMElement()
 
   fireEvent.click(screen.getByRole('button', { name: 'Review trip details' }))
   expect(screen.getByRole('alert')).toHaveTextContent('Check the highlighted fields')
@@ -376,7 +379,7 @@ test('blocks an otherwise valid form with no interests, then recovers without lo
   expect(screen.queryByRole('region', { name: 'Review your trip' })).not.toBeInTheDocument()
 
   fireEvent.click(within(group).getByRole('checkbox', { name: 'Nature' }))
-  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  expect(screen.getByRole('alert')).toBeEmptyDOMElement()
   expect(screen.getByLabelText('Destination (required)')).toHaveValue('Kyoto')
   expect(screen.getByLabelText('Budget per person (USD, required)')).toHaveValue(1200.25)
   expect(onDraftSubmit).not.toHaveBeenCalled()
@@ -417,4 +420,16 @@ test('submits a complete typed draft and reviews all interest labels and multili
   for (const name of names) expect(screen.getByRole('checkbox', { name })).toBeChecked()
   expect(screen.getByLabelText('Additional preferences or constraints (optional)')).toHaveValue(constraints)
   expect(onDraftSubmit).toHaveBeenCalledTimes(1)
+})
+
+test('announces the current error count atomically and stays quiet before submission', () => {
+  render(<TripCreation />)
+  const announcement = screen.getByRole('alert')
+  expect(announcement).toHaveAttribute('aria-atomic', 'true')
+  expect(announcement).toBeEmptyDOMElement()
+  fireEvent.click(screen.getByRole('button', { name: 'Review trip details' }))
+  expect(announcement).toHaveTextContent('6 fields need attention.')
+  fireEvent.change(screen.getByLabelText('Destination (required)'), { target: { value: 'Lisbon' } })
+  expect(announcement).toHaveTextContent('5 fields need attention.')
+  expect(screen.getByRole('button', { name: 'Review trip details' })).toBeEnabled()
 })

@@ -21,9 +21,9 @@ function TripReview({ draft, onEdit }: TripReviewProps) {
 
   return (
     <section className="trip-review" aria-labelledby={`${id}-heading`} aria-describedby={`${id}-notice`}>
-      <h2 ref={headingRef} id={`${id}-heading`} tabIndex={-1}>Review your trip</h2>
+      <h2 ref={headingRef} id={`${id}-heading`} aria-describedby={`${id}-notice`} tabIndex={-1}>Review your trip</h2>
       <p className="trip-review-notice" id={`${id}-notice`}>
-        This is a local review. Your trip has not been saved. Refreshing this page clears your details.
+        This is a local review. <strong>Your trip has not been saved.</strong> Refreshing this page clears your details.
       </p>
       <dl className="trip-summary">
         <div><dt>Destination</dt><dd>{draft.destinationLabel}</dd></div>

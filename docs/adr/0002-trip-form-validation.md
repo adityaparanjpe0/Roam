@@ -48,6 +48,12 @@ and its checkboxes; focus goes to the first checkbox when interests are first.
 Subsequent edits revalidate without moving focus or losing other entries.
 Only successful validation may leave the form for review.
 
+Milestone 8 retains an initially empty atomic alert region so changes to the
+current error count can be announced. Review heading focus describes the not-saved
+notice. Actual assistive-technology announcements remain a manual verification
+requirement; ARIA/unit checks alone do not prove them. See the
+[trip form guide](../trip-creation-form.md) for measurements and remaining limits.
+
 Milestone 5 originally created only a local draft and confirmation. Milestone 6
 replaces that confirmation with a local summary and an Edit details action.
 The container retains original editable strings independently of the normalized

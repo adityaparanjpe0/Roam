@@ -224,7 +224,22 @@ future PR #11 work and are not tested as implemented features.
 
 ## UI review checklist
 
-### Trip form — PR #8 Milestones 3–6
+The [trip form guide](../docs/trip-creation-form.md) documents every field, the
+normalized `TripDraft` contract/example, validation decisions, PR #11 integration
+boundary, and the detailed accessibility review. Milestone 8 checks passed **142
+tests in 5 files**, lint, strict typecheck, and production build using existing
+Node 24.11.1/npm 11.6.2; pinned Node 24.22.3 verification remains outstanding.
+There is no network operation or loading state in the form/review flow.
+
+Browser checks covered five standard widths, keyboard traversal/Space/Enter,
+focus transitions, a 4,000-character review note, and selected text contrast
+ratios. Doubling root text size at 320px no longer overflows the form/review cards,
+but the preserved landing header/hero still causes page-level overflow in that
+probe. Actual browser zoom, screen-reader announcements, OS high contrast, and
+cross-browser/native-picker behavior remain unverified; this is not a claim of
+full accessibility conformance.
+
+### Trip form — PR #8 Milestones 3–8
 
 Run `npm run dev` from `frontend/` with the pinned Node version, then open
 `http://127.0.0.1:5173/#create-trip`, or follow **Enter trip details** on the
