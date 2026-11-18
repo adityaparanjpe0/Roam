@@ -8,6 +8,34 @@
 
 ### Verified facts
 
+- PR #8 Milestone 5 (2026-11-17), owner: user with Codex assistance, on
+  `feat/trip-creation-form`: adds [pure typed validation](../frontend/src/features/trip/tripValidation.ts)
+  returning either field errors or a complete local draft. Checks include real
+  calendar dates, 1–14 inclusive days, 1–20 whole travelers, positive USD decimals
+  up to $1,000,000 with at most two decimal places, nonblank destination up to
+  200 UTF-16 code units, unique allowlisted interests, and optional constraints
+  up to 4,000 UTF-16 code units. Decimal digits become safe integer cents without
+  rounding. Invalid results never contain a draft. Normalization preserves editable
+  state, trims draft text/numeric whitespace, copies interests, and represents
+  blank optional constraints as null. The human's positive-budget requirement
+  supersedes earlier PR #8 zero-budget decisions; database storage is unchanged.
+  [ADR 0002](adr/0002-trip-form-validation.md) records rules and alternatives.
+  The local check action shows associated errors, announces failure, and focuses
+  the first invalid control after submit. Corrections revalidate without moving
+  focus or discarding data. Valid checks show an honest local success; any edit
+  clears success. Milestone 4 completion is human-reported; Milestone 6 review UI
+  and all backend integration remain unimplemented. No dependency was added.
+  Verification: lint, strict typecheck, **112 tests in 5 files**, production build,
+  and `git diff --check` passed on existing Node **24.11.1** / npm **11.6.2**.
+  Required Node **24.22.3** verification remains outstanding. In the browser,
+  empty submission showed six field errors and focused destination; all invalid
+  inputs described their error. Valid Lisbon details (March 27–30 2027, two
+  travelers, $750.50, Food) showed success. Changing budget to zero removed
+  success, showed only a budget error, and focused budget on recheck while
+  preserving the destination text. Error layout had no overflow at 320px.
+  Screen-reader and cross-browser review remain outstanding. No API request,
+  persistence, commit, push, or merge was performed by this milestone.
+
 - PR #8 Milestone 4 (2026-11-17), owner: user with Codex assistance, on
   `feat/trip-creation-form`: adds eight native controlled interest checkboxes
   and an optional multiline constraints field to the

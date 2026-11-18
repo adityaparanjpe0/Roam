@@ -9,6 +9,12 @@ schema. Backend CI now configures disposable PostgreSQL/migration tests;
 hosted verification and teammate schema review remain required. Business APIs
 remain future work.
 This does not change the MVP scope or claim production deployment.
+
+PR #8 Milestone 5 adds client-only trip validation and normalized local drafts.
+The human-requested positive budget rule supersedes the earlier zero-budget form
+proposal; the storage schema remains unchanged. Full local review and backend
+request integration remain planned. See [ADR 0002](adr/0002-trip-form-validation.md).
+
 > Owners: two developers; assign names in `memory.md` before the first feature branch  
 > Primary goal: build, deploy, measure, and deeply understand a credible AI-native full-stack project
 

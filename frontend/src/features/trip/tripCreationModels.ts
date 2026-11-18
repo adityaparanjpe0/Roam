@@ -37,7 +37,7 @@ export interface TripDraft {
   startDate: string
   endDate: string
   travelerCount: number
-  // Integer cents for the entire trip per person; zero is a known zero budget.
+  // Positive integer cents for the entire trip per person (PR #8 form policy).
   budgetPerPersonMinor: number
   currency: 'USD'
   interests: Interest[]

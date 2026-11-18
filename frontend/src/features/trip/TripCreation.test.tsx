@@ -58,13 +58,74 @@ test('mounted forms have independent state and uniquely associated labels', () =
   expect(secondInput).toHaveValue('')
 })
 
-test('prevents default form submission and exposes no submit action yet', () => {
+test('prevents native submission and provides a local validation action', () => {
   render(<TripCreation />)
   const form = screen.getByRole('form', { name: 'Trip details' })
 
   expect(fireEvent.submit(form)).toBe(false)
-  expect(within(form).queryByRole('button')).not.toBeInTheDocument()
+  expect(within(form).getByRole('button', { name: 'Check trip details' })).toBeInTheDocument()
   expect(form).toHaveAccessibleDescription('Your details stay on this page and are not saved. Itinerary planning is coming later.')
+})
+
+test('shows associated field errors after submit and focuses the first invalid input', () => {
+  render(<TripCreation />)
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Check trip details' }))
+  expect(screen.getByRole('alert')).toHaveTextContent('Check the highlighted fields')
+  const destination = screen.getByLabelText('Destination (required)')
+  expect(destination).toHaveFocus()
+  expect(destination).toHaveAttribute('aria-invalid', 'true')
+  expect(destination).toHaveAccessibleDescription(expect.stringContaining('Enter a destination.'))
+  expect(screen.getByRole('checkbox', { name: 'Food' })).toHaveAccessibleDescription('Select at least one interest.')
+  expect(screen.queryByText('Details are valid. Nothing has been saved.')).not.toBeInTheDocument()
+
+  fireEvent.change(destination, { target: { value: 'Lisbon' } })
+  expect(destination).not.toHaveAttribute('aria-invalid')
+  expect(screen.queryByText('Enter a destination.')).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Check trip details' }))
+  expect(screen.getByLabelText('Start date (required)')).toHaveFocus()
+  expect(destination).toHaveValue('Lisbon')
+})
+
+test('checks valid details locally and invalidates success after any edit', () => {
+  render(<TripCreation />)
+  for (const [label, value] of [
+    ['Destination (required)', ' Lisbon '],
+    ['Start date (required)', '2027-03-27'],
+    ['End date (required)', '2027-03-30'],
+    ['Number of travelers (required)', '2'],
+    ['Budget per person (USD, required)', '750.50'],
+  ]) {
+    fireEvent.change(screen.getByLabelText(label), { target: { value } })
+  }
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Food' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Check trip details' }))
+  expect(screen.getByRole('status')).toHaveTextContent('Details are valid. Nothing has been saved.')
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  expect(screen.getByLabelText('Destination (required)')).toHaveValue(' Lisbon ')
+
+  fireEvent.change(screen.getByLabelText('Budget per person (USD, required)'), { target: { value: '0' } })
+  expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  expect(screen.getByLabelText('Budget per person (USD, required)')).toHaveAttribute('aria-invalid', 'true')
+  expect(screen.getByRole('checkbox', { name: 'Food' })).toBeChecked()
+})
+
+test('rechecks dependent dates and focuses the interest group when it is the only error', () => {
+  render(<TripCreation />)
+  for (const [label, value] of [
+    ['Destination (required)', 'Lisbon'], ['Start date (required)', '2027-03-27'],
+    ['End date (required)', '2027-03-26'], ['Number of travelers (required)', '2'],
+    ['Budget per person (USD, required)', '10'],
+  ]) fireEvent.change(screen.getByLabelText(label), { target: { value } })
+  fireEvent.click(screen.getByRole('button', { name: 'Check trip details' }))
+  expect(screen.getByLabelText('End date (required)')).toHaveFocus()
+  expect(screen.getByText('End date must be on or after start date.')).toBeInTheDocument()
+  fireEvent.change(screen.getByLabelText('Start date (required)'), { target: { value: '2027-03-25' } })
+  expect(screen.queryByText('End date must be on or after start date.')).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Check trip details' }))
+  expect(screen.getByRole('checkbox', { name: 'Food' })).toHaveFocus()
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Food' }))
+  expect(screen.queryByText('Select at least one interest.')).not.toBeInTheDocument()
 })
 
 test('all five core inputs start blank and have visible required labels', () => {

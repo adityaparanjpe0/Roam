@@ -179,7 +179,7 @@ See [project memory](../docs/memory.md) for exact results and limitations.
 
 ## UI review checklist
 
-### Trip form — PR #8 Milestones 3–4
+### Trip form — PR #8 Milestones 3–5
 
 Run `npm run dev` from `frontend/` with the pinned Node version, then open
 `http://127.0.0.1:5173/#create-trip`, or follow **Enter trip details** on the
@@ -192,14 +192,16 @@ Destination, start/end dates, travelers, and total per-person USD budget are
 controlled and start blank. Numeric editing values stay strings. Eight interest
 checkboxes support independent selection/deselection, and an optional multiline
 preferences/constraints field starts empty. The
-[draft type](src/features/trip/tripCreationModels.ts) is a future normalization
-target; this milestone does not produce or submit one.
+[draft type](src/features/trip/tripCreationModels.ts) is produced only by successful
+[client validation](src/features/trip/tripValidation.ts); it is not sent to a backend.
 
 Manual checks:
 
 1. Enter and clear all five fields; editing one must preserve the others.
-2. Enter zero and a decimal budget. The budget is for the entire trip per person,
-   not per day or for the group. Placeholder examples must not be initial values.
+2. Enter zero and a decimal budget. Checking zero must show a budget error; a
+   positive amount with up to two decimal places is allowed. The budget is for
+   the entire trip per person, not per day or for the group. Placeholder examples
+   must not be initial values.
 3. Use labels and Tab/Shift+Tab to reach inputs; native date controls can contain
    multiple internal tab stops. Verify focus indicators remain visible.
 4. Check widths of 320, 375, 768, 1024, and 1440 pixels, plus zoom/enlarged text.
@@ -210,11 +212,25 @@ Manual checks:
    between checkboxes and Space to toggle; the visible checkmark indicates state.
 7. Enter multiple lines of preferences, then change interests and core fields.
    Text/newlines and selections must survive those edits. Clear the optional text
-   field; no validation message should appear yet.
+   field; it remains valid because preferences are optional.
+8. Click **Check trip details** on an empty form: expect field errors, an alert,
+   and focus on Destination. Correct it and check again: focus should reach the
+   first remaining invalid input. After the first check, errors update as you edit.
+9. Check a valid example: Lisbon, March 27–30 2027, 2 travelers, $750.50, Food.
+   Expect **Details are valid. Nothing has been saved.** The validator's draft has
+   `budgetPerPersonMinor: 75050`. Change budget to zero or reverse the dates:
+   success must disappear and field errors must return without losing other data.
 
-There is no submit/review action yet. Native input hints are provided, but
-automatic submit validation is disabled. Full validation is reserved for Milestone
-5; normalized draft creation, review, and backend integration remain planned.
+The check action is local only; the review screen and backend integration remain
+planned. Dates must be real calendar dates and span 1–14 inclusive days; travelers
+must be whole numbers from 1–20. Budget must be positive, at most $1,000,000 and
+have no more than two decimal places. Exponents, hex, nonfinite numbers, trailing
+junk, and excess precision are rejected rather than rounded. At least one unique
+supported interest is required. Destination is capped at 200 UTF-16 code units;
+optional preferences at 4,000, matching native maxlength behavior. Draft
+normalization trims surrounding text/numeric whitespace and converts whitespace-only
+preferences to null; the entered values are not rewritten. See
+[ADR 0002](../docs/adr/0002-trip-form-validation.md) for policy and server responsibilities.
 No routing dependency, API call, or persistence was added for the form.
 
 ### Existing landing page

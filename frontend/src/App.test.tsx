@@ -45,7 +45,7 @@ test('clearly explains that planning capabilities are not available yet', () => 
   expect(screen.getByText('Illustrative planner concept. Not generated or interactive.')).toBeInTheDocument()
   expect(screen.getByRole('list', { name: 'Illustrative day plan' })).toBeInTheDocument()
   expect(screen.getAllByRole('article')).toHaveLength(3)
-  expect(within(screen.getByRole('main')).queryByRole('button')).not.toBeInTheDocument()
+  expect(within(screen.getByRole('main')).getByRole('button', { name: 'Check trip details' })).toBeInTheDocument()
 })
 
 test('includes a developer connection check without changing the landing page', () => {
