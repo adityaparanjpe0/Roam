@@ -1,9 +1,11 @@
-# Local Google OAuth configuration — PR #9, Milestone 2
+# Local Google OAuth configuration and initiation — PR #9, Milestones 2–3
 
-This milestone prepares Google credentials and documents the configuration
-contract. It does not implement login, load auth settings, install Authlib, or
-change Vite routing. The human approved Milestone 1 and requested Milestone 2
-only. Stop before backend implementation (Milestone 3).
+Milestone 2 prepared Google credentials and the configuration contract.
+Milestone 3 adds the synchronous login-start route, typed settings, Authlib 1.9.9,
+and bounded discovery through HTTPX. It does not complete login, implement a
+callback, write application sessions, or change Vite routing. Stop before
+Milestone 4. Human review/completion of Milestone 2 is reported; actual console
+settings and live Google behavior have not been inspected by the agent.
 
 ## Architecture and exact URLs
 
@@ -17,11 +19,11 @@ and [ADR 0003](../adr/0003-local-oauth-configuration.md).
 |---|---|---|
 | React / browser origin | `http://127.0.0.1:5173` | Configured in Vite |
 | FastAPI upstream | `http://127.0.0.1:8000` | Documented development server |
-| Login path | `/auth/google/start` | Planned FastAPI route |
+| Login path | `/auth/google/start` | Implemented FastAPI route; returns 302 or safe 429/503 |
 | Callback path | `/auth/google/callback` | Planned FastAPI route |
 | Authorized redirect URI | `http://127.0.0.1:5173/auth/google/callback` | Agreed registration target; not a working endpoint yet |
 
-The backend currently registers only `/health`. Vite proxies only `/health`.
+The backend registers `/health` and `/auth/google/start`. Vite proxies only `/health`.
 A later milestone must add `/auth` forwarding to port 8000, preserving the path,
 and the FastAPI callback. Port 5173 is intentional: it is the browser origin,
 even though FastAPI handles the callback behind the future proxy. Do not
@@ -78,7 +80,8 @@ Never paste credentials into chat or include them in screenshots/issues.
    [the example](../../.env.example) only if no local `.env` exists.
 9. Confirm the selected project, External/Testing status, scopes, redirect URI,
    and intended test accounts. Do not try a live callback until its route and
-   proxy exist. Record completion without recording credentials.
+   proxy exist. Record completion without recording credentials. The start route
+   can now generate a Google redirect but does not prove successful login.
 
 Google can change console labels. Use these official references rather than
 following prompts to enable unrelated products:
@@ -86,7 +89,7 @@ following prompts to enable unrelated products:
 [web-server redirect rules](https://developers.google.com/identity/protocols/oauth2/web-server),
 and [audience/testing behavior](https://developers.google.com/identity/protocols/oauth2/production-readiness/overview).
 Reviewed 2026-11-17. No project creation, credential issuance, or successful
-Google login has been verified by this documentation change.
+Google login has been independently verified by the agent.
 
 ## Scopes and credentials explained
 
@@ -102,14 +105,16 @@ and must remain server-only. Neither is a user's Google password, a Maps API
 key, or a Roam session secret. Do not request offline access or store Google
 tokens for later API access. This slice needs no additional Google API enabled.
 
-## Reserved environment contract
+## Backend environment contract
 
-These names are prepared for future implementation, not currently consumed by
-auth code. Existing health-only startup remains independent of credentials.
+The five auth values below are validated on first auth use and the successfully
+configured client is cached until restart. Existing health-only startup remains
+independent of credentials. Missing/invalid auth config returns 503 at the start
+route; it never falls back to a test user or permissive settings.
 
 | Variable | Local value / purpose | Secret? |
 |---|---|---|
-| `APP_ENV` | `development`; future explicit environment policy | No |
+| `APP_ENV` | Explicit `development`, `test`, or `production`; HTTP permitted only on loopback in development/test | No |
 | `APP_BASE_URL` | `http://127.0.0.1:5173`; browser origin | No |
 | `GOOGLE_OIDC_REDIRECT_URI` | `http://127.0.0.1:5173/auth/google/callback` | No |
 | `GOOGLE_OIDC_CLIENT_ID` | Value from your development Web application client | No, but keep backend configuration here |
@@ -123,8 +128,8 @@ do not generate them for this milestone before the library/storage choices
 establish which are required. No `VITE_GOOGLE_*` OAuth variables are needed.
 Do not add the client secret to frontend environment files or browser storage.
 
-The root `.env` is not automatically loaded by current backend settings.
-When later auth code exists, the existing backend environment-file convention is:
+The root `.env` is not automatically loaded by backend settings.
+Use the existing environment-file convention to enable initiation locally:
 
 ```sh
 cd backend
@@ -132,7 +137,45 @@ uv run --env-file ../.env --locked uvicorn app.main:app --reload --host 127.0.0.
 ```
 
 Run the frontend separately using its [existing guide](../../frontend/README.md).
-Do not run dependency installation or start servers just to register credentials.
+Registration alone does not need running servers. Initiation now uses installed
+Authlib plus runtime HTTPX, pinned by the backend lockfile. No live Google call is
+needed for ordinary automated tests.
+
+## What initiation implements
+
+After loading valid settings, `GET http://127.0.0.1:8000/auth/google/start` fetches
+Google's well-known discovery metadata over verified TLS (without credentials),
+checks fixed trusted endpoints/capabilities, and caches valid metadata for one
+hour. HTTP calls have five-second timeouts; document reads have a five-second
+window and 64 KiB cap; redirects and retries are disabled. Discovery failure
+returns a sanitized 503 with no cookie or authorization redirect.
+
+Authlib constructs the authorization-code request with only `openid email
+profile`, fresh state/nonce, and PKCE S256. The Google client secret is not
+required for this URL and is never sent to the browser. The future token exchange
+must use the secret and the original server-held PKCE verifier. Do not set
+`AUTHLIB_INSECURE_TRANSPORT`.
+
+A ten-minute opaque browser-binding cookie is HttpOnly, SameSite=Lax, Path=/,
+and has no Domain. HTTPS uses Secure and the `__Host-roam_oauth` name. Only
+loopback development/test can use the non-Secure `roam_oauth` cookie. The browser
+sees state, nonce, and the challenge in the Google redirect; only their matching
+record and the secret verifier stay in server memory. The cookie contains none
+of those flow fields and is not an authenticated application session.
+
+At most 256 live pending attempts exist per process. Starting again replaces
+that browser's earlier attempt; expired entries are pruned on initiation, and
+full capacity returns 429 without evicting other browsers. Restarting the process
+loses attempts. Do not use multiple workers for future callback testing until
+shared storage exists. This is a bounded development foundation, not production
+authentication or complete login throttling. See [ADR 0004](../adr/0004-oidc-initiation-foundation.md).
+
+The callback remains absent (404), so state/nonce validation, code exchange,
+identity validation, and atomic replay prevention are NOT implemented/proven.
+Vite still has no `/auth` proxy. Do not finish a live Google login attempt yet:
+returning to the configured callback cannot authenticate the user. Milestone 4
+must integrate the stored attempt with maintained-library validation, rather
+than merely trusting callback query values.
 
 ## Secret protection and future security gates
 
@@ -163,6 +206,6 @@ provide hashed sessions, secure cookies, expiration, logout revocation, CSRF,
 and redacted callback logging. Google consent does not authorize access to
 another Roam user's trips. CI must use fakes without real Google credentials.
 
-Completion here means preparation and documented values. Manual console setup
-is pending until the human performs it; login and security behavior remain
-unverified. Stop before Milestone 3.
+The human reports Milestone 2 complete/reviewed. Milestone 3 proves initiation
+with isolated synthetic tests only. Live Google login and completed authentication
+remain unverified. Stop before Milestone 4.

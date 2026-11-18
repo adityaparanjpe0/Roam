@@ -578,16 +578,30 @@ This is safer and cheaper than regenerating the whole itinerary and makes the ch
 
 ### Authentication flow
 
-PR #9 Milestone 1 was approved by the human; Milestone 2 (2026-11-17) prepares
-local Google configuration only. FastAPI remains the OIDC client, React owns
-the UI, and PostgreSQL will hold opaque application-session hashes. Authlib is
-the proposed protocol library; its exact integration/version remains to be
-verified. No auth runtime behavior is implemented in this milestone.
+PR #9 Milestone 1 was approved by the human; Milestone 2 (2026-11-17) prepared
+local Google configuration. Milestone 3 implements only synchronous
+`GET /auth/google/start`, typed settings, and Google discovery. FastAPI remains
+the OIDC client, React owns the UI, and PostgreSQL will hold opaque application
+session hashes. Authlib 1.9.9's protocol client constructs authorization URLs
+and PKCE; its secure token generator supplies state, nonce, and verifier values.
+Synchronous HTTPX retrieves metadata with fixed endpoints, size/time bounds,
+and a one-hour cache. No token exchange or identity validation exists yet.
 The agreed local callback is `http://127.0.0.1:5173/auth/google/callback`:
 the browser reaches Vite, which will proxy `/auth` to FastAPI on port 8000.
 Both that proxy and the backend callback remain planned. See
 [ADR 0003](adr/0003-local-oauth-configuration.md) and the
 [configuration runbook](runbooks/google-oauth-local.md).
+
+For initiation only, the browser gets a ten-minute opaque HttpOnly, SameSite=Lax
+flow-binding cookie (Secure with HTTPS, `__Host-` name and no Domain). A bounded,
+thread-safe process-local store holds nonce, state, verifier, callback URI, and
+expiry under the binding hash. It replaces the browser's previous pending
+attempt, prunes expired attempts on initiation, and returns 429 at 256 active
+attempts instead of evicting another browser. This is not an application
+session. Restart/multiple workers cannot share this state; callback integration
+must address atomic single use and shared storage before deployment. The
+PostgreSQL-backed application-session architecture remains unchanged. See
+[ADR 0004](adr/0004-oidc-initiation-foundation.md).
 
 Use Google OpenID Connect/OAuth authorization-code flow through a maintained Python library:
 

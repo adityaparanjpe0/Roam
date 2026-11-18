@@ -8,6 +8,34 @@
 
 ### Verified facts
 
+- PR #9 Milestone 3 (2026-11-17), owner: user with Codex assistance, on
+  `feat/google-auth-sessions`: human reported Milestone 2 complete/reviewed and
+  authorized initiation only. Added typed lazy Google settings and synchronous
+  `GET /auth/google/start`, real Authlib 1.9.9 authorization-code URL generation
+  with state/nonce/PKCE S256, and bounded fixed-host discovery using runtime
+  HTTPX 0.28.1. Authlib's installed BSD-3-Clause license and relevant source APIs
+  were inspected. The lockfile adds Authlib and its transitive crypto dependencies;
+  HTTPX moved from development-only to runtime. Authlib is untyped, so only its
+  imports receive a mypy missing-stubs override; Roam app checks remain strict.
+  A ten-minute opaque HttpOnly/Lax browser cookie binds a bounded process-local
+  flow record (maximum 256); HTTPS uses Secure and a `__Host-` name. No Google
+  secret or PKCE verifier enters that cookie or redirect. No callback, token
+  exchange/validation, application sessions, DB writes/migrations, or frontend
+  changes were added. State/nonce validation and atomic replay prevention are
+  NOT implemented yet. [ADR 0004](adr/0004-oidc-initiation-foundation.md) documents
+  the initiation-only storage decision; the final PostgreSQL session plan is
+  unchanged. Process restart/multiple workers lose pending flow state.
+  This supersedes Milestone 2's no-loader/no-initiation/Authlib-not-installed
+  status only. Live Google/client PKCE enforcement, completed authentication,
+  hosted CI, and deployment are unverified; Milestone 4 has not begun.
+  Verification on Windows/Python 3.12.16: default `pytest` **88 passed / 47
+  intentionally skipped**, including 53 new isolated auth tests with synthetic
+  credentials/deterministic token generation and denied live HTTP. One existing
+  Starlette/HTTPX deprecation warning remains unsuppressed. Ruff format check
+  (**38 files**), Ruff lint, strict mypy (**21 app files**), frozen all-groups
+  sync, offline lock check, and `git diff --check` passed. No live credentials
+  read, Google requests made, paid services used, commits, pushes, or merges.
+
 - PR #9 Milestone 2 (2026-11-17), owner: user with Codex assistance, on
   `feat/google-auth-sessions`: human approved Milestone 1 and authorized only
   Google OAuth development configuration. Added blank credential placeholders,

@@ -1,8 +1,17 @@
 """Validate database configuration without exposing credentials."""
 
 import os
+from typing import Literal
+from urllib.parse import urlsplit
 
-from pydantic import BaseModel, ConfigDict, SecretStr, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    SecretStr,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 from sqlalchemy.engine import URL, make_url
 from sqlalchemy.exc import ArgumentError
 
@@ -74,4 +83,96 @@ def load_database_settings() -> DatabaseSettings:
         raise DatabaseConfigurationError(
             "DATABASE_URL is invalid. Use postgresql+psycopg with credentials, "
             "host, and database; remote hosts require sslmode=verify-full."
+        ) from None
+
+
+class OAuthConfigurationError(ValueError):
+    """Auth configuration is absent/invalid; never include environment values."""
+
+
+class GoogleOAuthSettings(BaseModel):
+    """Explicit origins and backend credentials, loaded only on auth use."""
+
+    model_config = ConfigDict(frozen=True, hide_input_in_errors=True)
+    app_env: Literal["development", "test", "production"]
+    app_base_url: str
+    google_oidc_redirect_uri: str
+    google_oidc_client_id: str
+    google_oidc_client_secret: SecretStr
+
+    @field_validator("google_oidc_client_id")
+    @classmethod
+    def validate_client_id(cls, value: str) -> str:
+        if not value.endswith(".apps.googleusercontent.com") or not (
+            1 <= len(value) <= 255
+        ):
+            raise ValueError("Expected a Google Web application client ID")
+        if any(
+            not (char.isascii() and (char.isalnum() or char in "-_.")) for char in value
+        ):
+            raise ValueError("Invalid Google client ID")
+        return value
+
+    @field_validator("google_oidc_client_secret")
+    @classmethod
+    def validate_client_secret(cls, value: SecretStr) -> SecretStr:
+        secret = value.get_secret_value()
+        if not 1 <= len(secret) <= 4096 or any(char.isspace() for char in secret):
+            raise ValueError("Expected a nonblank Google client secret")
+        return value
+
+    @model_validator(mode="after")
+    def validate_urls(self) -> "GoogleOAuthSettings":
+        try:
+            base = urlsplit(self.app_base_url)
+            valid = (
+                base.scheme in {"http", "https"}
+                and base.hostname
+                and base.username is None
+                and base.password is None
+                and not base.path
+                and not base.query
+                and not base.fragment
+                and (base.port is None or 1 <= base.port <= 65535)
+                and not any(
+                    char.isspace() or ord(char) < 32 or char == "\\"
+                    for char in self.app_base_url
+                )
+            )
+            local = base.hostname in {"127.0.0.1", "localhost", "::1"}
+            if not valid or (
+                base.scheme == "http" and (self.app_env == "production" or not local)
+            ):
+                raise ValueError
+            if self.google_oidc_redirect_uri != (
+                self.app_base_url + "/auth/google/callback"
+            ):
+                raise ValueError
+        except ValueError:
+            raise ValueError(
+                "Use an exact origin and its /auth/google/callback URL; "
+                "HTTP is allowed only for loopback development/test."
+            ) from None
+        return self
+
+    @property
+    def secure_cookie(self) -> bool:
+        return self.app_base_url.startswith("https://")
+
+
+def load_google_oauth_settings() -> GoogleOAuthSettings:
+    """Match the database loader: explicit environment, no automatic .env read."""
+    names = (
+        "APP_ENV",
+        "APP_BASE_URL",
+        "GOOGLE_OIDC_REDIRECT_URI",
+        "GOOGLE_OIDC_CLIENT_ID",
+        "GOOGLE_OIDC_CLIENT_SECRET",
+    )
+    values = {name.lower(): os.environ.get(name, "") for name in names}
+    try:
+        return GoogleOAuthSettings.model_validate(values)
+    except ValidationError:
+        raise OAuthConfigurationError(
+            "Google sign-in is not configured. Check backend OAuth settings."
         ) from None

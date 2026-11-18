@@ -70,12 +70,27 @@ server with Ctrl+C. Reload mode is for local development.
 
 Google OAuth development preparation is documented in the
 [local OAuth runbook](../docs/runbooks/google-oauth-local.md).
-PR #9 Milestone 2 adds configuration placeholders and setup instructions only.
+PR #9 Milestone 2 added configuration placeholders and setup instructions.
+Milestone 3 implements synchronous `GET /auth/google/start` using Authlib 1.9.9
+and bounded Google discovery through runtime HTTPX. It returns an authorization
+redirect with state, nonce, and PKCE S256 after storing a pending attempt in
+server memory. Missing/invalid auth settings return a safe 503; health remains
+independent. No user identity or Google token is validated at this stage.
 The planned callback is `/auth/google/callback`, browser-facing at
 `http://127.0.0.1:5173/auth/google/callback` through a future Vite proxy to
 FastAPI at `http://127.0.0.1:8000`. Neither the callback nor that proxy exists
 yet; registering credentials does not make login work. Existing health-only
-startup still needs no Google credentials.
+startup still needs no Google credentials. With auth settings loaded, direct
+requests to `http://127.0.0.1:8000/auth/google/start` can initiate authorization,
+but returning from Google cannot finish it. Do not interpret a redirect as
+successful login. Pending attempts expire after ten minutes, are limited to
+256 per process, and are lost on restart. Application-session persistence,
+callback validation, throttling, and multi-process flow storage are later work.
+Tests use synthetic credentials and mocked HTTP, never your `.env`:
+
+```text
+uv run --locked pytest tests/test_oauth_config.py tests/test_oauth_login.py tests/test_oauth_flow.py
+```
 
 Open <http://127.0.0.1:8000/health> or request it from another terminal:
 

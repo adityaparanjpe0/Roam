@@ -194,6 +194,13 @@ unverified, and Milestone 6 has not begun.
 
 ### Phase 2 — Authentication and authorization
 
+PR #9 Milestone 3 now provides login initiation only at `/auth/google/start`,
+typed auth settings, and bounded Google discovery/PKCE generation. Callback,
+identity verification, application sessions, CSRF, logout, and the frontend
+remain unimplemented. Process-local pending flow data is not a saved user
+session; [ADR 0004](adr/0004-oidc-initiation-foundation.md) documents its limits.
+This milestone does not satisfy the full acceptance criteria below.
+
 **Deliverables**
 
 - Implement Google OIDC/OAuth authorization-code flow using a maintained library.

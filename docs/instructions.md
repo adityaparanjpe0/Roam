@@ -99,14 +99,19 @@ Commit `.env.example` with placeholders and descriptions. Never commit `.env` or
 
 Rules:
 
-- PR #9 Milestone 2 reserves `APP_ENV`, `APP_BASE_URL`, and `GOOGLE_OIDC_*`
-  values in the root example for future auth code; no auth loader or route
-  consumes them yet. Follow the [local OAuth runbook](runbooks/google-oauth-local.md).
+- PR #9 Milestone 3 loads `APP_ENV`, `APP_BASE_URL`, and `GOOGLE_OIDC_*`
+  on the first successful auth configuration request, caches the immutable
+  settings/client, and requires a backend restart after environment changes.
+  Missing/invalid values fail closed at `/auth/google/start` without breaking
+  health-only startup. Follow the [local OAuth runbook](runbooks/google-oauth-local.md).
   `OAUTH_STATE_SECRET` and `SESSION_TOKEN_PEPPER` above remain planned session/
-  flow decisions, not credentials required for this configuration milestone.
+  flow decisions, not credentials required for initiation. Its opaque binding
+  cookie stores no flow data and needs no signing secret.
   Do not generate unused secrets or put OAuth credentials in `VITE_` variables.
 
-- Configuration is parsed and validated once at startup with typed settings.
+- Target: configuration is parsed and validated once at startup with typed settings.
+  Current database and auth loaders are intentionally lazy to preserve health-only
+  startup; auth validation failures return safe 503 responses, not insecure defaults.
 - Production refuses insecure defaults or missing secrets.
 - Fake providers are the default for tests; development may require an explicit opt-in to live calls.
 - Browser-exposed keys are never treated as secrets; restrict them by exact origin and API. Server keys use API and network/application restrictions where supported.
