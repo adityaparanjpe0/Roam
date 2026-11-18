@@ -1,5 +1,9 @@
 # Local Google OAuth configuration and callback — PR #9, Milestones 2–7
 
+For the current consolidated setup and live verification steps, use [AUTH](../AUTH.md)
+and the [manual checklist](../auth-manual-checklist.md). The sections below retain
+milestone history; no live Google success has been recorded by the agent.
+
 Milestone 2 prepared Google credentials and the configuration contract.
 Milestone 3 adds the synchronous login-start route, typed settings, Authlib 1.9.9,
 and bounded discovery through HTTPX. Milestone 4 adds callback verification and
@@ -94,9 +98,9 @@ Never paste credentials into chat or include them in screenshots/issues.
    an existing `.env` with the example. A fresh file can be copied from
    [the example](../../.env.example) only if no local `.env` exists.
 9. Confirm the selected project, External/Testing status, scopes, redirect URI,
-   and intended test accounts. Do not try a live callback until the Vite proxy
-   is implemented. Record completion without recording credentials. The start route
-   can now generate a Google redirect but does not prove successful login.
+   and intended test accounts. The Vite proxy is implemented; after starting the
+   migrated backend and frontend, follow the manual checklist. Record completion
+   without recording credentials. An authorization redirect alone does not prove login.
 
 Google can change console labels. Use these official references rather than
 following prompts to enable unrelated products:
@@ -166,8 +170,8 @@ returns a sanitized 503 with no cookie or authorization redirect.
 
 Authlib constructs the authorization-code request with only `openid email
 profile`, fresh state/nonce, and PKCE S256. The Google client secret is not
-required for this URL and is never sent to the browser. The future token exchange
-must use the secret and the original server-held PKCE verifier. Do not set
+required for this URL and is never sent to the browser. The implemented token exchange
+uses the secret and the original server-held PKCE verifier. Do not set
 `AUTHLIB_INSECURE_TRANSPORT`.
 
 A ten-minute opaque browser-binding cookie is HttpOnly, SameSite=Lax, Path=/,

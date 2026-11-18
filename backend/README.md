@@ -1,9 +1,11 @@
 # Roam backend
 
-PR #3, Milestones 1 through 3 provide the Python environment, a minimal FastAPI
-app, a health endpoint, and automated endpoint tests.
-No database, credentials, environment variables, or other services
-are required to start this backend.
+The backend includes FastAPI liveness, PostgreSQL/SQLAlchemy migrations and
+Google OIDC with database-backed Roam sessions. Health-only startup needs no
+credentials or database. Actual login/session APIs require configured backend
+settings and a migrated local database. See [AUTH](../docs/AUTH.md) for actual
+contracts, private local environment setup, startup and troubleshooting, and the
+[manual checklist](../docs/auth-manual-checklist.md) for live verification.
 
 ## Prerequisites
 
@@ -67,7 +69,7 @@ Open <http://127.0.0.1:8000/docs> for FastAPI's interactive documentation or
 path `/` has no route and returns 404. Stop the
 server with Ctrl+C. Reload mode is for local development.
 
-## Health endpoint
+## Google authentication
 
 Google OAuth development preparation is documented in the
 [local OAuth runbook](../docs/runbooks/google-oauth-local.md).
@@ -112,6 +114,8 @@ profile updates, equal-email/different-subject separation, concurrent first
 logins, and rollback. Follow the isolated test configuration below; ordinary
 CI uses fakes for all Google calls. Callback queries are stripped from the ASGI
 scope used by Uvicorn access logging; any future proxy must redact them too.
+
+## Health endpoint
 
 Open <http://127.0.0.1:8000/health> or request it from another terminal:
 

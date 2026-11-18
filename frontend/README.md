@@ -13,7 +13,7 @@ a recoverable auth error while the local trip form remains usable.
 ## Prerequisites
 
 - Node **24.22.3**, pinned in [`.nvmrc`](../.nvmrc).
-- npm (verification used **11.5.1**).
+- npm (current authentication verification used **11.19.1**).
 
 Use one of the setup paths below. Commands start from the repository root.
 
@@ -54,6 +54,11 @@ npm exec --yes --package=node@24.22.3 -- npm run dev
 This path requires registry access on the first download. Use the same `npm exec --yes --package=node@24.22.3 --` prefix for the checks below if your global Node version differs.
 
 ## Development and verification
+
+Use [AUTH](../docs/AUTH.md) for the implemented OAuth/session architecture and
+three-process local startup, plus the [manual end-to-end checklist](../docs/auth-manual-checklist.md)
+for first/returning login, refresh, profile, logout, denial and recovery. Manual
+results remain pending; passing synthetic tests are not proof of live Google login.
 
 For Google OAuth preparation, follow the
 [local OAuth runbook](../docs/runbooks/google-oauth-local.md).

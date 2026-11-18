@@ -8,6 +8,33 @@
 
 ### Verified facts
 
+- PR #9 Milestone 9 (2026-11-18), owner: user with Codex assistance, on
+  `feat/google-auth-sessions`: human reported Milestone 8 complete/reviewed,
+  superseding its pending-review note below. Added docs/AUTH.md for the actual
+  architecture, scopes/config placeholders, route contracts, persistence,
+  cookies/CSRF, React state, startup, troubleshooting, limits and planned PR #10
+  ownership enforcement; added a manual first/returning-login, refresh, /me,
+  logout/invalidation, callback/denial and recovery checklist. Updated relevant
+  READMEs, DESIGN links, setup history and Unreleased changelog; no application,
+  dependency, migration or workflow changes. No released version is claimed.
+  Agent did not read the actual .env or OAuth client secret, start the developer
+  database/server, or attempt live Google authentication. Agent preflight found
+  no Docker CLI on PATH, native postgresql-x64-17 service Stopped, and both
+  127.0.0.1:8000/health and :5173/health unreachable from the agent. These are
+  local observations, not a claim about another developer's environment.
+  Verification rerun: Ruff format/check passed (61 files), mypy app passed
+  (34 files); default pytest 266 passed / 91 intentional database skips; full
+  pytest 357 passed with no skips in 33.75 seconds against an owned disposable
+  PostgreSQL 17.0 UTC cluster with generated test-only credentials. Cluster
+  stopped/removed; actual developer cluster remained untouched. Frontend lint,
+  typecheck/build passed, Vitest 200 passed in 11 files. Existing TestClient
+  deprecation warning remains. Relative documentation links and git diff --check
+  passed; ignore patterns protect actual env/client-secret paths. Docker Compose
+  validation/build and hosted CI were unavailable/unrun; no live Google or HTTPS
+  result is claimed. Human setup checkpoint and all live manual checklist results
+  are PENDING; wait for safe user-reported observations before continuing that
+  verification. Milestone 10 is unstarted. No commit/push/merge/PR created.
+
 - PR #9 Milestone 8 (2026-11-18), owner: user with Codex assistance, on
   `feat/google-auth-sessions`: human reported Milestone 7 complete/reviewed,
   superseding its pending-review status below. Added 16 PostgreSQL auth-flow

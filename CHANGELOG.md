@@ -7,6 +7,15 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) co
 ## [Unreleased]
 
 ### Added
+- PR #9 Google OIDC authorization-code authentication using Authlib/joserfc,
+  state/nonce and PKCE, verified issuer/subject user persistence, hashed opaque
+  PostgreSQL sessions, current-user lookup, CSRF-protected logout and React
+  account controls. Automated tests use synthetic Google responses; live Google
+  and deployed HTTPS verification remain pending. This is unreleased work.
+- [Authentication architecture, setup, contracts and troubleshooting](docs/AUTH.md),
+  [manual end-to-end checklist](docs/auth-manual-checklist.md), and
+  [automated authentication coverage guide](docs/auth-testing.md). Trip ownership
+  authorization remains planned for PR #10.
 - PR #8 trip creation form: controlled destination, dates, travelers, total
   per-person USD budget, eight interests, and optional multiline preferences.
 - Typed client validation/normalization and a local review/edit flow that preserves

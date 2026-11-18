@@ -26,10 +26,12 @@ PR #9 Milestone 7 implements authentication failure hardening, reported complete
 and reviewed by the human. See the [audit matrix](auth-security-audit.md) for all fourteen requested
 security areas, concrete changes, regression coverage and deployment limits.
 Milestones 1–6 were reported complete/reviewed by the human. This does not add
-trip persistence or authorize deployment. Milestone 8 now adds combined automated
-auth tests, with review pending; see [coverage and evidence](auth-testing.md).
-Milestone 9 remains unstarted. Live Google/HTTPS and hosted CI verification remain
-outstanding.
+trip persistence or authorize deployment. Milestone 8 adds combined automated
+auth tests and is reported complete/reviewed; see [coverage and evidence](auth-testing.md).
+Milestone 9 adds [AUTH](AUTH.md) and
+the [manual checklist](auth-manual-checklist.md), with automated checks rerun;
+human setup/live results remain pending. Milestone 10 remains unstarted.
+Live Google/HTTPS and hosted CI verification remain outstanding.
 
 Roam is an AI-native travel planner that converts a user's destination, dates, party size, budget, interests, and constraints into a realistic day-by-day itinerary. It uses a Places provider to find real venues and a Routes provider to obtain travel durations. An LLM chooses and arranges only grounded candidates and interprets natural-language change requests. Deterministic backend code verifies the result before it can be saved.
 

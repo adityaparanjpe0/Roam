@@ -590,6 +590,12 @@ This is safer and cheaper than regenerating the whole itinerary and makes the ch
 
 ## 10. Authentication and authorization
 
+The actual implementation and local verification procedure are consolidated in
+[AUTH](AUTH.md) and the [manual checklist](auth-manual-checklist.md). PR #9
+Milestones 1–8 are reported reviewed by the human; Milestone 9 changes
+documentation, not architecture or application behavior. Live Google/production
+HTTPS results remain pending. PR #10 owner-scoped trip operations remain planned.
+
 ### Authentication flow
 
 PR #9 Milestone 1 was approved by the human; Milestone 2 (2026-11-17) prepared

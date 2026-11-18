@@ -1,7 +1,8 @@
 # Authentication automated testing — PR #9 Milestone 8
 
 Date: 2026-11-18. Owner: user with Codex assistance. Milestone 7 was reported
-complete/reviewed by the human; Milestone 8 implementation awaits review.
+complete/reviewed by the human; Milestone 8 was also reported complete/reviewed
+on 2026-11-18. Milestone 9 provides [the manual verification checklist](auth-manual-checklist.md).
 No application code, schema, dependencies or workflow configuration changed.
 
 ## What this milestone adds
