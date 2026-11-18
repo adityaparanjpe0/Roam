@@ -322,3 +322,99 @@ test('interest updates use stable values without mutating the previous selection
   fireEvent.click(screen.getByRole('checkbox', { name: 'Food' }))
   expect(onChange).toHaveBeenLastCalledWith({ ...values, interests: [] })
 })
+
+function enterValidCoreFields() {
+  for (const [label, value] of [
+    ['Destination (required)', 'Kyoto'], ['Start date (required)', '2027-03-27'],
+    ['End date (required)', '2027-03-30'], ['Number of travelers (required)', '4'],
+    ['Budget per person (USD, required)', '1200.25'],
+  ]) fireEvent.change(screen.getByLabelText(label), { target: { value } })
+}
+
+test.each([
+  { label: 'Destination (required)', value: '', error: 'Enter a destination.' },
+  { label: 'Destination (required)', value: '   ', error: 'Enter a destination.' },
+  { label: 'Start date (required)', value: '', error: 'Enter a valid start date.' },
+  { label: 'End date (required)', value: '', error: 'Enter a valid end date.' },
+  { label: 'End date (required)', value: '2027-03-26', error: 'End date must be on or after start date.' },
+  { label: 'Number of travelers (required)', value: '0', error: 'Enter a whole number of travelers from 1 to 20.' },
+  { label: 'Number of travelers (required)', value: '-2', error: 'Enter a whole number of travelers from 1 to 20.' },
+  { label: 'Number of travelers (required)', value: '1.5', error: 'Enter a whole number of travelers from 1 to 20.' },
+  { label: 'Budget per person (USD, required)', value: '', error: 'Enter a USD budget greater than zero' },
+  { label: 'Budget per person (USD, required)', value: '-1', error: 'Enter a USD budget greater than zero' },
+  { label: 'Budget per person (USD, required)', value: '0', error: 'Enter a USD budget greater than zero' },
+  { label: 'Budget per person (USD, required)', value: '1e2', error: 'Enter a USD budget greater than zero' },
+  { label: 'Budget per person (USD, required)', value: '1.001', error: 'Enter a USD budget greater than zero' },
+])('blocks review for $label = "$value" with an associated error and no draft callback', ({ label, value, error }) => {
+  const onDraftSubmit = vi.fn()
+  render(<TripCreation onDraftSubmit={onDraftSubmit} />)
+  enterValidCoreFields()
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Food' }))
+  const input = screen.getByLabelText(label)
+  fireEvent.change(input, { target: { value } })
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+
+  fireEvent.click(screen.getByRole('button', { name: 'Review trip details' }))
+  expect(screen.getByRole('alert')).toHaveTextContent('Check the highlighted fields')
+  expect(input).toHaveAttribute('aria-invalid', 'true')
+  expect(input).toHaveAccessibleDescription(expect.stringContaining(error))
+  expect(input).toHaveFocus()
+  expect(screen.queryByRole('region', { name: 'Review your trip' })).not.toBeInTheDocument()
+  expect(onDraftSubmit).not.toHaveBeenCalled()
+  expect(screen.getByRole('checkbox', { name: 'Food' })).toBeChecked()
+})
+
+test('blocks an otherwise valid form with no interests, then recovers without losing values', () => {
+  const onDraftSubmit = vi.fn()
+  render(<TripCreation onDraftSubmit={onDraftSubmit} />)
+  enterValidCoreFields()
+  fireEvent.click(screen.getByRole('button', { name: 'Review trip details' }))
+  const group = screen.getByRole('group', { name: 'Interests (required)' })
+  expect(group).toHaveAccessibleDescription(expect.stringContaining('Select at least one interest.'))
+  expect(within(group).getByRole('checkbox', { name: 'Food' })).toHaveFocus()
+  expect(onDraftSubmit).not.toHaveBeenCalled()
+  expect(screen.queryByRole('region', { name: 'Review your trip' })).not.toBeInTheDocument()
+
+  fireEvent.click(within(group).getByRole('checkbox', { name: 'Nature' }))
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  expect(screen.getByLabelText('Destination (required)')).toHaveValue('Kyoto')
+  expect(screen.getByLabelText('Budget per person (USD, required)')).toHaveValue(1200.25)
+  expect(onDraftSubmit).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole('button', { name: 'Review trip details' }))
+  expect(onDraftSubmit).toHaveBeenCalledTimes(1)
+  expect(onDraftSubmit).toHaveBeenLastCalledWith({
+    destinationLabel: 'Kyoto', startDate: '2027-03-27', endDate: '2027-03-30',
+    travelerCount: 4, budgetPerPersonMinor: 120025, currency: 'USD',
+    interests: ['outdoors'], freeTextConstraints: null,
+  })
+})
+
+test('submits a complete typed draft and reviews all interest labels and multiline preferences', () => {
+  const onDraftSubmit = vi.fn()
+  render(<TripCreation onDraftSubmit={onDraftSubmit} />)
+  enterValidCoreFields()
+  const names = ['Food', 'Sightseeing', 'Nature', 'Nightlife', 'Shopping', 'Art and culture', 'Adventure', 'Relaxation']
+  for (const name of names) fireEvent.click(screen.getByRole('checkbox', { name }))
+  const constraints = ' Quiet mornings\nVegetarian meals '
+  fireEvent.change(screen.getByLabelText('Additional preferences or constraints (optional)'), { target: { value: constraints } })
+  fireEvent.click(screen.getByRole('button', { name: 'Review trip details' }))
+  expect(onDraftSubmit).toHaveBeenCalledTimes(1)
+  expect(onDraftSubmit).toHaveBeenCalledWith({
+    destinationLabel: 'Kyoto', startDate: '2027-03-27', endDate: '2027-03-30',
+    travelerCount: 4, budgetPerPersonMinor: 120025, currency: 'USD',
+    interests: ['food', 'sightseeing', 'outdoors', 'nightlife', 'shopping', 'culture', 'adventure', 'relaxation'],
+    freeTextConstraints: 'Quiet mornings\nVegetarian meals',
+  })
+  const review = screen.getByRole('region', { name: 'Review your trip' })
+  const list = within(review).getByRole('list', { name: 'Selected interests' })
+  expect(within(list).getAllByRole('listitem')).toHaveLength(8)
+  for (const name of names) expect(within(list).getByText(name, { exact: true })).toBeInTheDocument()
+  expect(within(review).getByText('$1,200.25 for the entire trip')).toBeInTheDocument()
+  expect(within(review).getByText(/Quiet mornings/).textContent).toBe('Quiet mornings\nVegetarian meals')
+  expect(review).toHaveAccessibleDescription(expect.stringContaining('Your trip has not been saved.'))
+
+  fireEvent.click(within(review).getByRole('button', { name: 'Edit details' }))
+  for (const name of names) expect(screen.getByRole('checkbox', { name })).toBeChecked()
+  expect(screen.getByLabelText('Additional preferences or constraints (optional)')).toHaveValue(constraints)
+  expect(onDraftSubmit).toHaveBeenCalledTimes(1)
+})

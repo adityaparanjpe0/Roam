@@ -177,6 +177,51 @@ build passed with Node 24.22.3. A real Chrome run (no request mocks) verified
 connected → backend stopped/error → restarted/retry/connected through Vite.
 See [project memory](../docs/memory.md) for exact results and limitations.
 
+## Trip form automated tests — PR #8 Milestone 7
+
+The existing Vitest + React Testing Library + jest-dom setup runs in jsdom with
+automatic cleanup. No dependency, test configuration, or CI workflow change was
+needed for the trip form. Tests use role/label queries and explicit assertions,
+not snapshots. Test data is synthetic; provider/backend calls are not required.
+The existing health tests mock network/client boundaries, and the production
+app-flow test asserts no requests or browser-storage writes during review/edit.
+
+Run from `frontend/` with the pinned Node version:
+
+```sh
+# Full frontend suite, once and then exit (also used by CI)
+npm run test -- --run
+
+# Focused validator and form/review tests
+npm run test -- --run src/features/trip/tripValidation.test.ts src/features/trip/TripCreation.test.tsx
+
+npm run lint
+npm run typecheck
+npm run build
+```
+
+| Coverage | Location |
+|---|---|
+| Empty/whitespace destination; missing, impossible, and reversed dates; inclusive trip length and leap years | [Validator tests](src/features/trip/tripValidation.test.ts) |
+| Invalid traveler/budget syntax, bounds, fractions, zero/negative/nonfinite values, and exact USD cents | [Validator tests](src/features/trip/tripValidation.test.ts) |
+| Required/duplicate/unsupported interests, text limits, valid complete draft, normalization without mutation | [Validator tests](src/features/trip/tripValidation.test.ts) |
+| Accessible labels, controlled input updates, interest selection/deselection, associated errors, first-invalid focus | [Form tests](src/features/trip/TripCreation.test.tsx) |
+| No callback/review for invalid fields; exact normalized callback payloads; review summary; lossless return to edit | [Form tests](src/features/trip/TripCreation.test.tsx) |
+| Landing navigation preserved, production review/edit without requests or browser-storage writes | [App tests](src/App.test.tsx) |
+
+Milestone 7 verification: **141 tests across 5 files** passed, including **76
+validator cases** and **31 form/component cases**, plus 34 app/health cases.
+Lint, strict typecheck, and production build passed. These checks used existing
+Node **24.11.1** / npm **11.6.2**; required Node **24.22.3** verification remains
+outstanding. No dependency install or hosted CI run is claimed.
+
+Limits: fireEvent/jsdom verifies DOM/state behavior but not actual keyboard
+activation, native date-picker interactions, visual layout, zoom, screen-reader
+announcements, or cross-browser rendering. Earlier manual browser evidence is in
+[memory](../docs/memory.md); there is no committed real-browser end-to-end suite.
+Async backend pending/error/retry behavior and server validation/auth are still
+future PR #11 work and are not tested as implemented features.
+
 ## UI review checklist
 
 ### Trip form — PR #8 Milestones 3–6

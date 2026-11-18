@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { createInitialTripFormValues } from './tripCreationModels'
+import { createInitialTripFormValues, INTEREST_OPTIONS } from './tripCreationModels'
 import type { TripFormValues } from './tripCreationModels'
 import { validateTripForm } from './tripValidation'
 import type { TripFormField } from './tripValidation'
@@ -69,7 +69,7 @@ const malformedFields: { field: TripFormField; value: string }[] = [
   { field: 'endDate', value: '2027-03-26' },
   { field: 'endDate', value: '2027-04-10' },
   ...['', ' ', '0', '-1', '1.5', '2.0', '1e1', '0x10', '2people', 'NaN', 'Infinity', '21', '9007199254740993'].map((value) => ({ field: 'travelerCount' as const, value })),
-  ...['', ' ', '0', '0.00', '-1', 'NaN', 'Infinity', '1e2', '0x10', '100usd', '1,000', '$10', '1.001', '1.', '1.2.3', '1000000.01', '9'.repeat(400)].map((value) => ({ field: 'budgetUsd' as const, value })),
+  ...['', ' ', '0', '0.00', '-1', 'NaN', 'Infinity', '-Infinity', '1e309', '1e2', '0x10', '100usd', '1,000', '$10', '1.001', '1.', '1.2.3', '1000000.01', '9'.repeat(400)].map((value) => ({ field: 'budgetUsd' as const, value })),
   { field: 'constraints', value: 'x'.repeat(4001) },
 ]
 
@@ -110,4 +110,48 @@ test('rejects unknown and duplicate interest IDs even if static typing is bypass
 
 test('accepts exact text and party bounds', () => {
   expect(validateTripForm({ ...validValues(), destination: 'x'.repeat(200), constraints: 'x'.repeat(4000), travelerCount: '20' }).valid).toBe(true)
+})
+
+test('rejects an empty destination even when every other required field is valid', () => {
+  expect(validateTripForm({ ...validValues(), destination: '' })).toEqual({
+    valid: false, errors: { destination: 'Enter a destination.' },
+  })
+})
+
+test.each(['startDate', 'endDate'] as const)('reports only the missing %s when the other date is valid', (field) => {
+  const result = validateTripForm({ ...validValues(), [field]: '' })
+  expect(result).toEqual({
+    valid: false,
+    errors: { [field]: field === 'startDate' ? 'Enter a valid start date.' : 'Enter a valid end date.' },
+  })
+})
+
+test.each(['2027-02-29', '2027-04-31', '2027-03-30T00:00:00Z', '2027-03-30\n'])(
+  'requires an actual end calendar date before comparing the range: %j', (endDate) => {
+    expect(validateTripForm({ ...validValues(), endDate })).toEqual({
+      valid: false, errors: { endDate: 'Enter a valid end date.' },
+    })
+  },
+)
+
+test('rejects no interests as the only invalid field', () => {
+  expect(validateTripForm({ ...validValues(), interests: [] })).toEqual({
+    valid: false, errors: { interests: 'Select at least one interest.' },
+  })
+})
+
+test('normalizes complete data with every supported interest and multiline preferences', () => {
+  const interests = INTEREST_OPTIONS.map((option) => option.value)
+  expect(validateTripForm({
+    ...validValues(), destination: ' Kyoto ', travelerCount: ' 4 ', budgetUsd: ' 1200.25 ',
+    interests, constraints: ' Quiet mornings\nVegetarian meals ',
+  })).toEqual({
+    valid: true,
+    draft: {
+      destinationLabel: 'Kyoto', startDate: '2027-03-27', endDate: '2027-03-30',
+      travelerCount: 4, budgetPerPersonMinor: 120025, currency: 'USD',
+      interests: ['food', 'sightseeing', 'outdoors', 'nightlife', 'shopping', 'culture', 'adventure', 'relaxation'],
+      freeTextConstraints: 'Quiet mornings\nVegetarian meals',
+    },
+  })
 })

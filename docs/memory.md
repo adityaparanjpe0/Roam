@@ -8,6 +8,33 @@
 
 ### Verified facts
 
+- PR #8 Milestone 7 (2026-11-17), owner: user with Codex assistance, on
+  `feat/trip-creation-form`: inspected and reused existing Vitest/Testing Library/
+  jest-dom/jsdom configuration, cleanup, scripts, and frontend CI's non-interactive
+  `npm run test -- --run` step. Added **26 cases** to
+  [validator tests](../frontend/src/features/trip/tripValidation.test.ts) and
+  [component tests](../frontend/src/features/trip/TripCreation.test.tsx), without
+  changing application code, dependencies, test configuration, or workflows.
+  Coverage now explicitly isolates missing destination/dates/interests, validates
+  end-date syntax before range comparisons, and rejects additional nonfinite/
+  overflow budget representations. Parametrized component cases prove individual
+  invalid fields block review/callback, describe the error, and receive focus.
+  Complete-data cases cover all eight interests, exact normalized payloads,
+  multiline preferences, review labels/currency, and lossless return to editing.
+  Existing cases also cover whitespace, numeric/date bounds, selection toggles,
+  safe literal rendering, Strict Mode callback counts, and production no-network/
+  no-storage behavior. No snapshots, live backend requests, or paid APIs are used.
+  Verification: **141 tests in 5 files** passed (76 validator, 31 form/component,
+  34 app/health); lint, strict typecheck, production build, editor diagnostics,
+  and `git diff --check` passed. Checks used existing Node **24.11.1** / npm
+  **11.6.2**; required Node **24.22.3** verification remains outstanding.
+  [Frontend test instructions](../frontend/README.md#trip-form-automated-tests--pr-8-milestone-7)
+  document coverage and limitations. Actual keyboard/native date-picker behavior,
+  responsive rendering/zoom, screen-reader announcements, cross-browser checks,
+  hosted CI, and future backend integration are not proven by this jsdom run.
+  Milestone 6 completion is human-reported; Milestone 8 has not begun. No commit,
+  push, merge, or dependency installation was performed.
+
 - PR #8 Milestone 6 (2026-11-17), owner: user with Codex assistance, on
   `feat/trip-creation-form`: [the container](../frontend/src/features/trip/TripCreation.tsx)
   validates on submit and only successful results enter
