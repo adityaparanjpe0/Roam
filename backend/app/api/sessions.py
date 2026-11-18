@@ -2,11 +2,12 @@
 
 from functools import lru_cache
 from typing import Annotated
-from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import JSONResponse
 
+from app.core.auth_cookies import AmbiguousAuthCookies, auth_cookies
+from app.core.auth_logging import record_auth_failure
 from app.core.config import AppSettings, OAuthConfigurationError, load_app_settings
 from app.core.session_security import (
     ABSOLUTE_SESSION_LIFETIME,
@@ -80,18 +81,19 @@ def clear_session_cookies(response: Response) -> None:
 
 
 def session_error_response(request: Request, error: SessionHTTPError) -> JSONResponse:
+    request_id = record_auth_failure(error.code, error.status)
     body = AuthErrorResponse(
         error=AuthErrorDetail(
             code=error.code,
             message=error.message,
-            request_id=str(uuid4()),
+            request_id=request_id,
             details={},
         )
     )
     response = JSONResponse(
         body.model_dump(),
         status_code=error.status,
-        headers={"Cache-Control": "no-store"},
+        headers={"Cache-Control": "no-store", "X-Request-ID": request_id},
     )
     if error.status == 401:
         clear_session_cookies(response)
@@ -103,13 +105,7 @@ def get_current_session(request: Request) -> AuthenticatedSession:
         settings = get_session_settings()
         bearer_name, csrf_name = session_cookie_names(settings)
         # Reject ambiguous header/cookie values rather than selecting one copy.
-        cookie_headers = request.headers.getlist("cookie")
-        cookies = ";".join(cookie_headers)
-        if len(cookie_headers) > 1 or any(
-            sum(part.strip().startswith(name + "=") for part in cookies.split(";")) > 1
-            for name in (bearer_name, csrf_name)
-        ):
-            raise AuthenticationRequired
+        cookies = auth_cookies(request, (bearer_name, csrf_name))
         unsafe = request.method not in {"GET", "HEAD", "OPTIONS"}
         if unsafe and (
             len(request.headers.getlist("origin")) > 1
@@ -118,9 +114,9 @@ def get_current_session(request: Request) -> AuthenticatedSession:
         ):
             raise CsrfRejected
         return authenticate_session(
-            request.cookies.get(bearer_name),
+            cookies.get(bearer_name),
             unsafe=unsafe,
-            csrf_cookie=request.cookies.get(csrf_name),
+            csrf_cookie=cookies.get(csrf_name),
             csrf_header=request.headers.get("x-csrf-token"),
             trusted_origin=trusted_request_origin(
                 request.headers.get("origin"),
@@ -132,7 +128,7 @@ def get_current_session(request: Request) -> AuthenticatedSession:
         raise SessionHTTPError(
             503, "AUTH_NOT_CONFIGURED", "Authentication is not configured."
         ) from None
-    except AuthenticationRequired:
+    except (AuthenticationRequired, AmbiguousAuthCookies):
         raise SessionHTTPError(
             401, "AUTHENTICATION_REQUIRED", "Sign in to continue."
         ) from None

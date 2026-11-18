@@ -8,6 +8,31 @@
 
 ### Verified facts
 
+- PR #9 Milestone 7 (2026-11-17), owner: user with Codex assistance, on
+  `feat/google-auth-sessions`: human reported Milestone 6 complete/reviewed.
+  Hardened framework-normalized duplicate auth-cookie handling in OAuth and
+  session routes, preserved pending browser bindings on unbound callbacks,
+  rejected malformed supplied optional azp/at_hash claims before library checks,
+  and checked provider response elapsed/size budgets per available chunk.
+  Fixed case-sensitive HTTPS cookie detection and required canonical origins.
+  Added safe code/status/request-ID diagnostics and distinct provider-outage
+  versus denied-consent responses. ADR 0008 and the authentication audit record
+  all fourteen requested security areas, regressions and remaining limits.
+  No new dependency, migration, environment variable or frontend behavior.
+  Evidence: Ruff format/check passed (59 files), strict mypy passed (34 source
+  files), database-free pytest 264 passed / 75 opt-in skipped; final full pytest
+  339 passed against a generated-credential disposable PostgreSQL 17.0 UTC
+  cluster, stopped and removed after testing. This includes migrations/schema
+  drift, session rotation/revocation/expiry, concurrency and atomic rollback.
+  Frontend lint/typecheck/build passed and Vitest 187 tests in 9 files passed
+  under Node 24.22.3/npm 11.19.1. Editor diagnostics and git diff --check passed.
+  Backend retains the existing Starlette TestClient/httpx deprecation warning;
+  unrelated transport migration was not attempted. CI targets PostgreSQL 18.7;
+  hosted CI, live Google, production HTTPS/proxy/CSP verification remain unrun.
+  Flow state remains single-process and ephemeral; rate limiting, cleanup and
+  production serving are not added. Milestone 7 human review is pending;
+  Milestone 8 is unstarted. No commit/push/merge performed.
+
 - PR #9 Milestone 6 (2026-11-17), owner: user with Codex assistance, on
   `feat/google-auth-sessions`: human reported Milestone 5 complete/reviewed.
   Added a native-fetch auth service, small React state/context snapshot,

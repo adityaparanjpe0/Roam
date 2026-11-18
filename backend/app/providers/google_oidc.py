@@ -77,6 +77,7 @@ def _bounded_response(
     auth: httpx.BasicAuth | None = None,
 ) -> httpx.Response:
     """No retries, proxy inheritance, redirects, or unbounded response bodies."""
+    deadline = monotonic() + 5.0
     with httpx.Client(timeout=5.0, follow_redirects=False, trust_env=False) as client:
         with client.stream(
             method, url, data=data, headers=headers, auth=auth
@@ -85,11 +86,14 @@ def _bounded_response(
             if content_type.split(";")[0].strip().lower() != "application/json":
                 raise GoogleDiscoveryError
             body = bytearray()
-            deadline = monotonic() + 5.0
-            for chunk in response.iter_bytes(chunk_size=4096):
-                body.extend(chunk)
-                if len(body) > 65536 or monotonic() > deadline:
+            # Do not buffer 4096 bytes before checking the deadline: a slow
+            # peer could keep each individual read under HTTPX's read timeout.
+            for chunk in response.iter_bytes():
+                if len(body) + len(chunk) > 65536 or monotonic() > deadline:
                     raise GoogleDiscoveryError
+                body.extend(chunk)
+            if monotonic() > deadline:
+                raise GoogleDiscoveryError
             return httpx.Response(
                 response.status_code,
                 headers=response.headers,
@@ -269,6 +273,15 @@ class GoogleOidcClient:
                 decoded = jwt.decode(
                     raw, self._trusted_keys(refresh=True), algorithms=["RS256"]
                 )
+            # Authlib treats falsy optional values as absent. When supplied,
+            # these OIDC claims must be nonempty strings, not null/list/bool.
+            # Authlib still performs their audience/hash validation below.
+            for name in ("azp", "at_hash"):
+                if name in decoded.claims and (
+                    not isinstance(decoded.claims[name], str)
+                    or not decoded.claims[name]
+                ):
+                    raise GoogleIdentityError
             claims = CodeIDToken(
                 decoded.claims,
                 decoded.header,

@@ -1,7 +1,6 @@
 """Google callbacks verify identity before atomically issuing a Roam session."""
 
 from functools import lru_cache
-from uuid import uuid4
 
 from authlib.common.security import generate_token
 from fastapi import APIRouter, Request
@@ -13,6 +12,8 @@ from fastapi.responses import (
 from starlette.datastructures import QueryParams
 
 from app.api.sessions import session_cookie_names, set_session_cookies
+from app.core.auth_cookies import AmbiguousAuthCookies, auth_cookies
+from app.core.auth_logging import record_auth_failure
 from app.core.config import OAuthConfigurationError, load_google_oauth_settings
 from app.core.oauth_flow import (
     FLOW_TTL_SECONDS,
@@ -47,6 +48,7 @@ def get_login_flow_store() -> LoginFlowStore:
     status_code=302,
     response_class=RedirectResponse,
     responses={
+        400: {"model": AuthErrorResponse},
         429: {"model": AuthErrorResponse},
         503: {"model": AuthErrorResponse},
     },
@@ -57,8 +59,9 @@ def start_google_login(request: Request) -> Response:
     try:
         client = get_google_oidc_client()
         settings = client.settings
-        url, state, nonce, verifier = client.authorization_url()
         cookie_name = "__Host-roam_oauth" if settings.secure_cookie else "roam_oauth"
+        cookies = auth_cookies(request, (cookie_name,))
+        url, state, nonce, verifier = client.authorization_url()
         browser_token = generate_token(48)
         get_login_flow_store().save(
             browser_token,
@@ -66,10 +69,21 @@ def start_google_login(request: Request) -> Response:
             nonce=nonce,
             code_verifier=verifier,
             redirect_uri=settings.google_oidc_redirect_uri,
-            previous_browser_token=request.cookies.get(cookie_name),
+            previous_browser_token=cookies.get(cookie_name),
         )
-    except (OAuthConfigurationError, GoogleDiscoveryError, LoginCapacityError) as error:
-        if isinstance(error, LoginCapacityError):
+    except (
+        OAuthConfigurationError,
+        GoogleDiscoveryError,
+        LoginCapacityError,
+        AmbiguousAuthCookies,
+    ) as error:
+        if isinstance(error, AmbiguousAuthCookies):
+            status, code, message = (
+                400,
+                "OAUTH_CALLBACK_INVALID",
+                "Restart Google sign-in and try again.",
+            )
+        elif isinstance(error, LoginCapacityError):
             status, code, message = (
                 429,
                 "AUTH_CAPACITY_REACHED",
@@ -88,9 +102,11 @@ def start_google_login(request: Request) -> Response:
                 "AUTH_UNAVAILABLE",
                 "Google sign-in is unavailable.",
             )
+        request_id = record_auth_failure(code, status)
+        headers["X-Request-ID"] = request_id
         body = AuthErrorResponse(
             error=AuthErrorDetail(
-                code=code, message=message, request_id=str(uuid4()), details={}
+                code=code, message=message, request_id=request_id, details={}
             )
         )
         return JSONResponse(body.model_dump(), status_code=status, headers=headers)
@@ -124,11 +140,14 @@ def google_callback(request: Request) -> Response:
         "Referrer-Policy": "no-referrer",
         "X-Content-Type-Options": "nosniff",
     }
+    consumed = False
     try:
         client = get_google_oidc_client()
         cookie_name = (
             "__Host-roam_oauth" if client.settings.secure_cookie else "roam_oauth"
         )
+        bearer_name, csrf_name = session_cookie_names(client.settings)
+        cookies = auth_cookies(request, (cookie_name, bearer_name, csrf_name))
         raw = getattr(request.state, "oauth_callback_query", b"")
         if len(raw) > 8192:
             raise InvalidLoginFlow
@@ -136,17 +155,23 @@ def google_callback(request: Request) -> Response:
         if any(len(params.getlist(key)) != 1 for key in params):
             raise InvalidLoginFlow
         flow = get_login_flow_store().consume(
-            request.cookies.get(cookie_name), params.get("state")
+            cookies.get(cookie_name), params.get("state")
         )
+        consumed = True
         if "error" in params:
             if "code" in params:
                 raise InvalidLoginFlow
             # Never reflect Google's error_description or other provider text.
-            status, code, message = (
-                400,
-                "OAUTH_CONSENT_DENIED",
-                "Google sign-in was not completed.",
-            )
+            if params["error"] == "access_denied":
+                status, code, message = (
+                    400,
+                    "OAUTH_CONSENT_DENIED",
+                    "Google sign-in was not completed.",
+                )
+            elif params["error"] in {"server_error", "temporarily_unavailable"}:
+                raise GoogleDiscoveryError
+            else:
+                raise InvalidLoginFlow
         else:
             authorization_code = params.get("code", "")
             if not 1 <= len(authorization_code) <= 4096 or any(
@@ -162,8 +187,7 @@ def google_callback(request: Request) -> Response:
             identity = client.exchange_identity(authorization_code, flow)
             # This service opens its transaction only after all provider I/O and
             # signature/claim validation have succeeded.
-            bearer_name, _ = session_cookie_names(client.settings)
-            issued = create_login_session(identity, request.cookies.get(bearer_name))
+            issued = create_login_session(identity, cookies.get(bearer_name))
             response: Response = RedirectResponse(
                 client.settings.app_base_url + "/",
                 status_code=303,
@@ -172,7 +196,7 @@ def google_callback(request: Request) -> Response:
             set_session_cookies(response, client.settings, issued)
             _clear_flow_cookies(response)
             return response
-    except InvalidLoginFlow:
+    except (InvalidLoginFlow, AmbiguousAuthCookies):
         status, code, message = (
             400,
             "OAUTH_CALLBACK_INVALID",
@@ -204,16 +228,21 @@ def google_callback(request: Request) -> Response:
             "DATABASE_UNAVAILABLE",
             "Cannot save profile right now. Restart sign-in later.",
         )
+    request_id = record_auth_failure(code, status)
+    headers["X-Request-ID"] = request_id
     body = AuthErrorResponse(
         error=AuthErrorDetail(
             code=code,
             message=message,
-            request_id=str(uuid4()),
+            request_id=request_id,
             details={},
         )
     )
     response = JSONResponse(body.model_dump(), status_code=status, headers=headers)
-    _clear_flow_cookies(response)
+    # An unsolicited/mismatched callback must not erase another pending flow's
+    # browser binding. A consumed attempt is always cleared, even on failure.
+    if consumed:
+        _clear_flow_cookies(response)
     return response
 
 

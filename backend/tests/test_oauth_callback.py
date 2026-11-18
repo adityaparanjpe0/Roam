@@ -1,6 +1,7 @@
 """Callback orchestration never authenticates a browser without app sessions."""
 
 import asyncio
+import logging
 from collections.abc import Iterator
 from datetime import UTC, datetime
 
@@ -85,12 +86,116 @@ def test_callback_sets_session_cookies_only_after_success(callback: tuple) -> No
     assert browser.get("/api/v1/me").status_code == 404
 
 
+@pytest.mark.parametrize("name", ["roam_oauth", "roam_session", "roam_csrf"])
+def test_callback_rejects_ambiguous_cookies_before_exchange(
+    callback: tuple, name: str
+) -> None:
+    browser, calls, saved, _ = callback
+    browser.cookies.clear()
+    response = browser.get(
+        "/auth/google/callback",
+        params={"code": "synthetic-code", "state": STATE},
+        headers={"Cookie": f"roam_oauth={BINDING}; {name}=first; {name} =second"},
+    )
+    assert response.status_code == 400
+    assert not calls and not saved
+
+
+@pytest.mark.parametrize(
+    "error,status,code",
+    [
+        ("access_denied", 400, "OAUTH_CONSENT_DENIED"),
+        ("server_error", 503, "AUTH_UNAVAILABLE"),
+        ("temporarily_unavailable", 503, "AUTH_UNAVAILABLE"),
+        ("PRIVATE_UNKNOWN_ERROR", 400, "OAUTH_CALLBACK_INVALID"),
+    ],
+)
+def test_provider_errors_are_classified_and_safely_logged(
+    callback: tuple,
+    caplog: pytest.LogCaptureFixture,
+    error: str,
+    status: int,
+    code: str,
+) -> None:
+    browser, calls, saved, _ = callback
+    caplog.set_level(logging.INFO, logger="roam.auth")
+    response = browser.get(
+        "/auth/google/callback",
+        params={
+            "state": STATE,
+            "error": error,
+            "error_description": "PRIVATE_TEXT",
+            "error_uri": "https://attacker.example",
+            "next": "https://attacker.example",
+        },
+        headers={"X-Request-ID": "PRIVATE_ID"},
+    )
+    assert response.status_code == status
+    assert response.json()["error"]["code"] == code
+    assert "location" not in response.headers
+    request_id = response.json()["error"]["request_id"]
+    assert response.headers["x-request-id"] == request_id
+    records = [
+        record.getMessage() for record in caplog.records if record.name == "roam.auth"
+    ]
+    assert records == [
+        f"auth_failure code={code} status={status} request_id={request_id}"
+    ]
+    assert "PRIVATE" not in records[0] + response.text
+    assert not calls and not saved
+    browser.cookies.set("roam_oauth", BINDING)
+    assert (
+        browser.get(
+            "/auth/google/callback", params={"code": "synthetic-code", "state": STATE}
+        ).status_code
+        == 400
+    )
+
+
+def test_redirect_ignores_host_headers_and_return_to_parameters(
+    callback: tuple,
+) -> None:
+    browser, _, _, _ = callback
+    response = browser.get(
+        "/auth/google/callback",
+        params={
+            "code": "synthetic-code",
+            "state": STATE,
+            "next": "//attacker.example",
+            "return_to": "https://attacker.example",
+        },
+        headers={
+            "Host": "attacker.example",
+            "X-Forwarded-Host": "attacker.example",
+            "X-Forwarded-Proto": "http",
+        },
+    )
+    assert response.status_code == 303
+    assert response.headers["location"] == ENVIRONMENT["APP_BASE_URL"] + "/"
+
+
 def test_consumed_callback_cannot_exchange_again(callback: tuple) -> None:
     browser, calls, saved, _ = callback
     query = {"code": "synthetic-code", "state": STATE}
     assert browser.get("/auth/google/callback", params=query).status_code == 303
     browser.cookies.set("roam_oauth", BINDING)
     assert browser.get("/auth/google/callback", params=query).status_code == 400
+    assert calls == ["synthetic-code"] and saved == [IDENTITY]
+
+
+@pytest.mark.parametrize("query", ["code=untrusted", "state=wrong&code=untrusted"])
+def test_unbound_callback_cannot_destroy_pending_browser_flow(
+    callback: tuple, query: str
+) -> None:
+    browser, calls, saved, _ = callback
+    rejected = browser.get("/auth/google/callback?" + query)
+    assert rejected.status_code == 400
+    assert "set-cookie" not in rejected.headers
+    assert not calls and not saved
+    valid = browser.get(
+        "/auth/google/callback", params={"state": STATE, "code": "synthetic-code"}
+    )
+    assert valid.status_code == 303
     assert calls == ["synthetic-code"] and saved == [IDENTITY]
 
 

@@ -83,6 +83,22 @@ def mock_discovery(monkeypatch: pytest.MonkeyPatch, handler: object) -> None:
     monkeypatch.setattr("app.providers.google_oidc.httpx.Client", factory)
 
 
+@pytest.mark.parametrize("spacing", ["=", " =", "\t=\t"])
+def test_start_rejects_duplicate_binding_before_provider_io(
+    discovery: list[httpx.Request], spacing: str
+) -> None:
+    with TestClient(app) as browser:
+        response = browser.get(
+            "/auth/google/start",
+            follow_redirects=False,
+            headers={"Cookie": f"roam_oauth=first; roam_oauth{spacing}second"},
+        )
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "OAUTH_CALLBACK_INVALID"
+    assert "location" not in response.headers and "set-cookie" not in response.headers
+    assert not discovery
+
+
 def test_redirect_and_private_server_flow(discovery: list[httpx.Request]) -> None:
     with TestClient(app) as browser:
         response = browser.get("/auth/google/start", follow_redirects=False)

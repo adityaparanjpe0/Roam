@@ -97,8 +97,9 @@ flowchart LR
 The planned production Docker image will contain the built React assets and
 FastAPI application, serving assets and `/api/v1` from one origin. This avoids
 cross-site cookie/CORS complexity and reduces hosting components. During current
-development, Vite runs separately and proxies only `/health`; API/auth proxy
-routes and production asset serving are not implemented yet.
+development, Vite runs separately and proxies `/health`, `/auth`, and `/api` to
+FastAPI, preserving cookie and Origin headers. Production asset serving is not
+implemented yet. No backend CORS grants are needed for this same-origin design.
 
 The web service is a **modular monolith**, not one undifferentiated file. Internal modules communicate through typed Python calls and interfaces. They share a deployment and database because the team and load do not justify distributed failure modes.
 
@@ -652,6 +653,20 @@ Use Google OpenID Connect/OAuth authorization-code flow through a maintained Pyt
 OAuth access/refresh tokens are not needed for ongoing Google API access when Google is used only for sign-in. Do not retain them unless a later user-authorized Google feature genuinely requires them.
 
 ### Session and CSRF
+
+Milestone 7 hardens failure boundaries without changing the session schema.
+Authentication cookie selection rejects duplicates using framework parsing,
+including whitespace-normalized names. Unbound callbacks cannot clear another
+pending browser flow. APP_BASE_URL must be a canonical lowercase origin without
+default ports; Secure derives from parsed scheme. Supplied optional azp/at_hash
+must be nonempty strings before library comparisons. Provider elapsed-time/body
+bounds check every available chunk; blocking reads retain separate HTTPX timeouts.
+Auth failure code/status and a fresh server UUID are logged without exception or
+request contents; JSON and X-Request-ID share the UUID. Expected rejections are
+INFO, outages WARNING. Provider outage errors differ from denied consent.
+See [ADR 0008](adr/0008-auth-failure-hardening.md) and the
+[audit matrix](auth-security-audit.md) for risks, tests and limits. The callback
+still returns safe JSON on failure and a fixed configured-root redirect on success.
 
 Milestone 5 implements seven-day absolute and 24-hour idle lifetimes. Every
 lookup locks the matching session row, checks revocation/expiry and current

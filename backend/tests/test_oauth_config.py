@@ -58,6 +58,10 @@ def test_missing_setting_fails_safely(
         {"app_base_url": "http://127.0.0.1:5173?x=1"},
         {"app_base_url": "http://127.0.0.1:5173#fragment"},
         {"app_base_url": "http://127.0.0.1:5173\n"},
+        {"app_base_url": "HTTPS://roam.example"},
+        {"app_base_url": "https://ROAM.example"},
+        {"app_base_url": "https://roam.example:443"},
+        {"app_base_url": "https://roam.example:"},
         {"google_oidc_redirect_uri": "http://127.0.0.1:8000/auth/google/callback"},
         {"google_oidc_redirect_uri": "http://127.0.0.1:5173/auth/google/callback/"},
         {"google_oidc_redirect_uri": "https://attacker.example/auth/google/callback"},
@@ -79,3 +83,18 @@ def test_https_production_uses_secure_cookie(origin: str) -> None:
         google_oidc_redirect_uri=origin + "/auth/google/callback",
     )
     assert GoogleOAuthSettings.model_validate(data).secure_cookie is True
+
+
+@pytest.mark.parametrize(
+    "origin",
+    ["HTTPS://roam.example", "https://ROAM.example", "https://roam.example:443"],
+)
+def test_noncanonical_origin_fails_even_with_matching_callback(origin: str) -> None:
+    data = {name.lower(): value for name, value in ENVIRONMENT.items()}
+    data.update(
+        app_env="production",
+        app_base_url=origin,
+        google_oidc_redirect_uri=origin + "/auth/google/callback",
+    )
+    with pytest.raises(ValidationError):
+        GoogleOAuthSettings.model_validate(data)

@@ -5,6 +5,17 @@
 
 ## 1. Working agreement
 
+PR #9 Milestone 7: keep APP_BASE_URL canonical (lowercase scheme/host, no explicit
+default port or trailing slash). Local origin stays `http://127.0.0.1:5173`, with
+FastAPI on `http://127.0.0.1:8000` behind Vite's auth/API proxy; Google callback
+stays `http://127.0.0.1:5173/auth/google/callback`. Restart the backend after config
+changes. No additional environment variables or migrations are needed here.
+For auth failures, correlate the safe JSON request_id / X-Request-ID with
+`roam.auth` code/status logs. Configure that logger at INFO for expected
+rejections; server failures use WARNING. Never enable HTTP wire, SQL parameter,
+callback-query, cookie/header, or raw exception logging to diagnose a login.
+See [the security audit](auth-security-audit.md) for coverage and deployment limits.
+
 Roam is a learning project with professional engineering habits. The team optimizes for:
 
 - merged, demonstrable vertical slices;

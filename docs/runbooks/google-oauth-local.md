@@ -1,12 +1,14 @@
-# Local Google OAuth configuration and callback — PR #9, Milestones 2–6
+# Local Google OAuth configuration and callback — PR #9, Milestones 2–7
 
 Milestone 2 prepared Google credentials and the configuration contract.
 Milestone 3 adds the synchronous login-start route, typed settings, Authlib 1.9.9,
 and bounded discovery through HTTPX. Milestone 4 adds callback verification and
 PostgreSQL user persistence. Milestone 5 adds independent database-backed
 application sessions, CSRF protection, current-user lookup, and logout. Vite
-routing/UI are integrated in Milestone 6. Stop before Milestone 7. Human review/completion of Milestones 2–5
-is reported; actual console
+routing/UI are integrated in Milestone 6. Milestone 7 hardens cookie parsing,
+claim shapes, response deadlines, origin configuration and safe failure diagnostics;
+see the [security audit](../auth-security-audit.md). Stop before Milestone 8.
+Human review/completion of Milestones 2–6 is reported; actual console
 settings and live Google behavior have not been inspected by the agent.
 
 ## Architecture and exact URLs
@@ -21,7 +23,7 @@ and [ADR 0003](../adr/0003-local-oauth-configuration.md).
 |---|---|---|
 | React / browser origin | `http://127.0.0.1:5173` | Configured in Vite |
 | FastAPI upstream | `http://127.0.0.1:8000` | Documented development server |
-| Login path | `/auth/google/start` | Implemented FastAPI route; returns 302 or safe 429/503 |
+| Login path | `/auth/google/start` | Implemented FastAPI route; returns 302 or safe 400/429/503 |
 | Callback path | `/auth/google/callback` | Implemented in FastAPI; validates identity, commits user/session, sets cookies, redirects safely |
 | Authorized redirect URI | `http://127.0.0.1:5173/auth/google/callback` | Agreed registration target; Vite auth proxy now implemented |
 
@@ -34,6 +36,15 @@ substitute port 8000 or add a trailing slash. Use `127.0.0.1` consistently;
 to the redirect URI. Registration, authorization, and code exchange must use
 the same exact URI. The backend can now issue application sessions; end-to-end
 browser login still needs manual real-Google verification. See [frontend auth](../frontend-auth.md).
+
+APP_BASE_URL must use the canonical browser origin: lowercase scheme and host,
+no explicit default port, path or trailing slash. Use `https://roam.example`,
+not `HTTPS://roam.example` or `https://roam.example:443`. Secure cookie policy
+comes from the parsed scheme; production HTTP is rejected. Failures return a
+safe JSON request_id and matching X-Request-ID for correlation with `roam.auth`
+code/status logs (INFO for expected rejections, WARNING for outages). Do not
+enable verbose request/token/header logging. A failed callback shows JSON and
+requires restarting sign-in; it never redirects to provider-supplied error URLs.
 
 ## Manual Google Auth Platform checklist
 

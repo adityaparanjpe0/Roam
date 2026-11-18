@@ -12,6 +12,7 @@ from app.providers.google_oidc import (
     GoogleDiscoveryError,
     GoogleIdentityError,
     GoogleOidcClient,
+    _bounded_response,
 )
 from tests.test_oauth_config import ENVIRONMENT
 from tests.test_oauth_login import METADATA, mock_discovery
@@ -19,6 +20,38 @@ from tests.test_oauth_login import METADATA, mock_discovery
 NOW = 2_000_000_000
 NONCE = "synthetic-nonce"
 ACCESS_TOKEN = "synthetic-access-token"
+
+
+@pytest.mark.parametrize("header_delay", [0.0, 6.0])
+def test_slow_stream_deadline_is_checked_without_buffering_4k(
+    monkeypatch: pytest.MonkeyPatch, header_delay: float
+) -> None:
+    now = [0.0]
+    read: list[int] = []
+    closed: list[bool] = []
+
+    class DripStream(httpx.SyncByteStream):
+        def __iter__(self):
+            for index in range(100):
+                now[0] += 3.0  # Each read is below the five-second read timeout.
+                read.append(index)
+                yield b"x"
+
+        def close(self) -> None:
+            closed.append(True)
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        now[0] += header_delay
+        return httpx.Response(
+            200, headers={"content-type": "application/json"}, stream=DripStream()
+        )
+
+    monkeypatch.setattr("app.providers.google_oidc.monotonic", lambda: now[0])
+    mock_discovery(monkeypatch, respond)
+    with pytest.raises(GoogleDiscoveryError):
+        _bounded_response("GET", "https://accounts.google.com/test")
+    assert len(read) == (2 if header_delay == 0 else 1)
+    assert closed == [True]
 
 
 @pytest.fixture(scope="module")
@@ -88,6 +121,19 @@ def test_verified_claims_become_minimal_identity(
         {"iss": "https://attacker.example"},
         {"aud": "another-client"},
         {"aud": []},
+        {"aud": [None]},
+        {"aud": {"untrusted": "value"}},
+        {"iss": {"untrusted": "value"}},
+        {"exp": "invalid"},
+        {"iat": None},
+        {"nonce": ["wrong"]},
+        {"at_hash": True},
+        {"azp": []},
+        {"azp": ""},
+        {"azp": None},
+        {"azp": False},
+        {"at_hash": ""},
+        {"at_hash": None},
         {"exp": NOW - 31},
         {"exp": True},
         {"iat": NOW + 31},

@@ -115,20 +115,34 @@ class AppSettings(BaseModel):
                     for char in self.app_base_url
                 )
             )
+            host = base.hostname or ""
+            if ":" in host:
+                host = f"[{host}]"
+            canonical = f"{base.scheme}://{host}"
+            if base.port is not None and base.port != (
+                443 if base.scheme == "https" else 80
+            ):
+                canonical += f":{base.port}"
             local = base.hostname in {"127.0.0.1", "localhost", "::1"}
-            if not valid or (
-                base.scheme == "http" and (self.app_env == "production" or not local)
+            if (
+                not valid
+                or self.app_base_url != canonical
+                or (
+                    base.scheme == "http"
+                    and (self.app_env == "production" or not local)
+                )
             ):
                 raise ValueError
         except ValueError:
             raise ValueError(
-                "Use an exact HTTPS origin; HTTP is loopback development/test only."
+                "Use a canonical lowercase HTTPS origin without a default port; "
+                "HTTP is loopback development/test only."
             ) from None
         return self
 
     @property
     def secure_cookie(self) -> bool:
-        return self.app_base_url.startswith("https://")
+        return urlsplit(self.app_base_url).scheme == "https"
 
 
 class GoogleOAuthSettings(AppSettings):

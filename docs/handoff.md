@@ -22,6 +22,13 @@ planned. See [ADR 0002](adr/0002-trip-form-validation.md).
 
 ## 1. Executive summary
 
+PR #9 Milestone 7 implements authentication failure hardening, with human review
+pending. See the [audit matrix](auth-security-audit.md) for all fourteen requested
+security areas, concrete changes, regression coverage and deployment limits.
+Milestones 1–6 were reported complete/reviewed by the human. This does not add
+trip persistence or authorize deployment. Milestone 8 remains unstarted; live
+Google/HTTPS and hosted CI verification remain outstanding.
+
 Roam is an AI-native travel planner that converts a user's destination, dates, party size, budget, interests, and constraints into a realistic day-by-day itinerary. It uses a Places provider to find real venues and a Routes provider to obtain travel durations. An LLM chooses and arranges only grounded candidates and interprets natural-language change requests. Deterministic backend code verifies the result before it can be saved.
 
 The MVP is intentionally small enough for two college developers to own end to end and deep enough to support a strong resume discussion. Its engineering value comes from the boundary between probabilistic AI and reliable application logic: the model proposes; typed schemas, ownership checks, route data, lock rules, budget arithmetic, and schedule validation decide whether a proposal is acceptable.

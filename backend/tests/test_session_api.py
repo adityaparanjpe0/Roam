@@ -19,6 +19,7 @@ from app.core.config import AppSettings
 from app.core.session_security import AuthenticationRequired, token_hash, validate_csrf
 from app.domain.session import AuthenticatedSession, CurrentUser, IssuedSession
 from app.main import app
+from app.services.sessions import SessionsUnavailable
 
 BEARER = "a" * 43
 CSRF = "b" * 43
@@ -69,6 +70,74 @@ def test_me_returns_only_safe_profile() -> None:
     assert response.headers["cache-control"] == "no-store"
     assert BEARER not in response.text and CSRF not in response.text
     assert "set-cookie" not in response.headers
+
+
+@pytest.mark.parametrize("name", ["roam_session", "roam_csrf"])
+@pytest.mark.parametrize("spacing", [" =", "= ", "\t=\t"])
+def test_cookie_parser_normalized_duplicates_are_rejected(
+    name: str, spacing: str
+) -> None:
+    with TestClient(app) as browser:
+        response = browser.get(
+            "/api/auth/me",
+            headers={
+                "Cookie": (
+                    f"roam_session={BEARER}; roam_csrf={CSRF}; {name}{spacing}{BEARER}"
+                )
+            },
+        )
+    assert response.status_code == 401
+
+
+@pytest.mark.parametrize("operation", ["authenticate_session", "logout_session"])
+def test_database_outage_has_safe_correlated_diagnostics(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, operation: str
+) -> None:
+    def fail(*args: object, **kwargs: object) -> None:
+        raise SessionsUnavailable("PRIVATE_DATABASE_DETAILS")
+
+    monkeypatch.setattr(f"app.api.sessions.{operation}", fail)
+    with TestClient(app) as browser:
+        browser.cookies.set("roam_session", BEARER)
+        browser.cookies.set("roam_csrf", CSRF)
+        response = browser.post(
+            "/api/auth/logout",
+            headers={"Origin": ORIGIN, "X-CSRF-Token": CSRF, "X-Request-ID": "PRIVATE"},
+        )
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "DATABASE_UNAVAILABLE"
+    request_id = response.json()["error"]["request_id"]
+    assert response.headers["x-request-id"] == request_id
+    UUID(request_id)
+    assert request_id in caplog.text and "DATABASE_UNAVAILABLE" in caplog.text
+    assert "set-cookie" not in response.headers  # Outage is not confirmed logout.
+    for private in ("PRIVATE", BEARER, CSRF, USER.email):
+        assert private not in caplog.text + response.text
+
+
+def test_foreign_origin_has_no_credentialed_cors_and_cannot_logout() -> None:
+    with TestClient(app) as browser:
+        browser.cookies.set("roam_session", BEARER)
+        browser.cookies.set("roam_csrf", CSRF)
+        preflight = browser.options(
+            "/api/auth/logout",
+            headers={
+                "Origin": "https://attacker.example",
+                "Access-Control-Request-Method": "POST",
+            },
+        )
+        mutation = browser.post(
+            "/api/auth/logout",
+            headers={"Origin": "https://attacker.example", "X-CSRF-Token": CSRF},
+        )
+        read = browser.get(
+            "/api/auth/me", headers={"Origin": "https://attacker.example"}
+        )
+    assert preflight.status_code == 405
+    assert mutation.status_code == 403
+    for response in (preflight, mutation, read):
+        assert "access-control-allow-origin" not in response.headers
+        assert "access-control-allow-credentials" not in response.headers
 
 
 @pytest.mark.parametrize("token", [None, "", "malformed", "ü" * 43, "z" * 43])
