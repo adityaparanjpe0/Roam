@@ -6,6 +6,9 @@
 *.key
 credentials.json
 service-account.json
+# Google OAuth Web client downloads (including common copy-name suffixes).
+client_secret*.json
+client_secrets*.json
 
 # Python / FastAPI
 __pycache__/

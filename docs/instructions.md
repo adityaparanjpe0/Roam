@@ -86,6 +86,7 @@ Commit `.env.example` with placeholders and descriptions. Never commit `.env` or
 | `SESSION_TOKEN_PEPPER` | HMAC/pepper for stored session-token hashes | Yes |
 | `GOOGLE_OIDC_CLIENT_ID` | Google sign-in client ID | Treat as config |
 | `GOOGLE_OIDC_CLIENT_SECRET` | Google sign-in client secret | Yes |
+| `GOOGLE_OIDC_REDIRECT_URI` | Exact registered callback; local target `http://127.0.0.1:5173/auth/google/callback` | No |
 | `GOOGLE_MAPS_API_KEY` | Server-restricted Places/Routes key | Yes |
 | `VITE_GOOGLE_MAPS_BROWSER_KEY` | Browser-restricted map key if JavaScript map is enabled | Exposed by design; restrict by origin/API |
 | `LLM_PROVIDER` | Adapter selection such as `fake` or approved vendor | No |
@@ -97,6 +98,13 @@ Commit `.env.example` with placeholders and descriptions. Never commit `.env` or
 | `LOG_LEVEL` | Structured log threshold | No |
 
 Rules:
+
+- PR #9 Milestone 2 reserves `APP_ENV`, `APP_BASE_URL`, and `GOOGLE_OIDC_*`
+  values in the root example for future auth code; no auth loader or route
+  consumes them yet. Follow the [local OAuth runbook](runbooks/google-oauth-local.md).
+  `OAUTH_STATE_SECRET` and `SESSION_TOKEN_PEPPER` above remain planned session/
+  flow decisions, not credentials required for this configuration milestone.
+  Do not generate unused secrets or put OAuth credentials in `VITE_` variables.
 
 - Configuration is parsed and validated once at startup with typed settings.
 - Production refuses insecure defaults or missing secrets.

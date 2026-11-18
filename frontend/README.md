@@ -49,6 +49,12 @@ This path requires registry access on the first download. Use the same `npm exec
 
 ## Development and verification
 
+For PR #9's configuration-only Google OAuth preparation, follow the
+[local OAuth runbook](../docs/runbooks/google-oauth-local.md).
+Keep OAuth credentials in the ignored root `.env`, never in frontend variables.
+The agreed browser-facing callback uses `http://127.0.0.1:5173/auth/google/callback`;
+the callback and required Vite `/auth` proxy remain unimplemented.
+
 Open **http://127.0.0.1:5173/**. Vite binds to this loopback address and uses `strictPort`: it exits if 5173 is occupied rather than silently choosing another port. Save a source file to update the running page. Stop the server with **Control+C**.
 
 ### Run the frontend and backend together

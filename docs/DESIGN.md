@@ -578,6 +578,17 @@ This is safer and cheaper than regenerating the whole itinerary and makes the ch
 
 ### Authentication flow
 
+PR #9 Milestone 1 was approved by the human; Milestone 2 (2026-11-17) prepares
+local Google configuration only. FastAPI remains the OIDC client, React owns
+the UI, and PostgreSQL will hold opaque application-session hashes. Authlib is
+the proposed protocol library; its exact integration/version remains to be
+verified. No auth runtime behavior is implemented in this milestone.
+The agreed local callback is `http://127.0.0.1:5173/auth/google/callback`:
+the browser reaches Vite, which will proxy `/auth` to FastAPI on port 8000.
+Both that proxy and the backend callback remain planned. See
+[ADR 0003](adr/0003-local-oauth-configuration.md) and the
+[configuration runbook](runbooks/google-oauth-local.md).
+
 Use Google OpenID Connect/OAuth authorization-code flow through a maintained Python library:
 
 1. `/auth/google/start` creates high-entropy state and nonce as required, binds them to a short-lived secure flow cookie/server record, and redirects with minimal `openid email profile` scopes.

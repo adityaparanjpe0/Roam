@@ -8,6 +8,24 @@
 
 ### Verified facts
 
+- PR #9 Milestone 2 (2026-11-17), owner: user with Codex assistance, on
+  `feat/google-auth-sessions`: human approved Milestone 1 and authorized only
+  Google OAuth development configuration. Added blank credential placeholders,
+  agreed local browser/callback values, a [manual setup runbook](runbooks/google-oauth-local.md),
+  [ADR 0003](adr/0003-local-oauth-configuration.md), and ignore patterns for Google
+  client-secret downloads. The callback target is
+  `http://127.0.0.1:5173/auth/google/callback`; FastAPI's route and Vite's `/auth`
+  proxy remain unimplemented. Authlib remains proposed, not installed. No auth
+  loader consumes the new variables yet. Google console setup, real credentials,
+  live login, and runtime security remain unverified. No secrets read/generated,
+  dependencies installed, servers started, paid APIs enabled, or Git publication
+  performed. Verification: `git diff --check` passed; editor diagnostics reported
+  no errors in the nine changed files; `git check-ignore -v --no-index` confirmed
+  representative root/nested environment and Google-download paths are ignored;
+  tracked credential-pattern queries returned no matches. Application tests were
+  not run for this documentation/ignore-only change. This supersedes no runtime
+  implementation evidence. Milestone 3 has not begun.
+
 - PR #8 Milestone 8 (2026-11-17), owner: user with Codex assistance, on
   `feat/trip-creation-form`: polishes feature-scoped text wrapping, mobile action
   width, input/interest hover feedback, keyboard checkbox-row outlines with native
