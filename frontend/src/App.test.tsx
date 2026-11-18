@@ -8,6 +8,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  vi.restoreAllMocks()
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
 })
@@ -45,7 +46,7 @@ test('clearly explains that planning capabilities are not available yet', () => 
   expect(screen.getByText('Illustrative planner concept. Not generated or interactive.')).toBeInTheDocument()
   expect(screen.getByRole('list', { name: 'Illustrative day plan' })).toBeInTheDocument()
   expect(screen.getAllByRole('article')).toHaveLength(3)
-  expect(within(screen.getByRole('main')).getByRole('button', { name: 'Check trip details' })).toBeInTheDocument()
+  expect(within(screen.getByRole('main')).getByRole('button', { name: 'Review trip details' })).toBeInTheDocument()
 })
 
 test('includes a developer connection check without changing the landing page', () => {
@@ -78,4 +79,24 @@ test('exposes the core trip form without issuing requests when editing', () => {
 
   expect(within(form).getByLabelText('Destination (required)')).toHaveValue('Lisbon')
   expect(fetch).not.toHaveBeenCalled()
+})
+
+test('reviews and edits a trip locally without network or browser storage writes', () => {
+  vi.stubEnv('DEV', false)
+  const localWrite = vi.spyOn(Storage.prototype, 'setItem')
+  render(<App />)
+  for (const [label, value] of [
+    ['Destination (required)', 'Lisbon'], ['Start date (required)', '2027-03-27'],
+    ['End date (required)', '2027-03-30'], ['Number of travelers (required)', '2'],
+    ['Budget per person (USD, required)', '750.50'],
+  ]) fireEvent.change(screen.getByLabelText(label), { target: { value } })
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Food' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Review trip details' }))
+  expect(screen.getByRole('region', { name: 'Review your trip' })).toBeInTheDocument()
+  expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeInTheDocument()
+  expect(screen.getByRole('contentinfo')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Edit details' }))
+  expect(screen.getByLabelText('Destination (required)')).toHaveValue('Lisbon')
+  expect(fetch).not.toHaveBeenCalled()
+  expect(localWrite).not.toHaveBeenCalled()
 })

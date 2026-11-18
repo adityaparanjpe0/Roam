@@ -27,7 +27,7 @@ not database readiness, production serving, or a new business API. See the
 
 ## 1. Context and design goals
 
-PR #8 Milestones 2–5 (2026-11-17) add a frontend form-state foundation under
+PR #8 Milestones 2–6 (2026-11-17) add a frontend form-state foundation under
 `frontend/src/features/trip/`: editable string values, a separate target normalized
 draft type, and local React state. Milestone 3 mounts five controlled core fields
 (destination, dates, travelers, and total per-person USD budget) on the landing
@@ -43,8 +43,14 @@ field errors/focus handling, and a local check action. Only successful validatio
 creates a normalized draft with integer USD cents. Budgets must be positive for
 this form, superseding the earlier zero-budget form policy; existing nullable/
 nonnegative database storage is unchanged. Client bounds and normalization are
-documented in [ADR 0002](adr/0002-trip-form-validation.md). Local review remains
-planned, and future backend validation must independently enforce business rules.
+documented in [ADR 0002](adr/0002-trip-form-validation.md). Milestone 6 replaces
+the check-only confirmation with local review/edit screens. A valid submission
+hands the normalized draft to an optional typed `onDraftSubmit(draft)` callback;
+the default landing-page integration performs no external action. Review uses
+the normalized snapshot; editable state remains in the container for lossless
+return to the form. Future backend validation must independently enforce rules,
+and PR #11 must own pending/error/server-success handling rather than equating
+local review with persistence.
 The draft is not an API contract; PR #11 must establish request mapping and
 title/timezone handling. The form makes no requests and persists no data.
 

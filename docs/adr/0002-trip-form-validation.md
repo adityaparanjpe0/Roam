@@ -1,7 +1,7 @@
 # ADR 0002: Validate editable trip details before creating a local draft
 
 - Date: 2026-11-17
-- Status: accepted for PR #8 Milestone 5's human-requested client validation scope
+- Status: accepted for PR #8's human-requested client validation and local review scope
 - Owner: user with Codex assistance; teammate review pending
 
 ## Problem and decision
@@ -41,15 +41,29 @@ manual calendar checks prevent JavaScript rollover and reject malformed dates.
 
 ## Feedback and milestone boundary
 
-`Check trip details` validates on submit. Errors appear beside the fields with
+`Review trip details` validates on submit. Errors appear beside the fields with
 `aria-invalid` and `aria-describedby`; a summary announces failure and focus moves
 to the first invalid control after rendering. Interest errors describe the group
 and its checkboxes; focus goes to the first checkbox when interests are first.
 Subsequent edits revalidate without moving focus or losing other entries.
-Success is cleared on any edit and requires another explicit check.
+Only successful validation may leave the form for review.
 
-Milestone 5 creates only a local draft and confirmation; no review screen is
-implemented. The future review transition must consume only a successful result.
+Milestone 5 originally created only a local draft and confirmation. Milestone 6
+replaces that confirmation with a local summary and an Edit details action.
+The container retains original editable strings independently of the normalized
+draft, so going back preserves whitespace, numeric entry text, and selections.
+Review renders strings as text, local dates without timezone conversion, and
+budget as USD for the entire trip per person. Empty optional text has an explicit
+fallback. Review heading receives focus on entry; editing focuses Destination.
+
+The optional `onDraftSubmit: (draft: TripDraft) => void` prop on the container
+is a synchronous handoff called only from a valid explicit form submission, never
+from render/effects or edits. The landing page supplies no callback. PR #11 can
+attach a parent handler that maps the draft into generated API types; it must
+add actual pending/error states, server validation, and canonical saved results.
+This milestone implements no asynchronous save lifecycle or success claim.
+The UI explicitly states that the trip is not saved; refreshing clears memory.
+
 Client validation is bypassable. Future backend Pydantic/domain validation must
 independently enforce these rules plus ownership, title/timezone resolution,
 authorization, and other server invariants. A client draft is not a trusted API

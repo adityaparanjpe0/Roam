@@ -8,6 +8,34 @@
 
 ### Verified facts
 
+- PR #8 Milestone 6 (2026-11-17), owner: user with Codex assistance, on
+  `feat/trip-creation-form`: [the container](../frontend/src/features/trip/TripCreation.tsx)
+  validates on submit and only successful results enter
+  [local review](../frontend/src/features/trip/TripReview.tsx). An optional typed
+  `onDraftSubmit(draft)` callback receives normalized `TripDraft` values only from
+  valid explicit submissions. The landing page supplies no callback. The review
+  shows all fields, USD budget per person for the entire trip, readable interest
+  labels, and optional-text fallback. It explicitly says the trip is not saved
+  and refresh clears details. Editable strings remain in the container separately
+  from the reviewed snapshot; Edit details preserves raw values and selections.
+  Focus moves to the review heading, then back to Destination on edit. Text is
+  rendered literally and multiline preferences retain line breaks. This
+  supersedes Milestone 5's check-only confirmation and review-planned status.
+  Milestone 5 completion is human-reported; Milestone 7 has not begun. Backend
+  integration, save lifecycle, storage, auth, database changes, and generation
+  remain out of scope. [ADR 0002](adr/0002-trip-form-validation.md) records the
+  callback boundary and future PR #11 responsibilities.
+  Verification: lint, strict typecheck, **115 tests in 5 files**, production build,
+  and `git diff --check` passed using Node **24.11.1** / npm **11.6.2**. Required
+  Node **24.22.3** verification remains outstanding. Tests prove no callback on
+  invalid submission, one call per valid explicit review under Strict Mode, exact
+  normalized payloads, edit/review updates, literal rendering, and no network or
+  browser-storage writes from the production form/review flow. Browser checks
+  confirmed invalid → review → edit → invalid transitions and focus destinations;
+  all raw fields and interests survived edit. No page overflow at 320/375/768/1440px.
+  Full screen-reader/cross-browser review remains outstanding. No dependency was
+  added, and no commit, push, or merge was performed.
+
 - PR #8 Milestone 5 (2026-11-17), owner: user with Codex assistance, on
   `feat/trip-creation-form`: adds [pure typed validation](../frontend/src/features/trip/tripValidation.ts)
   returning either field errors or a complete local draft. Checks include real

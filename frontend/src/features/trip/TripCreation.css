@@ -10,7 +10,7 @@
   font-weight: 600;
 }
 
-.trip-form {
+.trip-form, .trip-review {
   max-width: 52rem;
   padding: var(--space-4);
   border: 1px solid var(--color-border);
@@ -18,7 +18,7 @@
   background: var(--color-surface);
 }
 
-.trip-form h2 {
+.trip-form h2, .trip-review h2 {
   margin-bottom: var(--space-2);
   font-size: clamp(2rem, 3.6vw, 3rem);
   letter-spacing: -0.035em;
@@ -139,7 +139,7 @@
   margin-top: var(--space-1);
 }
 
-.trip-check-button {
+.trip-action-button {
   min-height: 3rem;
   margin-top: var(--space-4);
   padding: 0.75rem 1.25rem;
@@ -152,20 +152,50 @@
   cursor: pointer;
 }
 
-.trip-check-button:hover {
+.trip-action-button:hover {
   background: var(--color-accent-hover);
 }
 
-.trip-validation-status {
-  margin-top: var(--space-2);
+.trip-review-notice {
+  color: var(--color-muted);
+}
+
+.trip-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  margin: var(--space-4) 0 0;
+}
+
+.trip-summary > div {
+  min-width: 0;
+}
+
+.trip-summary dt {
+  margin-bottom: var(--space-1);
+  font-weight: 600;
+}
+
+.trip-summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.trip-summary ul {
+  margin: 0;
+  padding-left: var(--space-3);
+}
+
+.trip-review-preferences {
+  white-space: pre-wrap;
 }
 
 @media (min-width: 45rem) {
-  .trip-form-fields, .trip-interest-options {
+  .trip-form-fields, .trip-interest-options, .trip-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .trip-form-field-wide {
+  .trip-form-field-wide, .trip-summary-wide {
     grid-column: 1 / -1;
   }
 }
@@ -175,7 +205,7 @@
     padding-block: var(--space-5);
   }
 
-  .trip-form {
+  .trip-form, .trip-review {
     padding: var(--space-2);
   }
 }

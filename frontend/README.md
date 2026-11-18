@@ -179,7 +179,7 @@ See [project memory](../docs/memory.md) for exact results and limitations.
 
 ## UI review checklist
 
-### Trip form — PR #8 Milestones 3–5
+### Trip form — PR #8 Milestones 3–6
 
 Run `npm run dev` from `frontend/` with the pinned Node version, then open
 `http://127.0.0.1:5173/#create-trip`, or follow **Enter trip details** on the
@@ -193,7 +193,11 @@ controlled and start blank. Numeric editing values stay strings. Eight interest
 checkboxes support independent selection/deselection, and an optional multiline
 preferences/constraints field starts empty. The
 [draft type](src/features/trip/tripCreationModels.ts) is produced only by successful
-[client validation](src/features/trip/tripValidation.ts); it is not sent to a backend.
+[client validation](src/features/trip/tripValidation.ts). Successful submission
+opens [local review](src/features/trip/TripReview.tsx); invalid input stays on the
+form with field errors. The container exposes an optional typed
+`onDraftSubmit(draft)` callback for a future parent. No callback is supplied by
+the landing page, and no draft is sent to a backend.
 
 Manual checks:
 
@@ -213,16 +217,25 @@ Manual checks:
 7. Enter multiple lines of preferences, then change interests and core fields.
    Text/newlines and selections must survive those edits. Clear the optional text
    field; it remains valid because preferences are optional.
-8. Click **Check trip details** on an empty form: expect field errors, an alert,
+8. Click **Review trip details** on an empty form: expect field errors, an alert,
    and focus on Destination. Correct it and check again: focus should reach the
    first remaining invalid input. After the first check, errors update as you edit.
-9. Check a valid example: Lisbon, March 27–30 2027, 2 travelers, $750.50, Food.
-   Expect **Details are valid. Nothing has been saved.** The validator's draft has
-   `budgetPerPersonMinor: 75050`. Change budget to zero or reverse the dates:
-   success must disappear and field errors must return without losing other data.
+9. Review a valid example: Lisbon, March 27–30 2027, 2 travelers, $750.50, Food.
+   Expect a summary of every field and an explicit **Your trip has not been saved**
+   notice. The heading should receive focus. The validator's draft has
+   `budgetPerPersonMinor: 75050`; review displays $750.50 for the entire trip.
+10. Choose **Edit details**: expect focus on Destination and every original input
+    restored, including surrounding spaces and multiline preferences. Change the
+    destination and review again: the summary must update. Change budget to zero
+    or reverse the dates and submit: errors must keep you on the form.
+11. Review with no preferences: expect **No additional preferences provided.**
+    Refreshing either screen must return to an empty form; there is no storage.
 
-The check action is local only; the review screen and backend integration remain
-planned. Dates must be real calendar dates and span 1–14 inclusive days; travelers
+Review and editing use local React state only; backend integration remains
+planned. The callback is a synchronous normalized-data handoff, not a save result.
+PR #11 must add request mapping, pending/error behavior, and canonical server
+results, including unresolved title/timezone handling. Dates must be real calendar
+dates and span 1–14 inclusive days; travelers
 must be whole numbers from 1–20. Budget must be positive, at most $1,000,000 and
 have no more than two decimal places. Exponents, hex, nonfinite numbers, trailing
 junk, and excess precision are rejected rather than rounded. At least one unique

@@ -10,11 +10,11 @@ interface TripCreationFormProps {
   onChange: (values: TripFormValues) => void
   onSubmit?: () => void
   errors?: TripFormErrors
-  validated?: boolean
+  focusOnMount?: boolean
 }
 
-/** Controlled trip details with field errors; local review remains a later step. */
-function TripCreationForm({ values, onChange, onSubmit, errors = {}, validated = false }: TripCreationFormProps) {
+/** Controlled trip details; the container validates and handles submission. */
+function TripCreationForm({ values, onChange, onSubmit, errors = {}, focusOnMount = false }: TripCreationFormProps) {
   const formRef = useRef<HTMLFormElement>(null)
   const [submitAttempt, setSubmitAttempt] = useState(0)
   const id = useId()
@@ -27,6 +27,10 @@ function TripCreationForm({ values, onChange, onSubmit, errors = {}, validated =
   const budgetId = `${id}-budget`
   const interestsHelpId = `${id}-interests-help`
   const constraintsId = `${id}-constraints`
+
+  useEffect(() => {
+    if (focusOnMount) formRef.current?.querySelector<HTMLInputElement>('input[name="destination"]')?.focus()
+  }, [focusOnMount])
 
   useEffect(() => {
     if (submitAttempt > 0) {
@@ -62,7 +66,7 @@ function TripCreationForm({ values, onChange, onSubmit, errors = {}, validated =
       <h2 id={headingId}>Trip details</h2>
       <p className="trip-form-help" id={helpId}>Your details stay on this page and are not saved. Itinerary planning is coming later.</p>
       <p className="trip-form-help">Required fields are marked. Additional preferences are optional.</p>
-      <p className="trip-form-help">Checking trims surrounding spaces for the draft; your entered text stays unchanged.</p>
+      <p className="trip-form-help">The review ignores surrounding spaces; your entered text stays unchanged when you return to edit.</p>
       {Object.keys(errors).length > 0 && <p className="trip-error-summary" role="alert">Check the highlighted fields before continuing.</p>}
       <div className="trip-form-fields">
         <div className="trip-form-field trip-form-field-wide">
@@ -182,8 +186,7 @@ function TripCreationForm({ values, onChange, onSubmit, errors = {}, validated =
           {fieldError('constraints')}
         </div>
       </div>
-      <button className="trip-check-button" type="submit">Check trip details</button>
-      {validated && <p className="trip-validation-status" role="status">Details are valid. Nothing has been saved.</p>}
+      <button className="trip-action-button" type="submit">Review trip details</button>
     </form>
   )
 }

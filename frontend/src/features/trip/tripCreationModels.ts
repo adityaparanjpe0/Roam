@@ -45,6 +45,9 @@ export interface TripDraft {
   freeTextConstraints: string | null
 }
 
+/** A normalized-draft handoff; the future parent owns API/pending/error behavior. */
+export type TripDraftSubmitHandler = (draft: TripDraft) => void
+
 /** Each mounted form gets its own values and interest array. */
 export function createInitialTripFormValues(): TripFormValues {
   return {
