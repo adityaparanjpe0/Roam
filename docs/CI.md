@@ -75,6 +75,15 @@ database tests described below.
 
 ## PostgreSQL and migrations
 
+PR #9 Milestone 8 authentication tests use the existing discovery and commands:
+ordinary pytest covers the database-free cases; --run-db-tests -m database selects
+all PostgreSQL cases, including the new combined real-library auth flow. Frontend
+Vitest --run includes the new service/component and navigation tests. No workflow
+edit or Google credentials are required. Default provider transports/fetch are
+faked or rejected, so tests cannot silently use real Google HTTP through them.
+See [the authentication test map](auth-testing.md) for the 18 acceptance areas,
+mock boundaries and actual local results. Hosted execution remains unverified.
+
 The existing `Backend checks` job starts `postgres:18.7-bookworm`, matching local
 Compose. A health check waits for startup. Docker publishes container port 5432
 on a randomly assigned **loopback-only** host port; the test step obtains that

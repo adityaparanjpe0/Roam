@@ -792,6 +792,14 @@ The free-budget baseline may rely on host logs plus `planner_runs` and a small a
 
 ## 14. Testing strategy
 
+PR #9 Milestone 8 adds combined OAuth/session PostgreSQL tests using real
+Authlib/joserfc validation and synthetic Google HTTP responses, plus React
+component/service integration tests with fake fetch/navigation. Normal test
+HTTPX transports and frontend fetch reject accidental live calls by default.
+Existing scratch-database safety, migrations and noninteractive CI commands
+remain unchanged. See [the authentication testing map](auth-testing.md) for all
+eighteen requested behaviors, mock boundaries, local evidence and remaining gaps.
+
 PR #4 Milestone 2 adds a [backend CI workflow](../.github/workflows/backend-ci.yml)
 on `chore/github-actions-ci`: Python 3.12, locked uv dependency installation,
 Ruff formatting/lint, strict mypy, and the existing dependency-free health tests.
@@ -799,9 +807,10 @@ It targets pull requests into `main` and pushes to `main` on an Ubuntu runner.
 PR #4 Milestone 3 adds a separate [frontend CI workflow](../.github/workflows/frontend-ci.yml)
 using Node from `.nvmrc`, `npm ci`, ESLint, TypeScript, the existing Vitest tests,
 and the Vite production build. Both workflows use the same event filters and run
-independently without application secrets or services. GitHub execution remains
-unverified until runs are recorded. PostgreSQL integration/migrations, e2e,
-and production image checks remain planned.
+independently without application secrets. The backend workflow now includes a
+disposable PostgreSQL service for integration/migration/authentication tests.
+GitHub execution remains unverified until runs are recorded. Browser e2e and
+production image checks remain planned.
 
 PR #4 Milestone 4 reviews these package workflows without expanding CI scope:
 both run for all changed paths, use read-only tokens and immutable action pins,

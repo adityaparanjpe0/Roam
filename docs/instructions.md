@@ -5,6 +5,15 @@
 
 ## 1. Working agreement
 
+PR #9 Milestone 8: automated auth tests use synthetic Google responses/keys only.
+Default HTTPX transports and frontend fetch are blocked/replaced by test fixtures;
+provide explicit fake responses instead of enabling live provider traffic. Use
+the existing PostgreSQL opt-in fixtures and local TEST_DATABASE_ADMIN_URL for
+database tests, never a development/production URL fallback. Both CI workflows
+already discover the new tests; Vitest must use --run for a noninteractive run.
+See [the test coverage and command guide](auth-testing.md) for isolation, mocks,
+evidence and remaining browser/deployment verification.
+
 PR #9 Milestone 7: keep APP_BASE_URL canonical (lowercase scheme/host, no explicit
 default port or trailing slash). Local origin stays `http://127.0.0.1:5173`, with
 FastAPI on `http://127.0.0.1:8000` behind Vite's auth/API proxy; Google callback

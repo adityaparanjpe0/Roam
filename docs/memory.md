@@ -1,12 +1,35 @@
 # Roam durable project memory
 
 > Purpose: preserve verified context across developers and AI sessions  
-> Last updated: 2026-11-17
+> Last updated: 2026-11-18
 > Rule: this file records decisions and evidence; it must not turn plans into facts
 
 ## 1. Current snapshot
 
 ### Verified facts
+
+- PR #9 Milestone 8 (2026-11-18), owner: user with Codex assistance, on
+  `feat/google-auth-sessions`: human reported Milestone 7 complete/reviewed,
+  superseding its pending-review status below. Added 16 PostgreSQL auth-flow
+  cases with real Authlib/joserfc verification and HTTPX fake discovery/token/
+  JWKS responses, covering localhost/HTTPS cookies, stable user upsert/repeat
+  login, rotation, CSRF, logout/replay, invalid claims/state, provider failure,
+  expiry and commit rollback. Added two HTTPX guard regression tests plus
+  global sync/async transport denial. Added 12 React/service integration cases
+  and one real navigation-helper test; frontend fetch is fake by default.
+  No application code, dependency, migration or workflow configuration changed.
+  Evidence: Ruff format/check passed (61 files), mypy app passed (34 source
+  files); default pytest 266 passed / 91 opt-in skips. Full pytest 357 passed
+  without skips in 51.50 seconds against a disposable generated-credential
+  PostgreSQL 17.0 UTC cluster, stopped and removed afterward. Frontend lint,
+  typecheck and build passed; Vitest 200 passed in 11 files under Node 24.22.3/
+  npm 11.19.1. Existing Starlette TestClient/httpx warning remains visible.
+  Existing workflow discovery, database marker/fixtures and noninteractive
+  Vitest commands cover these tests without Google secrets; hosted Actions
+  execution and pinned remote artifact availability were not verified here.
+  docs/auth-testing.md maps all 18 requested areas and remaining real-browser,
+  Google, HTTPS and deployment gaps. No live provider or paid calls; no commit,
+  push or merge. Milestone 8 review pending; Milestone 9 remains unstarted.
 
 - PR #9 Milestone 7 (2026-11-17), owner: user with Codex assistance, on
   `feat/google-auth-sessions`: human reported Milestone 6 complete/reviewed.

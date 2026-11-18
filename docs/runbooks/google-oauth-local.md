@@ -7,8 +7,9 @@ PostgreSQL user persistence. Milestone 5 adds independent database-backed
 application sessions, CSRF protection, current-user lookup, and logout. Vite
 routing/UI are integrated in Milestone 6. Milestone 7 hardens cookie parsing,
 claim shapes, response deadlines, origin configuration and safe failure diagnostics;
-see the [security audit](../auth-security-audit.md). Stop before Milestone 8.
-Human review/completion of Milestones 2–6 is reported; actual console
+see the [security audit](../auth-security-audit.md). Milestone 8 adds
+[automated auth tests](../auth-testing.md); stop before Milestone 9.
+Human review/completion of Milestones 2–7 is reported; actual console
 settings and live Google behavior have not been inspected by the agent.
 
 ## Architecture and exact URLs

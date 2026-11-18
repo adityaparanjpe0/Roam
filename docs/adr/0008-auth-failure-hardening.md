@@ -1,7 +1,7 @@
 # ADR 0008: Authentication failure boundaries and diagnostics
 
 - Date: 2026-11-17
-- Status: implemented for human-authorized PR #9 Milestone 7; review pending
+- Status: implemented for PR #9 Milestone 7; human reported complete/reviewed 2026-11-18
 - Owner: user with Codex assistance
 
 ## Decision

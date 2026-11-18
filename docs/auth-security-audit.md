@@ -1,7 +1,8 @@
 # PR #9 Milestone 7 authentication audit
 
 Date: 2026-11-17. Owner: user with Codex assistance. Scope: authentication
-hardening only, on `feat/google-auth-sessions`; pending human review.
+hardening only, on `feat/google-auth-sessions`; human reported complete/reviewed
+on 2026-11-18. Milestone 8 adds [combined automated test coverage](auth-testing.md).
 No real Google requests, real account credentials, paid services, or developer
 database were used. No dependencies or schema changes are required.
 
