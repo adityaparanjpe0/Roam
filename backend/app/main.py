@@ -8,6 +8,7 @@ from fastapi.concurrency import run_in_threadpool
 
 from app.api.auth import router as auth_router
 from app.api.health import router as health_router
+from app.core.auth_logging import RedactOAuthCallbackQuery
 from app.db.session import dispose_database_engine
 
 
@@ -21,5 +22,6 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="Roam API", lifespan=lifespan)
+app.add_middleware(RedactOAuthCallbackQuery)
 app.include_router(health_router)
 app.include_router(auth_router)

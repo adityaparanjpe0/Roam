@@ -345,7 +345,7 @@ Base path: `/api/v1`. JSON uses `snake_case`. Times are RFC 3339 instants; local
 | Method | Path | Behavior |
 |---|---|---|
 | `GET` | `/auth/google/start` | Set signed/short-lived OAuth state and redirect to Google |
-| `GET` | `/auth/google/callback` | Validate response, upsert user, rotate Roam session, redirect safely |
+| `GET` | `/auth/google/callback` | Milestone 4 validates response and upserts user; explicit not-signed-in text until sessions/safe redirect arrive in Milestone 5 |
 | `POST` | `/api/v1/auth/logout` | CSRF-protected revoke and clear cookie |
 | `GET` | `/api/v1/me` | Return minimal current-user profile and CSRF token/bootstrap data |
 | `GET` | `/health` | PR #3 Milestone 2: unauthenticated liveness, HTTP 200 with `{"status":"ok"}`; no dependency calls |
@@ -585,10 +585,16 @@ the OIDC client, React owns the UI, and PostgreSQL will hold opaque application
 session hashes. Authlib 1.9.9's protocol client constructs authorization URLs
 and PKCE; its secure token generator supplies state, nonce, and verifier values.
 Synchronous HTTPX retrieves metadata with fixed endpoints, size/time bounds,
-and a one-hour cache. No token exchange or identity validation exists yet.
+and a one-hour cache. Milestone 4 adds code exchange, trusted RSA/JWKS signature
+verification through joserfc, Authlib `CodeIDToken` validation (issuer, audience,
+expiry/issued-at/not-before, nonce, authorized party, optional access-token hash),
+and literal-boolean verified-email policy. Only RS256 is accepted, with 30-second
+clock skew. Google's documented canonical/legacy issuer values validate before
+normalization to `https://accounts.google.com`. Profile email is normalized and
+name bounded to 120 characters; neither selects account ownership.
 The agreed local callback is `http://127.0.0.1:5173/auth/google/callback`:
 the browser reaches Vite, which will proxy `/auth` to FastAPI on port 8000.
-Both that proxy and the backend callback remain planned. See
+The callback is now implemented in FastAPI; the Vite proxy remains planned. See
 [ADR 0003](adr/0003-local-oauth-configuration.md) and the
 [configuration runbook](runbooks/google-oauth-local.md).
 
@@ -598,10 +604,25 @@ thread-safe process-local store holds nonce, state, verifier, callback URI, and
 expiry under the binding hash. It replaces the browser's previous pending
 attempt, prunes expired attempts on initiation, and returns 429 at 256 active
 attempts instead of evicting another browser. This is not an application
-session. Restart/multiple workers cannot share this state; callback integration
-must address atomic single use and shared storage before deployment. The
+session. Callback consumption now atomically removes a matching, unexpired
+browser/state record before exchange, rejecting replay and duplicate callbacks.
+Restart/multiple workers cannot share this state; durable shared storage is
+still required before deployment. The
 PostgreSQL-backed application-session architecture remains unchanged. See
 [ADR 0004](adr/0004-oidc-initiation-foundation.md).
+
+Milestone 4 persists only verified identity/profile fields using PostgreSQL
+`INSERT ... ON CONFLICT (oidc_issuer, oidc_subject) DO UPDATE ... RETURNING id`.
+The existing unique constraint supplies identity lookup and serializes concurrent
+first logins; updates preserve UUID, issuer, subject, creation time, and trip
+ownership. Missing optional name preserves an existing name. The transaction
+opens only after provider verification. No schema change/migration is needed.
+The callback clears flow cookies and returns safe plain text explicitly saying
+the user is not signed in. No Google tokens, session cookie, or authenticated
+state is stored. Uvicorn's callback access-log scope has its query removed before
+handling; raw query data is privately parsed and discarded afterward. Future
+proxies must independently redact callback queries. See
+[ADR 0005](adr/0005-google-callback-user-persistence.md).
 
 Use Google OpenID Connect/OAuth authorization-code flow through a maintained Python library:
 

@@ -1,4 +1,4 @@
-"""Identity storage only; login and account deletion are not implemented."""
+"""Google identity storage; app sessions and account deletion remain pending."""
 
 from typing import TYPE_CHECKING
 

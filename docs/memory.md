@@ -8,6 +8,46 @@
 
 ### Verified facts
 
+- PR #9 Milestone 4 (2026-11-17), owner: user with Codex assistance, on
+  `feat/google-auth-sessions`: human reported Milestone 3 complete/reviewed.
+  Added `/auth/google/callback`, atomic single-use browser/state consumption,
+  Authlib code exchange through bounded synchronous HTTPX, joserfc RS256
+  signature verification against fixed trusted Google JWKS, and Authlib OIDC
+  claims validation with 30-second skew. Literal-boolean verified email and
+  bounded profile fields are required. joserfc 1.8.0 was already installed via
+  Authlib and is now directly declared; no dependency versions changed.
+  Inspected `User`/revision `0001`: unique issuer/subject already exists, so
+  **no migration** was added. A short service-owned PostgreSQL transaction
+  atomically upserts on that identity constraint, updates only permitted profile
+  fields, preserves UUID/ownership, and never identifies/merges by email.
+  No transaction spans Google I/O. Google tokens are not persisted. Callback
+  clears flow cookies and returns explicit NOT-signed-in plain text, with no
+  application session or identity returned. Uvicorn callback-query scope
+  redaction is tested; future proxies must redact independently. See
+  [ADR 0005](adr/0005-google-callback-user-persistence.md). This supersedes only
+  Milestone 3's absent callback/validation/persistence status. Process-local
+  flow storage remains limited to one process; restarts lose attempts.
+  Verification: Windows/Python 3.12.16, final ordinary pytest **168 passed / 53
+  intentionally skipped**. PostgreSQL-enabled verification passed **220 tests**
+  before adding a final HTTP-error-status regression, which passed in the final
+  ordinary suite. That full run included **53 PostgreSQL integration tests** against
+  a separately initialized disposable local **PostgreSQL 17.0** cluster using
+  UTC, generated withheld credentials, isolated UUID databases, and a separate
+  loopback port. Includes six new user-persistence tests (concurrent first-login
+  race and rollback included). Real RSA/JOSE/claim fixtures and mocked HTTP prove
+  token/error behavior without Google requests. One pre-existing Starlette/HTTPX
+  deprecation warning remains unsuppressed. Ruff format (**47 files**), lint,
+  strict mypy (**27 app files**), frozen dependency sync, lock consistency,
+  editor diagnostics, and `git diff --check` passed. The initial Windows launcher
+  needed output-handle correction; an initial full cluster run passed 211 tests
+  but exposed one existing UTC-offset assertion because initdb inherited local
+  New York timezone. Setting the disposable server to UTC matched the intended
+  test environment; no application logic or test assertion was weakened. Test
+  clusters were stopped and removed. PostgreSQL 18.7/hosted CI and live Google
+  login are not verified by this run. No real credentials read, frontend/proxy
+  implementation, app sessions, commits, pushes, or merges. Milestone 5 has not
+  begun.
+
 - PR #9 Milestone 3 (2026-11-17), owner: user with Codex assistance, on
   `feat/google-auth-sessions`: human reported Milestone 2 complete/reviewed and
   authorized initiation only. Added typed lazy Google settings and synchronous

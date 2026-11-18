@@ -108,6 +108,11 @@ Rules:
   flow decisions, not credentials required for initiation. Its opaque binding
   cookie stores no flow data and needs no signing secret.
   Do not generate unused secrets or put OAuth credentials in `VITE_` variables.
+  Milestone 4's callback requires the existing migrated PostgreSQL schema and
+  `DATABASE_URL` only after Google validation succeeds. It saves a profile,
+  not an application session. Never enable raw callback-query/body logging;
+  Uvicorn scope redaction is implemented, but future proxies need their own
+  redaction. Do not share callback URLs in screenshots/issues.
 
 - Target: configuration is parsed and validated once at startup with typed settings.
   Current database and auth loaders are intentionally lazy to preserve health-only

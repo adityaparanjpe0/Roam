@@ -197,7 +197,13 @@ unverified, and Milestone 6 has not begun.
 PR #9 Milestone 3 now provides login initiation only at `/auth/google/start`,
 typed auth settings, and bounded Google discovery/PKCE generation. Callback,
 identity verification, application sessions, CSRF, logout, and the frontend
-remain unimplemented. Process-local pending flow data is not a saved user
+were still unimplemented at that milestone. Milestone 4 now verifies callbacks
+and persists users under the existing unique issuer/subject constraint, without
+Google-token storage or a new migration. State consumption is single-use in one
+process. Application sessions, logout, CSRF, frontend integration, throttling,
+and shared flow storage remain pending. A successful callback explicitly says
+the user is not signed in. See [ADR 0005](adr/0005-google-callback-user-persistence.md).
+Process-local pending flow data is not a saved user
 session; [ADR 0004](adr/0004-oidc-initiation-foundation.md) documents its limits.
 This milestone does not satisfy the full acceptance criteria below.
 

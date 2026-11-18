@@ -302,7 +302,6 @@ def test_capacity_returns_429_without_eviction(
     assert "set-cookie" not in response.headers
 
 
-def test_callback_and_app_session_endpoints_are_not_implemented() -> None:
+def test_app_session_endpoint_is_not_implemented() -> None:
     with TestClient(app) as browser:
-        for path in ("/auth/google/callback", "/api/v1/me"):
-            assert browser.get(path).status_code == 404
+        assert browser.get("/api/v1/me").status_code == 404

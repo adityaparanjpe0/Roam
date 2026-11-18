@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from hashlib import sha256
+from hmac import compare_digest
 from threading import Lock
 from time import monotonic
 
@@ -11,6 +12,10 @@ FLOW_TTL_SECONDS = 600
 
 class LoginCapacityError(ValueError):
     """No live flow may be silently evicted to admit another browser."""
+
+
+class InvalidLoginFlow(ValueError):
+    """Expired, missing, mismatched, or already-consumed login attempt."""
 
 
 @dataclass(frozen=True, repr=False)
@@ -25,8 +30,7 @@ class PendingLogin:
 class LoginFlowStore:
     """One-process initiation storage; restarts fail closed, no disk/DB writes.
 
-    There is deliberately no callback consumption API in this milestone.
-    A callback must later atomically consume a browser-bound, unexpired flow.
+    Callback consumption is atomic and single-use within this process.
     """
 
     def __init__(
@@ -69,3 +73,23 @@ class LoginFlowStore:
                 redirect_uri=redirect_uri,
                 expires_at=now + FLOW_TTL_SECONDS,
             )
+
+    def consume(self, browser_token: str | None, state: str | None) -> PendingLogin:
+        if (
+            not browser_token
+            or not state
+            or len(browser_token) > 128
+            or len(state) > 128
+        ):
+            raise InvalidLoginFlow
+        key = sha256(browser_token.encode()).digest()
+        with self._lock:
+            flow = self._pending.get(key)
+            if flow is None:
+                raise InvalidLoginFlow
+            if flow.expires_at <= self._clock():
+                del self._pending[key]
+                raise InvalidLoginFlow
+            if not compare_digest(flow.state.encode(), state.encode()):
+                raise InvalidLoginFlow
+            return self._pending.pop(key)

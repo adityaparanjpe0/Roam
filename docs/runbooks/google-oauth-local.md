@@ -1,10 +1,11 @@
-# Local Google OAuth configuration and initiation — PR #9, Milestones 2–3
+# Local Google OAuth configuration and callback — PR #9, Milestones 2–4
 
 Milestone 2 prepared Google credentials and the configuration contract.
 Milestone 3 adds the synchronous login-start route, typed settings, Authlib 1.9.9,
-and bounded discovery through HTTPX. It does not complete login, implement a
-callback, write application sessions, or change Vite routing. Stop before
-Milestone 4. Human review/completion of Milestone 2 is reported; actual console
+and bounded discovery through HTTPX. Milestone 4 adds callback verification and
+PostgreSQL user persistence. It does not issue application sessions or change
+Vite routing. Stop before Milestone 5. Human review/completion of Milestones 2–3
+is reported; actual console
 settings and live Google behavior have not been inspected by the agent.
 
 ## Architecture and exact URLs
@@ -20,17 +21,19 @@ and [ADR 0003](../adr/0003-local-oauth-configuration.md).
 | React / browser origin | `http://127.0.0.1:5173` | Configured in Vite |
 | FastAPI upstream | `http://127.0.0.1:8000` | Documented development server |
 | Login path | `/auth/google/start` | Implemented FastAPI route; returns 302 or safe 429/503 |
-| Callback path | `/auth/google/callback` | Planned FastAPI route |
-| Authorized redirect URI | `http://127.0.0.1:5173/auth/google/callback` | Agreed registration target; not a working endpoint yet |
+| Callback path | `/auth/google/callback` | Implemented in FastAPI; validates and saves profile without signing in |
+| Authorized redirect URI | `http://127.0.0.1:5173/auth/google/callback` | Agreed registration target; still needs Vite proxy |
 
-The backend registers `/health` and `/auth/google/start`. Vite proxies only `/health`.
+The backend registers `/health`, `/auth/google/start`, and `/auth/google/callback`.
+Vite proxies only `/health`.
 A later milestone must add `/auth` forwarding to port 8000, preserving the path,
-and the FastAPI callback. Port 5173 is intentional: it is the browser origin,
+for the implemented FastAPI callback. Port 5173 is intentional: it is the browser origin,
 even though FastAPI handles the callback behind the future proxy. Do not
 substitute port 8000 or add a trailing slash. Use `127.0.0.1` consistently;
 `localhost` is a different host. Do not add the frontend `#create-trip` fragment
 to the redirect URI. Registration, authorization, and code exchange must use
-the same exact URI. A callback request today cannot complete login.
+the same exact URI. The callback still cannot complete login without the
+application sessions reserved for Milestone 5.
 
 ## Manual Google Auth Platform checklist
 
@@ -79,8 +82,8 @@ Never paste credentials into chat or include them in screenshots/issues.
    an existing `.env` with the example. A fresh file can be copied from
    [the example](../../.env.example) only if no local `.env` exists.
 9. Confirm the selected project, External/Testing status, scopes, redirect URI,
-   and intended test accounts. Do not try a live callback until its route and
-   proxy exist. Record completion without recording credentials. The start route
+   and intended test accounts. Do not try a live callback until the Vite proxy
+   is implemented. Record completion without recording credentials. The start route
    can now generate a Google redirect but does not prove successful login.
 
 Google can change console labels. Use these official references rather than
@@ -170,12 +173,46 @@ loses attempts. Do not use multiple workers for future callback testing until
 shared storage exists. This is a bounded development foundation, not production
 authentication or complete login throttling. See [ADR 0004](../adr/0004-oidc-initiation-foundation.md).
 
-The callback remains absent (404), so state/nonce validation, code exchange,
-identity validation, and atomic replay prevention are NOT implemented/proven.
-Vite still has no `/auth` proxy. Do not finish a live Google login attempt yet:
-returning to the configured callback cannot authenticate the user. Milestone 4
-must integrate the stored attempt with maintained-library validation, rather
-than merely trusting callback query values.
+## What the callback now implements (Milestone 4)
+
+The callback atomically consumes a valid, unexpired browser/state record before
+exchange. Duplicate/replayed callbacks, ambiguous parameters, wrong bindings,
+and malformed responses fail safely. Denied consent performs no provider or DB
+work and never reflects provider error descriptions. Any consumed failed flow
+requires restarting sign-in; code exchange is not automatically retried.
+
+Authlib constructs and parses the standard authorization-code exchange over the
+existing bounded synchronous HTTPX transport, with BasicAuth client credentials
+and the server-held PKCE verifier/original callback. joserfc verifies RS256
+signatures using only Google's trusted fixed JWKS endpoint. Authlib's
+`CodeIDToken` validates issuer, audience, expiry/issued-at/not-before, nonce,
+authorized party, and optional access-token hash with 30 seconds of skew. Then
+Roam requires the literal boolean `email_verified=true`, validates profile
+shape, normalizes email, and bounds the optional display name. Token contents
+are never used to select a user before verification.
+
+Only afterward does a short PostgreSQL transaction upsert by `(issuer, sub)`.
+Google's supported issuer forms are validated then normalized to the canonical
+HTTPS issuer. Existing revision `0001` already has the required unique constraint,
+so no migration is added. Equal emails do not merge different subjects;
+concurrent first logins return one UUID. Returning users keep their UUID,
+creation time, identity key, and trips. Only email/name/update time change;
+an absent optional name preserves the existing one.
+
+The response clears flow cookies and returns plain text explicitly saying the
+profile was saved but the user is NOT signed in. No user identity/profile is
+returned, no application session is set, and no Google tokens are persisted.
+Use existing migrated `DATABASE_URL` for runtime persistence; never use the
+test maintenance URL as the application's URL. See
+[ADR 0005](../adr/0005-google-callback-user-persistence.md).
+
+Uvicorn's access-log scope has callback query strings removed before handling.
+The middleware discards the privately parsed query afterward. Future Vite and
+production proxies must independently redact callback queries; do not log them
+or share callback URLs. Vite still has no `/auth` proxy, and live Google flow is
+unverified. Do not change the registered URI as a workaround or claim completed
+login. Session issuance, logout, CSRF, throttling, shared flow state, and frontend
+integration remain future work.
 
 ## Secret protection and future security gates
 
@@ -199,13 +236,13 @@ If a real secret is exposed, rotate it in Google; merely deleting it from Git
 does not revoke it. Anyone with the secret must be treated as a trusted backend
 operator. Use a separate production client with HTTPS redirect registration.
 
-The loopback HTTP exception is for local development only. Registration is not
-token validation: later implementation must still verify state, nonce, PKCE
-support, signature/issuer/audience/expiry, and the verified-email policy, then
-provide hashed sessions, secure cookies, expiration, logout revocation, CSRF,
-and redacted callback logging. Google consent does not authorize access to
+The loopback HTTP exception is for local development only. Callback validation
+does not provide hashed application sessions, session-cookie expiration,
+logout revocation, or API CSRF protection; those remain future implementation.
+Google consent does not authorize access to
 another Roam user's trips. CI must use fakes without real Google credentials.
 
-The human reports Milestone 2 complete/reviewed. Milestone 3 proves initiation
-with isolated synthetic tests only. Live Google login and completed authentication
-remain unverified. Stop before Milestone 4.
+The human reports Milestones 2–3 complete/reviewed. Milestone 4 verifies callback
+behavior with synthetic signed tokens and persistence tests against disposable
+PostgreSQL. Live Google login and completed authentication remain unverified.
+Stop before Milestone 5.
