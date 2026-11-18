@@ -191,6 +191,7 @@ If a requested change weakens an invariant, stop and request an explicit archite
 
 - Treat server responses as the source of truth; map server error codes to specific, recoverable UI states.
 - Keep feature state local where possible and server state in TanStack Query. Do not introduce a global state library without a concrete need.
+- Human-requested PR #9 Milestone 6 exception: the small authentication snapshot uses built-in React state/context and native fetch. TanStack Query remains the default for future trip server state; do not add Redux for auth.
 - Forms need labels, inline errors, keyboard operation, focus management, loading state, and duplicate-submit prevention.
 - Drag-and-drop must have buttons or keyboard alternatives.
 - Display provider attribution and freshness/warning information where required.

@@ -1,11 +1,11 @@
-# Local Google OAuth configuration and callback — PR #9, Milestones 2–5
+# Local Google OAuth configuration and callback — PR #9, Milestones 2–6
 
 Milestone 2 prepared Google credentials and the configuration contract.
 Milestone 3 adds the synchronous login-start route, typed settings, Authlib 1.9.9,
 and bounded discovery through HTTPX. Milestone 4 adds callback verification and
 PostgreSQL user persistence. Milestone 5 adds independent database-backed
 application sessions, CSRF protection, current-user lookup, and logout. Vite
-routing/UI remain unchanged. Stop before Milestone 6. Human review/completion of Milestones 2–4
+routing/UI are integrated in Milestone 6. Stop before Milestone 7. Human review/completion of Milestones 2–5
 is reported; actual console
 settings and live Google behavior have not been inspected by the agent.
 
@@ -23,18 +23,17 @@ and [ADR 0003](../adr/0003-local-oauth-configuration.md).
 | FastAPI upstream | `http://127.0.0.1:8000` | Documented development server |
 | Login path | `/auth/google/start` | Implemented FastAPI route; returns 302 or safe 429/503 |
 | Callback path | `/auth/google/callback` | Implemented in FastAPI; validates identity, commits user/session, sets cookies, redirects safely |
-| Authorized redirect URI | `http://127.0.0.1:5173/auth/google/callback` | Agreed registration target; still needs Vite proxy |
+| Authorized redirect URI | `http://127.0.0.1:5173/auth/google/callback` | Agreed registration target; Vite auth proxy now implemented |
 
 The backend registers `/health`, `/auth/google/start`, and `/auth/google/callback`.
-Vite proxies only `/health`.
-A later milestone must add `/auth` forwarding to port 8000, preserving the path,
-for the implemented FastAPI callback. Port 5173 is intentional: it is the browser origin,
-even though FastAPI handles the callback behind the future proxy. Do not
+Vite now proxies exact `/health` and complete `/api` and `/auth` namespaces to
+port 8000, preserving path, query, cookies, and Origin. Port 5173 is intentional:
+it is the browser origin even though FastAPI handles the callback. Do not
 substitute port 8000 or add a trailing slash. Use `127.0.0.1` consistently;
 `localhost` is a different host. Do not add the frontend `#create-trip` fragment
 to the redirect URI. Registration, authorization, and code exchange must use
 the same exact URI. The backend can now issue application sessions; end-to-end
-browser login still needs the future Vite proxy/frontend integration.
+browser login still needs manual real-Google verification. See [frontend auth](../frontend-auth.md).
 
 ## Manual Google Auth Platform checklist
 
@@ -212,10 +211,11 @@ never use the test maintenance URL as the application's URL. See the
 Uvicorn's access-log scope has callback query strings removed before handling.
 The middleware discards the privately parsed query afterward. Future Vite and
 production proxies must independently redact callback queries; do not log them
-or share callback URLs. Vite still has no `/auth` proxy, and live Google flow is
+or share callback URLs. Vite now proxies `/auth`, but live Google flow is
 unverified. Do not change the registered URI as a workaround or claim completed
 live browser login. Session issuance, expiry, logout, and CSRF now have backend
-tests; throttling, shared OAuth flow state, and frontend integration remain future work.
+tests; throttling and shared OAuth flow state remain future work. Milestone 6
+adds React account controls and the proxy, verified only with synthetic fixtures.
 
 ## Secret protection and future security gates
 
@@ -250,4 +250,4 @@ another Roam user's trips. CI must use fakes without real Google credentials.
 The human reports Milestones 2–4 complete/reviewed. Milestone 4 verifies callback
 behavior with synthetic signed tokens and persistence tests against disposable
 PostgreSQL. Milestone 5 adds tested backend sessions; live Google login and
-frontend-integrated authentication remain unverified. Stop before Milestone 6.
+real-account/production authentication remain unverified. Stop before Milestone 7.

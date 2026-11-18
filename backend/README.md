@@ -84,12 +84,13 @@ sets cookies after commit and redirects to the configured frontend origin root.
 Use the [session runbook](../docs/runbooks/application-sessions.md) for revision
 `0002`, current-user lookup, expiration, CSRF, logout, and security limits.
 The callback is `/auth/google/callback`, browser-facing at
-`http://127.0.0.1:5173/auth/google/callback` through a future Vite proxy to
-FastAPI at `http://127.0.0.1:8000`. The proxy is still absent; do not change the
-registered callback to work around it. Existing health-only
+`http://127.0.0.1:5173/auth/google/callback` through Vite's Milestone 6 auth proxy to
+FastAPI at `http://127.0.0.1:8000`. Keep that exact registered callback.
+Existing health-only
 startup still needs no Google credentials. With auth settings loaded, direct
 requests to `http://127.0.0.1:8000/auth/google/start` can initiate authorization,
-but returning through the configured Vite origin still needs that future proxy.
+and return through the configured Vite origin. React confirms the session using
+`/api/auth/me`; live Google login has not been verified in this milestone.
 Pending OAuth attempts expire after ten minutes, are limited to 256 per process,
 and are lost on restart. Application sessions are persisted independently in
 PostgreSQL, with seven-day absolute and 24-hour idle expiry. Login throttling

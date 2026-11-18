@@ -607,7 +607,9 @@ normalization to `https://accounts.google.com`. Profile email is normalized and
 name bounded to 120 characters; neither selects account ownership.
 The agreed local callback is `http://127.0.0.1:5173/auth/google/callback`:
 the browser reaches Vite, which will proxy `/auth` to FastAPI on port 8000.
-The callback is now implemented in FastAPI; the Vite proxy remains planned. See
+The callback is implemented in FastAPI; Milestone 6 adds the Vite `/auth` and
+`/api` proxies and React account controls. Live Google/HTTPS verification remains
+outstanding. See
 [ADR 0003](adr/0003-local-oauth-configuration.md) and the
 [configuration runbook](runbooks/google-oauth-local.md).
 
@@ -672,6 +674,21 @@ requires signing in again; GET /me does not rotate it and invalidate other tabs.
 Application-session validation needs only APP_ENV/APP_BASE_URL/DATABASE_URL,
 not Google credentials or provider availability. SHA-256 is suitable for random
 256-bit tokens; no pepper/signing secret is needed. See [ADR 0006](adr/0006-application-sessions.md).
+
+Milestone 6 uses built-in React state/context for a small current-user snapshot,
+per the human preference, without a new state/cache dependency. It validates
+`GET /api/auth/me`, treats only 401 as unauthenticated, and offers recovery for
+network/server/shape errors. Login is full-page navigation to `/auth/google/start`;
+only a later /me response can establish UI sign-in. Logout uses same-origin
+cookies plus the CSRF delivery value in a header; only 204/401 confirm logout.
+CSRF failure checks /me once to distinguish a lost CSRF cookie from an ended
+session. Focus/visibility/reconnect checks recover expiry without polling that
+would keep idle sessions alive. Abort/revision guards prevent stale checks from
+undoing logout; Strict Mode cleanup is covered. Auth transitions do not remount
+the local trip form; full-page sign-in discloses draft loss. UI state never
+authorizes a resource. Vite proxy errors are sanitized and DEBUG serving is
+rejected because debug logs bypass that sanitizer. See
+[ADR 0007](adr/0007-react-authentication.md) and [frontend auth](frontend-auth.md).
 
 - `HttpOnly`, `Secure` except localhost, `SameSite=Lax`, narrow path/domain, finite idle and absolute expiry.
 - Rotate on login and meaningful security changes; revoke on logout.

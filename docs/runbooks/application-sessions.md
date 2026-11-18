@@ -1,8 +1,8 @@
 # Roam application sessions — PR #9 Milestone 5
 
 Backend application sessions now use PostgreSQL independently of transient
-Google flow records. Frontend login controls and the Vite auth proxy are not
-implemented in this milestone. No live Google login or HTTPS deployment is
+Google flow records. Milestone 6 adds React controls and Vite auth/API proxies;
+see [frontend auth](../frontend-auth.md). No live Google login or HTTPS deployment is
 claimed. See [ADR 0006](../adr/0006-application-sessions.md).
 
 ## Setup and migration
@@ -103,6 +103,6 @@ substitutes never become production login shortcuts. No Google/paid calls run.
 
 Keep the agreed browser origin `http://127.0.0.1:5173`, FastAPI upstream
 `http://127.0.0.1:8000`, and Google redirect
-`http://127.0.0.1:5173/auth/google/callback`. The frontend proxy/UI, shared OAuth
-flow storage, auth throttling, cleanup policy, and production verification remain
-future work. Stop before Milestone 6.
+`http://127.0.0.1:5173/auth/google/callback`. Shared OAuth flow storage, throttling,
+cleanup policy, and production verification remain future work. React controls
+and the proxy now have synthetic verification only. Stop before Milestone 7.

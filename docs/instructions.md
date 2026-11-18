@@ -200,8 +200,9 @@ npm ci
 npm run dev
 ```
 
-Vite currently proxies only the exact `/health` path. Proxying future `/api` and
-`/auth` routes remains planned. Keep ports and addresses in development
+Vite now proxies exact `/health` and the `/api` and `/auth` namespaces to FastAPI,
+preserving paths, cookies, and Origin. Proxy errors are sanitized and DEBUG
+serving is rejected to avoid callback-query logging. Keep ports and addresses in development
 configuration, not domain code. Production same-origin serving is still future work.
 
 Provide top-level convenience commands after the underlying commands work:
@@ -323,6 +324,10 @@ Avoid “utils” dumping grounds. Name modules after domain purpose.
 - Enable TypeScript strict mode; avoid `any` and unchecked casts.
 - Keep route components thin and organize behavior by feature.
 - Use TanStack Query for server state and invalidation; use component/context state for short-lived UI state.
+- PR #9 Milestone 6 follows the human preference for built-in React state/context
+  for the small auth snapshot. Native fetch validates the current session contract;
+  no new state dependency is needed. Future trip server state still defaults to
+  TanStack Query. See [frontend auth](frontend-auth.md).
 - Narrow PR #6 exception: the single development-only health diagnostic uses
   native fetch and local component state, as explicitly requested. Introduce
   TanStack Query when actual server-state features justify it, not for this probe.

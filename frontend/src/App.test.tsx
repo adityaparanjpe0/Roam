@@ -53,7 +53,7 @@ test('includes a developer connection check without changing the landing page', 
   render(<App />)
 
   expect(screen.getByRole('complementary', { name: 'Backend connection' })).toBeInTheDocument()
-  expect(screen.getByRole('status')).toHaveTextContent('Checking backend…')
+  expect(within(screen.getByRole('complementary', { name: 'Backend connection' })).getByRole('status')).toHaveTextContent('Checking backend…')
 })
 
 test('omits the connection diagnostic and its requests outside development', () => {
@@ -61,7 +61,8 @@ test('omits the connection diagnostic and its requests outside development', () 
   render(<App />)
 
   expect(screen.queryByRole('complementary', { name: 'Backend connection' })).not.toBeInTheDocument()
-  expect(fetch).not.toHaveBeenCalled()
+  expect(fetch).toHaveBeenCalledTimes(1)
+  expect(fetch).toHaveBeenCalledWith('/api/auth/me', expect.anything())
 })
 
 test('exposes the core trip form without issuing requests when editing', () => {
@@ -70,6 +71,7 @@ test('exposes the core trip form without issuing requests when editing', () => {
 
   expect(screen.getByRole('link', { name: 'Enter trip details' })).toHaveAttribute('href', '#create-trip')
   const form = screen.getByRole('form', { name: 'Trip details' })
+  const authRequests = vi.mocked(fetch).mock.calls.length
   expect(screen.getByRole('region', { name: 'Create a trip' })).toContainElement(form)
   fireEvent.change(within(form).getByLabelText('Destination (required)'), { target: { value: 'Lisbon' } })
   fireEvent.change(within(form).getByLabelText('Budget per person (USD, required)'), { target: { value: '500' } })
@@ -78,13 +80,14 @@ test('exposes the core trip form without issuing requests when editing', () => {
   fireEvent.submit(form)
 
   expect(within(form).getByLabelText('Destination (required)')).toHaveValue('Lisbon')
-  expect(fetch).not.toHaveBeenCalled()
+  expect(fetch).toHaveBeenCalledTimes(authRequests)
 })
 
-test('reviews and edits a trip locally without network or browser storage writes', () => {
+test('reviews and edits a trip without additional requests or browser storage writes', () => {
   vi.stubEnv('DEV', false)
   const localWrite = vi.spyOn(Storage.prototype, 'setItem')
   render(<App />)
+  const authRequests = vi.mocked(fetch).mock.calls.length
   for (const [label, value] of [
     ['Destination (required)', 'Lisbon'], ['Start date (required)', '2027-03-27'],
     ['End date (required)', '2027-03-30'], ['Number of travelers (required)', '2'],
@@ -97,6 +100,6 @@ test('reviews and edits a trip locally without network or browser storage writes
   expect(screen.getByRole('contentinfo')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Edit details' }))
   expect(screen.getByLabelText('Destination (required)')).toHaveValue('Lisbon')
-  expect(fetch).not.toHaveBeenCalled()
+  expect(fetch).toHaveBeenCalledTimes(authRequests)
   expect(localWrite).not.toHaveBeenCalled()
 })

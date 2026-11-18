@@ -205,7 +205,11 @@ dependency, `/api/auth/me`, CSRF-protected `/api/auth/logout`, rotation, and
 expiry through revision `0002`. Callback now issues cookies only after its
 transaction commits and redirects safely, superseding the earlier text-only
 response. Frontend integration, throttling, and shared OAuth flow storage remain
-pending; live Google flow is unverified. See [ADR 0006](adr/0006-application-sessions.md).
+pending at Milestone 5. Milestone 6 now implements the React auth snapshot,
+accessible account controls, full-page login navigation, current-user recovery,
+CSRF logout, and Vite auth/API proxies. The trip form remains local/unsaved.
+Shared flow storage, throttling, retention tooling, live Google flow, and
+production verification remain outstanding. See [ADR 0007](adr/0007-react-authentication.md).
 Process-local pending flow data is not a saved user
 session; [ADR 0004](adr/0004-oidc-initiation-foundation.md) documents its limits.
 This milestone does not satisfy the full acceptance criteria below.

@@ -8,6 +8,46 @@
 
 ### Verified facts
 
+- PR #9 Milestone 6 (2026-11-17), owner: user with Codex assistance, on
+  `feat/google-auth-sessions`: human reported Milestone 5 complete/reviewed.
+  Added a native-fetch auth service, small React state/context snapshot,
+  accessible header controls, current-user bootstrap/recovery, backend-managed
+  full-page login navigation, and CSRF logout. Only validated /me 200 establishes
+  UI identity; 401 ends it, other failures stay unknown/recoverable. Logout waits
+  for 204/401; missing CSRF/403 confirms /me once before inferring session absence.
+  Focus/visibility/reconnect checks avoid polling/idle keepalive. Abort/revision
+  guards cover Strict Mode and late responses after logout. Auth transitions
+  preserve local trip fields; full-page sign-in discloses draft loss. No token
+  storage or frontend resource authorization is added. Human preference for
+  built-in React is a narrow exception to planned TanStack Query, documented in
+  [ADR 0007](adr/0007-react-authentication.md) and [frontend auth](frontend-auth.md).
+  Vite now forwards /auth, /api, and exact /health with query/Origin/cookies
+  preserved. Installed Vite source inspection found default proxy errors expose
+  callback URLs; sanitized logging and a DEBUG-serving guard prevent that path.
+  No backend app/migration, trip-feature source, manifest, or lockfile changes.
+  Verification: official portable Node **24.22.3** ZIP matched its published
+  SHA-256; npm **11.19.1** performed a clean locked install (**223 packages**).
+  Sandbox network attempts were blocked/stalled; approved network-enabled setup
+  succeeded without global installation or persistent PATH edits. Lint, strict
+  typecheck, production build, editor diagnostics, and `git diff --check` passed.
+  Vitest **187 tests in 9 files** passed (45 new cases; prior form coverage kept).
+  Tests include HTTP/HTTPS CSRF, runtime Unicode/shape guards, timeout/cancellation,
+  expiry, failed logout, duplicate prevention, focus, and trip-state preservation.
+  A separate browser tab on test port 5187 used synthetic responses only:
+  account scroll width matched client width at 320/375/768/1440 with anonymous
+  and 120-character-name states; mock logout sent the expected CSRF header,
+  retained Destination, and focused Sign in. Enter on Sign in performed a full
+  navigation intercepted before Google. Local proxy verification preserved query,
+  Origin, Cookie, and response Set-Cookie; backend failure returned 502 with
+  redacted logs. Test routes were removed, the test tab cleared, and temporary
+  servers stopped; the shared tab was not navigated or edited. This supersedes
+  earlier frontend/proxy-absent status only. No real credentials/Google accounts,
+  paid calls, commits, pushes, merges, trip save/CRUD, or Milestone 7 work.
+  Backend tests were not rerun because app/migration code is unchanged. Real Google
+  consent/session/logout, production HTTPS, full screen-reader/cross-browser
+  checks, shared OAuth flow storage, throttling, and retention remain unverified
+  or unfinished. No full authentication/deployment certification is claimed.
+
 - PR #9 Milestone 5 (2026-11-17), owner: user with Codex assistance, on
   `feat/google-auth-sessions`: human reported Milestone 4 complete/reviewed.
   Added `sessions`/Alembic revision `0002`, opaque 256-bit CSPRNG bearer and CSRF
@@ -481,7 +521,7 @@ Material changes should receive an ADR under `docs/adr/` and a row here. Dates a
 | D-005 | 2026-11-07 | PLANNED | Retrieve real place candidates before LLM planning; model references allowlisted IDs only. | Prevents fabricated venue identity and bounds provider/model work. |
 | D-006 | 2026-11-07 | PLANNED | Deterministic Python code is authoritative for authorization, locks, time, routes, known hours, and budget arithmetic. | Probabilistic output cannot enforce hard application invariants. |
 | D-007 | 2026-11-07 | PLANNED | Replanning uses a typed scoped patch against stable IDs and a base trip version. | Preserves unaffected work, supports locks, costs less, and is explainable. |
-| D-008 | 2026-11-17 | IN_PROGRESS | Google OIDC verification plus opaque PostgreSQL-backed session cookie. | Backend session/CSRF tests verified in Milestone 5; frontend/live Google/production proof pending. See ADR 0006. |
+| D-008 | 2026-11-17 | IN_PROGRESS | Google OIDC verification plus opaque PostgreSQL-backed session cookie and React account UI. | Backend/session and frontend synthetic checks verified through Milestone 6; live Google/production proof pending. See ADRs 0006–0007. |
 | D-009 | 2026-11-07 | PLANNED | Authorization is owner-based; no RBAC/admin role in MVP. | There is only one meaningful permission model; avoid decorative complexity. |
 | D-010 | 2026-11-07 | PLANNED | Browser generates PDF from canonical saved trip data. | No server renderer or per-export external cost; simple file sharing. |
 | D-011 | 2026-11-07 | PLANNED | Planning is a bounded synchronous operation with idempotency and no queue/worker. | Appropriate to demo load; durable async is the measured scaling step. |
@@ -521,7 +561,7 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 | Frontend/backend health integration / PR #6 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | `d66391a`, `ab6e482`; [client](../frontend/src/api/health.ts), [UI](../frontend/src/features/connection/ConnectionStatus.tsx), live verification below | Documentation review, teammate review, and merge evidence |
 | Trip schema/migrations/CRUD | IN_PROGRESS | User with Codex assistance; reviewer pending | [Models](../backend/app/db/models/), [initial revision](../backend/migrations/versions/0001_create_users_trips_days_and_activities.py), PostgreSQL tests | CRUD and cross-owner authorization remain planned |
 | PostgreSQL foundation / PR #7 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | [Settings](../backend/app/core/config.py), [sessions](../backend/app/db/session.py), [ADR 0001](adr/0001-database-foundation.md), [CI](../.github/workflows/backend-ci.yml), evidence below | Milestone 3 review, hosted Backend checks success, and teammate schema walkthrough before merge |
-| Google OIDC/session/CSRF | IN_PROGRESS | User with Codex assistance; Milestone 5 review pending | ADR 0006, isolated backend/PostgreSQL tests | Frontend, proxy, shared flow state, throttling, and live deployment verification |
+| Google OIDC/session/CSRF | IN_PROGRESS | User with Codex assistance; Milestone 6 review pending | ADRs 0006–0007, backend/PostgreSQL and frontend synthetic tests | Shared flow state, throttling, retention, live Google/HTTPS and deployment verification |
 | Provider-neutral Places/Routes | PLANNED | Unassigned | None | Fake + live opt-in normalization/failure proof |
 | Grounded LLM generation | PLANNED | Unassigned | None | Unknown-ID rejection and atomic valid save |
 | Deterministic validator | PLANNED | Unassigned | None | Unit/property/integration invariant suite |
