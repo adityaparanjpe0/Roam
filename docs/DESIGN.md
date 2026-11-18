@@ -27,6 +27,37 @@ not database readiness, production serving, or a new business API. See the
 
 ## 1. Context and design goals
 
+PR #8 Milestones 2–8 (2026-11-17) add a frontend form-state foundation under
+`frontend/src/features/trip/`: editable string values, a separate target normalized
+draft type, and local React state. Milestone 3 mounts five controlled core fields
+(destination, dates, travelers, and total per-person USD budget) on the landing
+page, with a responsive layout and an anchor entry link. Existing navigation and
+landing content remain available. Native input hints are present; custom validation
+owns feedback rather than browser submit popups. Milestone
+4 adds eight native interest checkboxes and an optional multiline constraints
+field. The typed frontend interest options are food, sightseeing, outdoors (Nature),
+nightlife, shopping, culture (Art and culture), adventure, and relaxation. This
+supersedes the initial six-tag frontend proposal; it does not define a backend
+allowlist or alter activity categories. Milestone 5 adds a pure typed validator,
+field errors/focus handling, and a local check action. Only successful validation
+creates a normalized draft with integer USD cents. Budgets must be positive for
+this form, superseding the earlier zero-budget form policy; existing nullable/
+nonnegative database storage is unchanged. Client bounds and normalization are
+documented in [ADR 0002](adr/0002-trip-form-validation.md). Milestone 6 replaces
+the check-only confirmation with local review/edit screens. A valid submission
+hands the normalized draft to an optional typed `onDraftSubmit(draft)` callback;
+the default landing-page integration performs no external action. Review uses
+the normalized snapshot; editable state remains in the container for lossless
+return to the form. Future backend validation must independently enforce rules,
+and PR #11 must own pending/error/server-success handling rather than equating
+local review with persistence.
+Milestone 8 polishes feature-scoped responsive/focus states, keeps an initially
+empty atomic error-count live region, and connects the review heading to its
+not-saved notice. The [trip form guide](trip-creation-form.md) documents fields,
+the local draft contract, manual checks, and measured accessibility limitations.
+The draft is not an API contract; PR #11 must establish request mapping and
+title/timezone handling. The form makes no requests and persists no data.
+
 Roam creates realistic travel itineraries from user preferences. It combines uncertain external data and probabilistic model output with persistent user data, so its core design problem is not “call an LLM.” It is maintaining a trustworthy boundary:
 
 - real providers supply place identity, available place facts, and route estimates;

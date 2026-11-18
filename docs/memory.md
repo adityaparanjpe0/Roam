@@ -8,6 +8,189 @@
 
 ### Verified facts
 
+- PR #8 Milestone 8 (2026-11-17), owner: user with Codex assistance, on
+  `feat/trip-creation-form`: polishes feature-scoped text wrapping, mobile action
+  width, input/interest hover feedback, keyboard checkbox-row outlines with native
+  fallback, button active/disabled CSS, and the emphasized not-saved review notice.
+  Review heading now describes that notice. An initially empty persistent atomic
+  alert reports the current error count; regression tests cover silence before
+  submission/count correction and the review heading's accessible description.
+  [The trip form guide](trip-creation-form.md) documents fields, the local draft
+  contract, validation/normalization, PR #11 connection responsibilities, and manual
+  responsive/accessibility checks. [Unreleased changelog](../CHANGELOG.md) records
+  completed frontend work without claiming a release. No loading behavior was
+  added because validation/review are synchronous. Landing styles/navigation,
+  validation policies, dependencies, infrastructure, and backend remain unchanged.
+  Verification: **142 tests in 5 files** passed, along with lint, strict typecheck,
+  production build, and `git diff --check`, using Node **24.11.1** / npm **11.6.2**.
+  Required Node **24.22.3** verification remains outstanding. Browser checks found
+  no page overflow at 320/375/768/1024/1440px, including a 4,000-character unbroken
+  review note. Keyboard traversal covered all controls and native date segments;
+  Space toggled interests and Enter completed review/edit with correct focus.
+  Measured helper/error/button text contrast: **5.09:1 / 5.17:1 / 5.62:1**.
+  Hover and temporary disabled-style probes behaved as intended; the actual local
+  action remains enabled. At doubled root font size/320px, card scroll width now
+  equals card width (form/review 207px), fixing prior form content overflow (285px
+  in a 207px card). Preserved landing header/hero still causes page-level overflow
+  in that text-enlargement probe. Actual browser zoom, screen-reader speech,
+  forced-colors/native-picker/cross-browser behavior remain unverified; no full
+  accessibility-conformance claim is made. Milestone 7 completion is human-reported;
+  Milestone 9 has not begun. No dependency install, commit, push, merge, PR creation,
+  backend integration, or release was performed.
+
+- PR #8 Milestone 7 (2026-11-17), owner: user with Codex assistance, on
+  `feat/trip-creation-form`: inspected and reused existing Vitest/Testing Library/
+  jest-dom/jsdom configuration, cleanup, scripts, and frontend CI's non-interactive
+  `npm run test -- --run` step. Added **26 cases** to
+  [validator tests](../frontend/src/features/trip/tripValidation.test.ts) and
+  [component tests](../frontend/src/features/trip/TripCreation.test.tsx), without
+  changing application code, dependencies, test configuration, or workflows.
+  Coverage now explicitly isolates missing destination/dates/interests, validates
+  end-date syntax before range comparisons, and rejects additional nonfinite/
+  overflow budget representations. Parametrized component cases prove individual
+  invalid fields block review/callback, describe the error, and receive focus.
+  Complete-data cases cover all eight interests, exact normalized payloads,
+  multiline preferences, review labels/currency, and lossless return to editing.
+  Existing cases also cover whitespace, numeric/date bounds, selection toggles,
+  safe literal rendering, Strict Mode callback counts, and production no-network/
+  no-storage behavior. No snapshots, live backend requests, or paid APIs are used.
+  Verification: **141 tests in 5 files** passed (76 validator, 31 form/component,
+  34 app/health); lint, strict typecheck, production build, editor diagnostics,
+  and `git diff --check` passed. Checks used existing Node **24.11.1** / npm
+  **11.6.2**; required Node **24.22.3** verification remains outstanding.
+  [Frontend test instructions](../frontend/README.md#trip-form-automated-tests--pr-8-milestone-7)
+  document coverage and limitations. Actual keyboard/native date-picker behavior,
+  responsive rendering/zoom, screen-reader announcements, cross-browser checks,
+  hosted CI, and future backend integration are not proven by this jsdom run.
+  Milestone 6 completion is human-reported; Milestone 8 has not begun. No commit,
+  push, merge, or dependency installation was performed.
+
+- PR #8 Milestone 6 (2026-11-17), owner: user with Codex assistance, on
+  `feat/trip-creation-form`: [the container](../frontend/src/features/trip/TripCreation.tsx)
+  validates on submit and only successful results enter
+  [local review](../frontend/src/features/trip/TripReview.tsx). An optional typed
+  `onDraftSubmit(draft)` callback receives normalized `TripDraft` values only from
+  valid explicit submissions. The landing page supplies no callback. The review
+  shows all fields, USD budget per person for the entire trip, readable interest
+  labels, and optional-text fallback. It explicitly says the trip is not saved
+  and refresh clears details. Editable strings remain in the container separately
+  from the reviewed snapshot; Edit details preserves raw values and selections.
+  Focus moves to the review heading, then back to Destination on edit. Text is
+  rendered literally and multiline preferences retain line breaks. This
+  supersedes Milestone 5's check-only confirmation and review-planned status.
+  Milestone 5 completion is human-reported; Milestone 7 has not begun. Backend
+  integration, save lifecycle, storage, auth, database changes, and generation
+  remain out of scope. [ADR 0002](adr/0002-trip-form-validation.md) records the
+  callback boundary and future PR #11 responsibilities.
+  Verification: lint, strict typecheck, **115 tests in 5 files**, production build,
+  and `git diff --check` passed using Node **24.11.1** / npm **11.6.2**. Required
+  Node **24.22.3** verification remains outstanding. Tests prove no callback on
+  invalid submission, one call per valid explicit review under Strict Mode, exact
+  normalized payloads, edit/review updates, literal rendering, and no network or
+  browser-storage writes from the production form/review flow. Browser checks
+  confirmed invalid → review → edit → invalid transitions and focus destinations;
+  all raw fields and interests survived edit. No page overflow at 320/375/768/1440px.
+  Full screen-reader/cross-browser review remains outstanding. No dependency was
+  added, and no commit, push, or merge was performed.
+
+- PR #8 Milestone 5 (2026-11-17), owner: user with Codex assistance, on
+  `feat/trip-creation-form`: adds [pure typed validation](../frontend/src/features/trip/tripValidation.ts)
+  returning either field errors or a complete local draft. Checks include real
+  calendar dates, 1–14 inclusive days, 1–20 whole travelers, positive USD decimals
+  up to $1,000,000 with at most two decimal places, nonblank destination up to
+  200 UTF-16 code units, unique allowlisted interests, and optional constraints
+  up to 4,000 UTF-16 code units. Decimal digits become safe integer cents without
+  rounding. Invalid results never contain a draft. Normalization preserves editable
+  state, trims draft text/numeric whitespace, copies interests, and represents
+  blank optional constraints as null. The human's positive-budget requirement
+  supersedes earlier PR #8 zero-budget decisions; database storage is unchanged.
+  [ADR 0002](adr/0002-trip-form-validation.md) records rules and alternatives.
+  The local check action shows associated errors, announces failure, and focuses
+  the first invalid control after submit. Corrections revalidate without moving
+  focus or discarding data. Valid checks show an honest local success; any edit
+  clears success. Milestone 4 completion is human-reported; Milestone 6 review UI
+  and all backend integration remain unimplemented. No dependency was added.
+  Verification: lint, strict typecheck, **112 tests in 5 files**, production build,
+  and `git diff --check` passed on existing Node **24.11.1** / npm **11.6.2**.
+  Required Node **24.22.3** verification remains outstanding. In the browser,
+  empty submission showed six field errors and focused destination; all invalid
+  inputs described their error. Valid Lisbon details (March 27–30 2027, two
+  travelers, $750.50, Food) showed success. Changing budget to zero removed
+  success, showed only a budget error, and focused budget on recheck while
+  preserving the destination text. Error layout had no overflow at 320px.
+  Screen-reader and cross-browser review remain outstanding. No API request,
+  persistence, commit, push, or merge was performed by this milestone.
+
+- PR #8 Milestone 4 (2026-11-17), owner: user with Codex assistance, on
+  `feat/trip-creation-form`: adds eight native controlled interest checkboxes
+  and an optional multiline constraints field to the
+  [existing form](../frontend/src/features/trip/TripCreationForm.tsx). The
+  [options and derived Interest type](../frontend/src/features/trip/tripCreationModels.ts)
+  share one definition; selected IDs stay in `Interest[]`. Labels are Food,
+  Sightseeing, Nature, Nightlife, Shopping, Art and culture, Adventure, Relaxation.
+  Nature retains `outdoors` and Art and culture retains `culture`; the initial
+  unused `other` option is replaced by the requested expanded vocabulary. This
+  supersedes the initial frontend tags only; backend semantics remain deferred.
+  Changes replace the interest array without mutating previous state and preserve
+  other fields. Native checkmarks and selected borders indicate selection; a
+  fieldset/legend names the group. The textarea starts empty and retains newlines,
+  with the existing 4,000-character storage-aligned limit. No validation messages,
+  API/persistence, recommendations, search, or dependencies were added. Milestone
+  5 has not begun; Milestone 3 completion is human-reported.
+  Verification: lint, strict typecheck, **44 tests in 4 files**, production build,
+  and `git diff --check` passed using existing Node **24.11.1** / npm **11.6.2**.
+  Required Node **24.22.3** verification remains outstanding. Browser checks proved
+  Space selects/deselects and Tab reaches the next checkbox; multiline input was
+  retained. No page overflow at 320/375/768/1440px; interests were one column on
+  mobile and two on wider screens. Full screen-reader/cross-browser review remains
+  outstanding. No commit, push, or merge was performed.
+
+- PR #8 Milestone 3 (2026-11-17), owner: user with Codex assistance, on
+  `feat/trip-creation-form`: [the core form](../frontend/src/features/trip/TripCreationForm.tsx)
+  now contains five labeled controlled inputs, with native date/number controls
+  and [responsive token-based CSS](../frontend/src/features/trip/TripCreation.css).
+  [The landing page](../frontend/src/routes/LandingPage.tsx) mounts it at
+  `#create-trip` and adds an entry link while preserving existing navigation/content.
+  Defaults remain blank and numeric editing values remain strings. Required/min/
+  max/step attributes provide input hints; `noValidate` prevents native submit
+  validation, and submission still only prevents navigation. No submit button,
+  interests/constraints UI, custom validation, normalized draft creation, review,
+  API request, or persistence was added. Milestone 2 was reviewed per the user;
+  Milestone 4 has not begun. This supersedes Milestone 2's isolated/unmounted status.
+  Windows verification: lint, strict typecheck, **40 tests in 4 files**, production
+  build, and `git diff --check` passed. Existing Node **24.11.1** / npm **11.6.2**
+  were used; verification on required Node **24.22.3** remains outstanding.
+  Browser measurements at 320/375/768/1024/1440px found no page overflow or clipped
+  form inputs; mobile had one column and wider screens two. All five fields accepted
+  values in the browser. Sampled keyboard focus outlines were visible; native dates
+  have internal tab stops. Full keyboard/screen-reader and cross-browser review
+  remain outstanding. The existing development health check showed expected HTTP
+  502 with FastAPI stopped; it did not block the form. No dependencies were added,
+  and no commit, push, or merge was performed.
+
+- PR #8 Milestone 2 (2026-11-17), owner: user with Codex assistance, on
+  `feat/trip-creation-form`: adds [editable/draft types and fresh defaults](../frontend/src/features/trip/tripCreationModels.ts),
+  [local state](../frontend/src/features/trip/TripCreation.tsx), and an isolated
+  [controlled form foundation](../frontend/src/features/trip/TripCreationForm.tsx).
+  Numeric editing values remain strings; the target normalized draft uses integer
+  USD cents and nullable optional constraints. No normalization or validation
+  function is implemented yet. Only the destination field is rendered in isolation;
+  the landing page is unchanged. Remaining fields, validation, review, and PR #11
+  request integration remain planned. This supersedes the no-trip-form-foundation
+  status only; no completed form, persistence, or API contract is claimed.
+  Verification on Windows: focused tests **5 passed**; full Vitest suite **37
+  passed in 4 files**; `npm run lint`, `npm run typecheck`, and `npm run build`
+  passed. Editor diagnostics reported no errors in the new feature, and
+  `git diff --check` passed. Checks used existing Node **24.11.1** / npm
+  **11.6.2**, not the required Node **24.22.3**, which was not installed.
+  Verification with the pinned runtime remains outstanding. No dependency
+  installation, browser visual review, commit, push, or merge was performed.
+
+- Local Git reconciliation (2026-11-17): this branch includes database-foundation
+  merge `3fbf770` and verification commit `2a159bc`. This supersedes older
+  uncommitted/unmerged PR #7 statements below for local Git history only; hosted
+  CI execution and teammate review are not inferred.
+
 - PR #7 Milestone 3 (2026-11-17), on `feat/database-foundation`: extends the
   existing [backend CI job](../.github/workflows/backend-ci.yml) with an independent
   PostgreSQL 18.7 service and a separate opt-in database/migration test step.

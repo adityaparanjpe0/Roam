@@ -7,6 +7,15 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) co
 ## [Unreleased]
 
 ### Added
+- PR #8 trip creation form: controlled destination, dates, travelers, total
+  per-person USD budget, eight interests, and optional multiline preferences.
+- Typed client validation/normalization and a local review/edit flow that preserves
+  entered values and explicitly states the trip is not saved. No trip API or
+  persistence is implemented.
+- Automated trip validator/component tests and [field, draft-contract, validation,
+  accessibility, and PR #11 integration documentation](docs/trip-creation-form.md).
+- Responsive form/review polish, keyboard focus and selection feedback, atomic
+  error-count announcements, and an emphasized not-saved review notice.
 - PR #3 Milestone 1 backend foundation: minimal FastAPI application, Python 3.12
   runtime selection, uv dependency declarations/lockfile, and local setup instructions.
 - PR #3 Milestone 2: dependency-free `GET /health` liveness endpoint returning

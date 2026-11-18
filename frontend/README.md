@@ -177,7 +177,136 @@ build passed with Node 24.22.3. A real Chrome run (no request mocks) verified
 connected → backend stopped/error → restarted/retry/connected through Vite.
 See [project memory](../docs/memory.md) for exact results and limitations.
 
+## Trip form automated tests — PR #8 Milestone 7
+
+The existing Vitest + React Testing Library + jest-dom setup runs in jsdom with
+automatic cleanup. No dependency, test configuration, or CI workflow change was
+needed for the trip form. Tests use role/label queries and explicit assertions,
+not snapshots. Test data is synthetic; provider/backend calls are not required.
+The existing health tests mock network/client boundaries, and the production
+app-flow test asserts no requests or browser-storage writes during review/edit.
+
+Run from `frontend/` with the pinned Node version:
+
+```sh
+# Full frontend suite, once and then exit (also used by CI)
+npm run test -- --run
+
+# Focused validator and form/review tests
+npm run test -- --run src/features/trip/tripValidation.test.ts src/features/trip/TripCreation.test.tsx
+
+npm run lint
+npm run typecheck
+npm run build
+```
+
+| Coverage | Location |
+|---|---|
+| Empty/whitespace destination; missing, impossible, and reversed dates; inclusive trip length and leap years | [Validator tests](src/features/trip/tripValidation.test.ts) |
+| Invalid traveler/budget syntax, bounds, fractions, zero/negative/nonfinite values, and exact USD cents | [Validator tests](src/features/trip/tripValidation.test.ts) |
+| Required/duplicate/unsupported interests, text limits, valid complete draft, normalization without mutation | [Validator tests](src/features/trip/tripValidation.test.ts) |
+| Accessible labels, controlled input updates, interest selection/deselection, associated errors, first-invalid focus | [Form tests](src/features/trip/TripCreation.test.tsx) |
+| No callback/review for invalid fields; exact normalized callback payloads; review summary; lossless return to edit | [Form tests](src/features/trip/TripCreation.test.tsx) |
+| Landing navigation preserved, production review/edit without requests or browser-storage writes | [App tests](src/App.test.tsx) |
+
+Milestone 7 verification: **141 tests across 5 files** passed, including **76
+validator cases** and **31 form/component cases**, plus 34 app/health cases.
+Lint, strict typecheck, and production build passed. These checks used existing
+Node **24.11.1** / npm **11.6.2**; required Node **24.22.3** verification remains
+outstanding. No dependency install or hosted CI run is claimed.
+
+Limits: fireEvent/jsdom verifies DOM/state behavior but not actual keyboard
+activation, native date-picker interactions, visual layout, zoom, screen-reader
+announcements, or cross-browser rendering. Earlier manual browser evidence is in
+[memory](../docs/memory.md); there is no committed real-browser end-to-end suite.
+Async backend pending/error/retry behavior and server validation/auth are still
+future PR #11 work and are not tested as implemented features.
+
 ## UI review checklist
+
+The [trip form guide](../docs/trip-creation-form.md) documents every field, the
+normalized `TripDraft` contract/example, validation decisions, PR #11 integration
+boundary, and the detailed accessibility review. Milestone 8 checks passed **142
+tests in 5 files**, lint, strict typecheck, and production build using existing
+Node 24.11.1/npm 11.6.2; pinned Node 24.22.3 verification remains outstanding.
+There is no network operation or loading state in the form/review flow.
+
+Browser checks covered five standard widths, keyboard traversal/Space/Enter,
+focus transitions, a 4,000-character review note, and selected text contrast
+ratios. Doubling root text size at 320px no longer overflows the form/review cards,
+but the preserved landing header/hero still causes page-level overflow in that
+probe. Actual browser zoom, screen-reader announcements, OS high contrast, and
+cross-browser/native-picker behavior remain unverified; this is not a claim of
+full accessibility conformance.
+
+### Trip form — PR #8 Milestones 3–8
+
+Run `npm run dev` from `frontend/` with the pinned Node version, then open
+`http://127.0.0.1:5173/#create-trip`, or follow **Enter trip details** on the
+landing page. FastAPI is not required for the form; the independent development
+health diagnostic may report an error if it is stopped.
+
+The [form](src/features/trip/TripCreationForm.tsx) receives editable values and
+an update callback from [local React state](src/features/trip/TripCreation.tsx).
+Destination, start/end dates, travelers, and total per-person USD budget are
+controlled and start blank. Numeric editing values stay strings. Eight interest
+checkboxes support independent selection/deselection, and an optional multiline
+preferences/constraints field starts empty. The
+[draft type](src/features/trip/tripCreationModels.ts) is produced only by successful
+[client validation](src/features/trip/tripValidation.ts). Successful submission
+opens [local review](src/features/trip/TripReview.tsx); invalid input stays on the
+form with field errors. The container exposes an optional typed
+`onDraftSubmit(draft)` callback for a future parent. No callback is supplied by
+the landing page, and no draft is sent to a backend.
+
+Manual checks:
+
+1. Enter and clear all five fields; editing one must preserve the others.
+2. Enter zero and a decimal budget. Checking zero must show a budget error; a
+   positive amount with up to two decimal places is allowed. The budget is for
+   the entire trip per person, not per day or for the group. Placeholder examples
+   must not be initial values.
+3. Use labels and Tab/Shift+Tab to reach inputs; native date controls can contain
+   multiple internal tab stops. Verify focus indicators remain visible.
+4. Check widths of 320, 375, 768, 1024, and 1440 pixels, plus zoom/enlarged text.
+   Inputs should stack on mobile, pair on desktop, and stay within the page.
+5. Refresh: values reset. Confirm existing navigation, preview, and footer work.
+6. Select several interests, then deselect one. Others must stay selected and all
+   previously entered fields must remain unchanged. Use Tab/Shift+Tab to move
+   between checkboxes and Space to toggle; the visible checkmark indicates state.
+7. Enter multiple lines of preferences, then change interests and core fields.
+   Text/newlines and selections must survive those edits. Clear the optional text
+   field; it remains valid because preferences are optional.
+8. Click **Review trip details** on an empty form: expect field errors, an alert,
+   and focus on Destination. Correct it and check again: focus should reach the
+   first remaining invalid input. After the first check, errors update as you edit.
+9. Review a valid example: Lisbon, March 27–30 2027, 2 travelers, $750.50, Food.
+   Expect a summary of every field and an explicit **Your trip has not been saved**
+   notice. The heading should receive focus. The validator's draft has
+   `budgetPerPersonMinor: 75050`; review displays $750.50 for the entire trip.
+10. Choose **Edit details**: expect focus on Destination and every original input
+    restored, including surrounding spaces and multiline preferences. Change the
+    destination and review again: the summary must update. Change budget to zero
+    or reverse the dates and submit: errors must keep you on the form.
+11. Review with no preferences: expect **No additional preferences provided.**
+    Refreshing either screen must return to an empty form; there is no storage.
+
+Review and editing use local React state only; backend integration remains
+planned. The callback is a synchronous normalized-data handoff, not a save result.
+PR #11 must add request mapping, pending/error behavior, and canonical server
+results, including unresolved title/timezone handling. Dates must be real calendar
+dates and span 1–14 inclusive days; travelers
+must be whole numbers from 1–20. Budget must be positive, at most $1,000,000 and
+have no more than two decimal places. Exponents, hex, nonfinite numbers, trailing
+junk, and excess precision are rejected rather than rounded. At least one unique
+supported interest is required. Destination is capped at 200 UTF-16 code units;
+optional preferences at 4,000, matching native maxlength behavior. Draft
+normalization trims surrounding text/numeric whitespace and converts whitespace-only
+preferences to null; the entered values are not rewritten. See
+[ADR 0002](../docs/adr/0002-trip-form-validation.md) for policy and server responsibilities.
+No routing dependency, API call, or persistence was added for the form.
+
+### Existing landing page
 
 - Check widths of 320, 375, 768, 1024, and 1440 pixels for clipping or horizontal overflow.
 - Use Tab from page load: the skip link should become visible. Enter should focus the main content; the next Tab should reach the primary CTA.

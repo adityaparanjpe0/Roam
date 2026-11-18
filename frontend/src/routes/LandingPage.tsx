@@ -1,3 +1,4 @@
+import TripCreation from '../features/trip/TripCreation'
 import './LandingPage.css'
 
 const plannedFeatures = [
@@ -29,6 +30,7 @@ function LandingPage() {
             See planned features <span aria-hidden="true">↓</span>
           </a>
           <p className="development-note">Roam is in development. Planning features aren’t available yet.</p>
+          <a className="trip-entry-link" href="#create-trip">Enter trip details</a>
         </div>
 
         <figure className="planner-preview" aria-labelledby="preview-title preview-caption">
@@ -43,6 +45,10 @@ function LandingPage() {
           </ol>
           <figcaption id="preview-caption">Illustrative planner concept. Not generated or interactive.</figcaption>
         </figure>
+      </section>
+
+      <section className="trip-creation page-width" id="create-trip" aria-label="Create a trip">
+        <TripCreation />
       </section>
 
       <section className="idea-section page-width" id="the-idea" aria-labelledby="idea-heading">
