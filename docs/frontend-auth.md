@@ -52,6 +52,12 @@ and a described sign-in draft-loss notice support keyboard use. Focus returns
 to the next account action after explicit logout/retry; initial/background
 checks do not steal focus from trip editing.
 
+Focus recovery runs in a layout effect during commit. A passive effect from a
+previous render must not consume the focus request of a newly clicked action.
+Regression tests click sign-out during the authenticated commit and check focus
+after both confirmed logout and an outage; integration assertions also wait for
+the final focused control.
+
 Sign-in navigation clears unsaved details, disclosed on the control. Logout,
 expiry, and retries keep the form mounted. No draft auto-save is introduced.
 Profile text is rendered literally; no avatar/provider URLs or raw HTML are used.

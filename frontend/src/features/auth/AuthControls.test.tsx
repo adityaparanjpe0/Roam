@@ -1,10 +1,11 @@
-import { StrictMode } from 'react'
+import { StrictMode, useLayoutEffect } from 'react'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import App from '../../App'
 import * as auth from '../../api/auth'
 import AuthProvider from './AuthProvider'
 import AuthControls from './AuthControls'
+import { useAuth } from './authContext'
 
 const user = { id: '00000000-0000-0000-0000-000000000001', email: 'student@example.com', display_name: 'Student' }
 
@@ -85,6 +86,51 @@ test('logout waits for server confirmation and prevents duplicate submits', asyn
   expect(account().getByRole('status')).toHaveTextContent('Signed out.')
   expect(account().getByRole('button', { name: 'Sign in with Google' })).toBeInTheDocument()
   expect(account().getByRole('button', { name: 'Sign in with Google' })).toHaveFocus()
+})
+
+test.each([
+  ['success', false], ['outage', false], ['success', true], ['outage', true],
+] as const)('immediate logout %s preserves recovery focus (Strict Mode: %s)', async (outcome, strict) => {
+  vi.spyOn(auth, 'getCurrentUser').mockResolvedValue(user)
+  const pending = deferred<'signed-out'>()
+  vi.spyOn(auth, 'logout').mockReturnValue(pending.promise.then((result) => {
+    if (outcome === 'outage') throw new auth.AuthError('UNAVAILABLE')
+    return result
+  }))
+
+  function ImmediateSignOut() {
+    const { state } = useAuth()
+    useLayoutEffect(() => {
+      if (state.status === 'authenticated') {
+        // Exercise an action before passive effects from this render run.
+        account().getByRole('button', { name: 'Sign out' }).click()
+      }
+    }, [state.status])
+    return <AuthControls />
+  }
+
+  const controls = <AuthProvider><ImmediateSignOut /></AuthProvider>
+  render(strict ? <StrictMode>{controls}</StrictMode> : controls)
+  await account().findByRole('button', { name: 'Signing out…' })
+  await act(async () => { pending.resolve('signed-out') })
+  const nextAction = outcome === 'outage' ? 'Retry sign-in check' : 'Sign in with Google'
+  await waitFor(() => expect(account().getByRole('button', { name: nextAction })).toHaveFocus())
+})
+
+test('bootstrap and background expiry keep focus on trip editing', async () => {
+  const initial = deferred<auth.AuthUser | null>()
+  const refresh = deferred<auth.AuthUser | null>()
+  vi.spyOn(auth, 'getCurrentUser').mockReturnValueOnce(initial.promise).mockReturnValueOnce(refresh.promise)
+  render(<AuthProvider><input aria-label="Trip notes" /><AuthControls /></AuthProvider>)
+  const input = screen.getByRole('textbox', { name: 'Trip notes' })
+  input.focus()
+  await act(async () => { initial.resolve(user) })
+  expect(account().getByRole('button', { name: 'Sign out' })).toBeInTheDocument()
+  expect(input).toHaveFocus()
+  fireEvent(window, new Event('focus'))
+  await act(async () => { refresh.resolve(null) })
+  expect(account().getByRole('button', { name: 'Sign in with Google' })).toBeInTheDocument()
+  expect(input).toHaveFocus()
 })
 
 test.each(['UNAVAILABLE', 'CSRF_FAILED'] as const)('logout %s never invents success', async (code) => {

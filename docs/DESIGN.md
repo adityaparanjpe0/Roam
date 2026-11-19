@@ -717,7 +717,10 @@ CSRF failure checks /me once to distinguish a lost CSRF cookie from an ended
 session. Focus/visibility/reconnect checks recover expiry without polling that
 would keep idle sessions alive. Abort/revision guards prevent stale checks from
 undoing logout; Strict Mode cleanup is covered. Auth transitions do not remount
-the local trip form; full-page sign-in discloses draft loss. UI state never
+the local trip form. Explicit-action focus recovery runs in a layout effect
+during commit so a delayed effect cannot consume a later action's focus request;
+initial/background checks still do not request focus. Full-page sign-in
+discloses draft loss. UI state never
 authorizes a resource. Vite proxy errors are sanitized and DEBUG serving is
 rejected because debug logs bypass that sanitizer. See
 [ADR 0007](adr/0007-react-authentication.md) and [frontend auth](frontend-auth.md).

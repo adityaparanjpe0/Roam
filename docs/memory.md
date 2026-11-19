@@ -8,6 +8,32 @@
 
 ### Verified facts
 
+- 2026-11-19 pre-commit focus audit, owner: user with Codex assistance.
+  History review traced the passive focus effect to f8f94cb; navbar commit
+  a3602b6 did not change it, and 7b1e929 changed only assertions. Against the
+  exact 7b1e929 component, four deterministic logout-focus cases failed (success
+  and outage, each with/without Strict Mode). The layout-effect fix passed all
+  206 tests in 11 files, including bootstrap/background focus preservation.
+  Clean npm ci (223 packages), lint, typecheck and production build passed in
+  an isolated source copy with the exact pinned Node 24.22.3 and committed lock.
+  This supersedes the earlier local-runtime verification gap; hosted Ubuntu CI
+  is still unverified for the uncommitted change. The first in-place clean
+  install hit Vite's Windows native-module file lock; verification used an
+  isolated copy to preserve the running server. No commit/push performed.
+
+- 2026-11-19 frontend focus lifecycle fix, owner: user with Codex assistance.
+  Hosted Frontend CI run 44623970894 tested commit 7b1e929 and still failed the
+  logout-outage focus assertion even with waitFor. This supersedes the earlier
+  assumption that waiting in tests alone was sufficient. A deterministic test
+  clicking sign-out during the authenticated commit reproduced lost focus on
+  the old passive effect. AuthControls now uses a layout effect for focus so an
+  older effect cannot consume a newly requested action. Success/outage regression
+  cases are included. All 203 tests in 11 files, lint, typecheck, build and diff
+  whitespace checks passed locally with Node 24.11.1; pinned 24.22.3/hosted rerun
+  remains unverified for this change. DESIGN/frontend-auth document the ordering
+  correction; API, cookies, session validation and schema are unchanged.
+  No new architecture decision; no commit/push performed by the agent.
+
 - 2026-11-19 frontend CI focus-assertion fix, owner: user with Codex assistance.
   Auth integration tests now wait for effect-driven focus after bootstrap retry
   and logout recovery, rather than assuming DOM appearance means focus is ready.

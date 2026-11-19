@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
 import { startGoogleSignIn } from '../../api/auth'
 import { useAuth } from './authContext'
 import './AuthControls.css'
@@ -15,7 +15,9 @@ function AuthControls() {
   const displayName = state.status === 'authenticated' ? state.user.display_name?.trim() || state.user.email : ''
   const initials = displayName.split(/\s+/).slice(0, 2).map((part) => Array.from(part)[0]).join('').toUpperCase()
 
-  useEffect(() => {
+  // Finish focus handling during commit so an older passive effect cannot
+  // consume the focus request from a newly clicked retry/sign-out action.
+  useLayoutEffect(() => {
     if (!actionFocus.current || signingOut || state.status === 'loading') return
     actionFocus.current = false
     const target = state.status === 'error' ? retryButton : state.status === 'authenticated' ? signOutButton : signInButton
