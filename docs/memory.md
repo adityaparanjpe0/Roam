@@ -8,6 +8,31 @@
 
 ### Verified facts
 
+- 2026-11-19 explicit human UX decision: plan to remove the manual "Check session"
+  navbar button because normal users do not need it. Documented in frontend-auth,
+  DESIGN and the handoff backlog. This is future work only; the current button
+  and all application behavior remain unchanged. Automatic mount/focus/visible-
+  tab/reconnect checks, backend session validation, /me and error-state retry
+  must remain when removing the control. No new polling or expiration-policy
+  change is planned. Documentation-only edit; no new application-test result
+  claimed and no staging/commit/push performed.
+
+- 2026-11-19 signed-in navbar polish, owner: user with Codex assistance.
+  Human requested visual consistency for the signed-in account controls.
+  Changed only auth JSX/CSS presentation: inline initials badge/name, matching
+  navigation typography, subtle divider and sign-out styling, icon session
+  refresh with preserved accessible name, ellipsis for long names and mobile
+  wrapping. Screen-reader signed-in status and existing action/focus handling
+  remain. Added an accessible refresh/identity regression. Frontend lint,
+  typecheck and production build passed; Vitest 201 passed in 11 files.
+  Agent reviewed desktop appearance in a separate test tab with synthetic
+  profile data; responsive geometry at widths 320/390/768/1440 had no horizontal
+  overflow with a long synthetic name, and keyboard Tab reached Sign out from
+  Check session. Test tab returned to blank and routes removed. No real auth
+  cookies, credentials or backend state were changed; no backend code changed.
+  This is presentation verification, not another live Google login test.
+  Editor settings were preserved; no staging/commit/push/merge performed.
+
 - 2026-11-19 human-reported local verification, owner: human developer with
   Codex guidance. Human reported creating roam_dev role/database in pgAdmin
   under their PostgreSQL 19 server on port 5432, then successful migration

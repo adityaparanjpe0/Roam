@@ -14,6 +14,8 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) co
 - Replace stale milestone stop instructions in current authentication guides.
 
 ### Changed
+- Align signed-in account controls with the navbar using an initials badge,
+  compact name, accessible session-check icon and consistent sign-out styling.
 - Ignore named real environment files such as docker.env and backend.env.production,
   while keeping placeholder environment examples eligible for version control.
 

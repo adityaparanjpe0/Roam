@@ -722,6 +722,11 @@ authorizes a resource. Vite proxy errors are sanitized and DEBUG serving is
 rejected because debug logs bypass that sanitizer. See
 [ADR 0007](adr/0007-react-authentication.md) and [frontend auth](frontend-auth.md).
 
+Planned UX cleanup (human decision, 2026-11-19): remove the routine "Check session"
+navbar control; users should not need to verify sessions manually. Automatic
+bootstrap/focus/visibility/reconnect checks, error-state retry, /me and backend
+validation remain. The control is still present until that future UI change.
+
 - `HttpOnly`, `Secure` except localhost, `SameSite=Lax`, narrow path/domain, finite idle and absolute expiry.
 - Rotate on login and meaningful security changes; revoke on logout.
 - Unsafe API requests include a session-bound CSRF token in a custom header; server compares its hash and checks same-origin `Origin`/`Referer` where reliable.

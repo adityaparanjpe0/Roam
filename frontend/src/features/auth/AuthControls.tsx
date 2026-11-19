@@ -12,6 +12,8 @@ function AuthControls() {
   const signInButton = useRef<HTMLButtonElement>(null)
   const signOutButton = useRef<HTMLButtonElement>(null)
   const retryButton = useRef<HTMLButtonElement>(null)
+  const displayName = state.status === 'authenticated' ? state.user.display_name?.trim() || state.user.email : ''
+  const initials = displayName.split(/\s+/).slice(0, 2).map((part) => Array.from(part)[0]).join('').toUpperCase()
 
   useEffect(() => {
     if (!actionFocus.current || signingOut || state.status === 'loading') return
@@ -34,13 +36,23 @@ function AuthControls() {
   }
 
   return (
-    <section className="auth-controls" aria-label="Account" aria-busy={state.status === 'loading' || signingOut || leaving}>
+    <section className={`auth-controls${state.status === 'authenticated' ? ' auth-controls--authenticated' : ''}`} aria-label="Account" aria-busy={state.status === 'loading' || signingOut || leaving}>
       {state.status === 'loading' && <p role="status">Checking sign-in…</p>}
       {state.status === 'authenticated' && <>
-        <p role="status" className="auth-identity">Signed in as <strong>{state.user.display_name?.trim() || state.user.email}</strong></p>
+        <div className="auth-profile">
+          <span className="auth-avatar" aria-hidden="true">{initials}</span>
+          <p role="status" className="auth-identity" title={displayName}>
+            <span className="auth-sr-only">Signed in as </span><strong>{displayName}</strong>
+          </p>
+        </div>
         <div className="auth-actions">
-          <button ref={signOutButton} type="button" onClick={requestSignOut} disabled={signingOut}>{signingOut ? 'Signing out…' : 'Sign out'}</button>
-          <button type="button" onClick={retryCheck} disabled={signingOut}>Check session</button>
+          <button className="auth-refresh" type="button" aria-label="Check session" title="Check session" onClick={retryCheck} disabled={signingOut}>
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 7v5h-5M4 17v-5h5" />
+              <path d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17" />
+            </svg>
+          </button>
+          <button ref={signOutButton} className="auth-sign-out" type="button" onClick={requestSignOut} disabled={signingOut}>{signingOut ? 'Signing out…' : 'Sign out'}</button>
         </div>
       </>}
       {state.status === 'error' && <>

@@ -50,6 +50,18 @@ test('a validated profile is rendered literally and email is the missing-name fa
   await waitFor(() => expect(account().getByRole('status')).toHaveTextContent(user.email))
 })
 
+test('compact account controls retain accessible identity and session refresh', async () => {
+  const check = vi.spyOn(auth, 'getCurrentUser').mockResolvedValue(user)
+  renderAuth()
+  await account().findByRole('button', { name: 'Sign out' })
+  expect(account().getByRole('status')).toHaveTextContent('Signed in as Student')
+  const refresh = account().getByRole('button', { name: 'Check session' })
+  expect(refresh).toBeEnabled()
+  fireEvent.click(refresh)
+  await waitFor(() => expect(check).toHaveBeenCalledTimes(2))
+  expect(account().getByRole('status')).toHaveTextContent('Signed in as Student')
+})
+
 test('an unavailable backend shows recovery rather than signed-out success', async () => {
   vi.spyOn(auth, 'getCurrentUser').mockRejectedValueOnce(new auth.AuthError('UNAVAILABLE')).mockResolvedValueOnce(user)
   renderAuth()
