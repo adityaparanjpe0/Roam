@@ -31,6 +31,9 @@ from app.schemas.auth import AuthErrorDetail, AuthErrorResponse
 from app.services.auth import UserPersistenceUnavailable, create_login_session
 
 router = APIRouter(prefix="/auth/google", tags=["auth"])
+# Construct before serving requests. A cached lazy factory can run more than
+# once during overlapping first calls, losing attempts in an uncached store.
+_login_flow_store = LoginFlowStore()
 
 
 @lru_cache(maxsize=1)
@@ -38,9 +41,8 @@ def get_google_oidc_client() -> GoogleOidcClient:
     return GoogleOidcClient(load_google_oauth_settings())
 
 
-@lru_cache(maxsize=1)
 def get_login_flow_store() -> LoginFlowStore:
-    return LoginFlowStore()
+    return _login_flow_store
 
 
 @router.get(

@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.api.auth import get_google_oidc_client, get_login_flow_store
 from app.api.sessions import get_session_settings
 from app.core import session_security as security
+from app.core.oauth_flow import LoginFlowStore
 from app.db.models import AppSession, User
 from app.db.session_repository import insert_session, locked_session
 from app.domain.identity import VerifiedIdentity
@@ -39,14 +40,13 @@ def setup_session_environment(
         monkeypatch.setenv(name, value)
     get_session_settings.cache_clear()
     get_google_oidc_client.cache_clear()
-    get_login_flow_store.cache_clear()
+    monkeypatch.setattr("app.api.auth._login_flow_store", LoginFlowStore())
     monkeypatch.setattr("app.services.sessions.get_engine", lambda: auth_database)
     now = [NOW]
     monkeypatch.setattr(security, "utc_now", lambda: now[0])
     yield now
     get_session_settings.cache_clear()
     get_google_oidc_client.cache_clear()
-    get_login_flow_store.cache_clear()
 
 
 def browser_with(token: str, csrf: str | None = None) -> TestClient:

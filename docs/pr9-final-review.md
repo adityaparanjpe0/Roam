@@ -5,11 +5,22 @@ This is a local review artifact, not a created/published PR or released version.
 
 ## Verdict
 
-**Hold publication for two focused fixes (F1/F2) and documentation cleanup (F3).**
-Existing automated suites pass, but two additional isolated reproductions expose
+**2026-11-19 follow-up:** F1/F2 code fixes and F3 documentation cleanup are now
+implemented and tested. Full backend: 368 passed (93 PostgreSQL cases); frontend:
+200 passed; format/lint/types/build pass. No commit/push/PR was performed.
+The earlier 503 AUTH_NOT_CONFIGURED setup blocker is superseded by the human's
+later report of successful local Google sign-in and logout after configuration,
+database migration and backend restart. See [the manual record](auth-manual-checklist.md).
+This is human-reported evidence, not an independently observed browser run;
+remaining detailed manual checks, hosted CI and production HTTPS are unverified.
+
+**Original 2026-11-18 review:** publication was held for F1/F2/F3.
+The original automated suites passed, but additional isolated reproductions exposed
 gaps those tests do not cover. No application fixes were applied during this
-review. Human reports Milestones 1–9 complete; detailed live Google outcomes
-have not been supplied or independently observed. Do not infer them from tests.
+original review. The follow-up below supersedes the outstanding-fix status.
+At the original review the human reported Milestones 1–9 complete without live
+outcomes. Subsequent local sign-in/logout success was human-reported on
+2026-11-19. Do not infer additional live observations from synthetic tests.
 
 ## Findings and proposed fixes
 
@@ -37,9 +48,13 @@ Regression checks: compressed discovery, token and JWKS success; normal JSON
 success; compressed oversized decoded bodies still rejected; a complete synthetic
 Google → PostgreSQL session flow succeeds with compressed responses.
 
+Resolution 2026-11-19: removed stale encoding/length/transfer-encoding headers
+when constructing the decoded in-memory response. Transport boundary and full
+compressed PostgreSQL flow regressions pass, including decoded 64 KiB bounds.
+
 ### F2 — Medium: overlapping first calls can initialize different flow stores
 
-Affected: [get_login_flow_store](../backend/app/api/auth.py#L42).
+Affected: [get_login_flow_store](../backend/app/api/auth.py#L44).
 lru_cache protects cache coherence but does not make factory execution
 single-flight. Overlapping initial calls can each return a different LoginFlowStore;
 only one becomes the cached store used later. A valid attempt saved to the other
@@ -63,6 +78,10 @@ Regression checks: concurrent first access always returns the same store;
 attempts created by overlapping initial requests remain available to callbacks;
 single-use consumption/replay, capacity and expiry tests still pass.
 
+Resolution 2026-11-19: module-initialized store and plain getter replace the cached
+lazy factory. Fixtures explicitly supply fresh stores; concurrency regression
+and existing replay/expiry/capacity tests pass.
+
 ### F3 — Low: stale milestone instructions in living documentation
 
 Current text still says Milestone 9 is unstarted in
@@ -77,6 +96,9 @@ Proposed fix: replace living-guide status/stop statements with links to AUTH and
 the current verification record, or label them explicitly as historical. Preserve
 dated memory entries instead of rewriting their past evidence. Keep live tests
 pending unless detailed human-reported results are recorded as such.
+
+Resolution 2026-11-19: living guide stop/unstarted statements now refer to AUTH
+and the current manual record. Historical dated evidence is preserved.
 
 ## Review of all requested areas
 
@@ -99,7 +121,7 @@ pending unless detailed human-reported results are recorded as such.
 | 15 | Frontend gates | ESLint, TypeScript, Vitest and production build pass; exact results below. |
 | 16 | Actions compatibility | Workflow files unchanged. Ordinary pytest and database-marker run select new tests; 91/357 selected with CI's DB selector. Vitest --run is noninteractive. Hosted Actions and pinned external artifact availability not verified. |
 | 17 | Documentation | AUTH explains actual behavior and limitations; unreleased changelog is truthful. F3 needs cleanup. No released version or production deployment is claimed. |
-| 18 | Live versus mocked | Human reports milestones complete; no per-scenario live results supplied. Committed manual checklist remains pending. All agent-confirmed auth successes use synthetic Google responses. |
+| 18 | Live versus mocked | Human subsequently reported local Google sign-in/logout success; manual record identifies that source and retains unreported checks. Automated Google responses remain synthetic. No agent-observed browser, hosted CI or production HTTPS success is claimed. |
 
 The local main log records the trip-form merge as pull request #7, while project
 conversation uses PR #8 for that workstream. Verify actual predecessor links and
@@ -136,8 +158,8 @@ was performed. Docker and dedicated secret scanners were not on agent PATH.
 
 ## B. Proposed GitHub PR description
 
-This is draft text for publication **after resolving F1/F2/F3**. Re-run relevant
-checks after fixes and replace test counts if they change. Unchecked acceptance
+This is draft text. F1/F2/F3 are resolved in the 2026-11-19 working diff; the
+original review snapshot below is retained, with current counts added. Unchecked acceptance
 items below must remain honest. No PR has been created.
 
 ### Summary
@@ -164,17 +186,18 @@ expiry, and preserves the existing local trip form during auth-state changes.
 
 ### Testing
 
-- Current review snapshot: 357 backend tests pass, including 91 PostgreSQL cases;
-  default run separately passes 266 with 91 intentional skips.
+- Current 2026-11-19 follow-up: 368 backend tests pass, including 93 PostgreSQL cases;
+  default run separately passes 275 with 93 intentional skips.
 - Ruff formatting/lint and mypy app pass. Frontend lint/typecheck/build pass;
   200 Vitest cases pass across 11 files, including the existing trip form.
 - PostgreSQL tests cover migrations, stable identity, session hashes, expiry,
   rotation/revocation, concurrency, CSRF and rollback.
 - Google discovery/exchange/JWKS responses are synthetic; real library signature
   and claim verification runs. No real Google credentials or calls in tests.
-- F1/F2 regression fixes and rerun evidence must be added before publication.
-- Live Google outcomes are not verified by the agent; human reported milestone
-  completion without detailed results. Hosted Actions and production HTTPS remain
+- F1/F2 regressions pass, including gzip/deflate and concurrent first-store access.
+- Human reported local Google sign-in and logout working after native PostgreSQL
+  19 setup/migrations and backend restart. The agent did not observe the browser
+  or capture exact HTTP/cookie/UUID details. Hosted Actions and production HTTPS remain
   unverified. UI screenshots are not attached; add safe/redacted review images
   without tokens, callback URLs or private profile data.
 
@@ -232,10 +255,11 @@ must be checked against actual repository history.
 - [x] Current frontend lint/types/build and 200 tests pass.
 - [x] Existing noninteractive Actions commands/markers discover these tests.
 - [x] Automated results explicitly distinguished from human report/live evidence.
-- [ ] F1 compressed-response fix plus regression tests and rerun completed.
-- [ ] F2 singleton initialization fix plus concurrency regression and rerun completed.
-- [ ] F3 stale living-guide milestone instructions reconciled.
-- [ ] Detailed live first/returning login, refresh/profile, logout/invalidation,
+- [x] F1 compressed-response fix plus regression tests and rerun completed (2026-11-19).
+- [x] F2 singleton initialization fix plus concurrency regression and rerun completed (2026-11-19).
+- [x] F3 stale living-guide milestone instructions reconciled (2026-11-19).
+- [x] Human-reported local sign-in/logout and database setup success recorded with attribution.
+- [ ] Remaining detailed live first/returning login, refresh/profile, logout/invalidation,
   invalid callback, offered consent-denial and frontend recovery observations recorded;
   blocked/not-offered cases labelled honestly.
 - [ ] Safe UI review screenshots attached if publishing UI changes.
@@ -245,8 +269,10 @@ must be checked against actual repository history.
 
 ## D. Limitations and follow-up ownership
 
-**Fix in PR #9:** F1/F2 and their missing regressions; F3 documentation cleanup.
-Do not defer these core auth issues to trip work.
+**Fixed in PR #9 follow-up (2026-11-19):** F1/F2 and their missing regressions;
+F3 documentation cleanup. The earlier local setup blocker was subsequently
+resolved according to the human's sign-in/logout report; the manual record keeps
+unreported checks separate. Hosted CI and production verification remain outstanding.
 
 **PR #10:** derive trip owner UUID from get_current_user, never request fields;
 filter parent/child access through owner-scoped queries; use non-enumerating

@@ -94,9 +94,15 @@ def _bounded_response(
                 body.extend(chunk)
             if monotonic() > deadline:
                 raise GoogleDiscoveryError
+            # iter_bytes has already decoded compression. These wire headers
+            # no longer describe the bounded in-memory body; retaining them
+            # would trigger a second decode or advertise the wrong length.
+            decoded_headers = httpx.Headers(response.headers)
+            for name in ("content-encoding", "content-length", "transfer-encoding"):
+                decoded_headers.pop(name, None)
             return httpx.Response(
                 response.status_code,
-                headers=response.headers,
+                headers=decoded_headers,
                 content=bytes(body),
                 request=response.request,
             )

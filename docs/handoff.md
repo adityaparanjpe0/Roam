@@ -30,8 +30,10 @@ trip persistence or authorize deployment. Milestone 8 adds combined automated
 auth tests and is reported complete/reviewed; see [coverage and evidence](auth-testing.md).
 Milestone 9 adds [AUTH](AUTH.md) and
 the [manual checklist](auth-manual-checklist.md), with automated checks rerun;
-human setup/live results remain pending. Milestone 10 remains unstarted.
-Live Google/HTTPS and hosted CI verification remain outstanding.
+local database setup, migrations and Google sign-in/logout subsequently passed
+according to the human. Remaining detailed manual checks, production HTTPS and
+hosted CI are outstanding. Milestone 10 review/fixes are recorded in
+[the PR review](pr9-final-review.md); no publication is implied.
 
 Roam is an AI-native travel planner that converts a user's destination, dates, party size, budget, interests, and constraints into a realistic day-by-day itinerary. It uses a Places provider to find real venues and a Routes provider to obtain travel durations. An LLM chooses and arranges only grounded candidates and interprets natural-language change requests. Deterministic backend code verifies the result before it can be saved.
 

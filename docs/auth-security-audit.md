@@ -54,7 +54,8 @@ new rate limiter, session cleanup worker, production serving layer/CSP, or accou
 deletion/retention implementation. Expired/revoked database rows cannot sign in
 while retained. No live Google consent, production HTTPS, reverse-proxy logging,
 or deployed security headers were verified. Do not disable checks to work around
-configuration errors. Milestone 8 remains unstarted.
+configuration errors. See [AUTH](AUTH.md) for current implementation and manual
+verification status; the milestone findings above record the original audit.
 
 Library behavior was cross-checked with primary documentation:
 [Starlette cookies](https://starlette.dev/requests/#cookies),

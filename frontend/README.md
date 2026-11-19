@@ -58,7 +58,8 @@ This path requires registry access on the first download. Use the same `npm exec
 Use [AUTH](../docs/AUTH.md) for the implemented OAuth/session architecture and
 three-process local startup, plus the [manual end-to-end checklist](../docs/auth-manual-checklist.md)
 for first/returning login, refresh, profile, logout, denial and recovery. Manual
-results remain pending; passing synthetic tests are not proof of live Google login.
+sign-in/logout success is now human-reported; remaining detailed manual checks
+are pending. Synthetic tests and human reports are recorded separately.
 
 For Google OAuth preparation, follow the
 [local OAuth runbook](../docs/runbooks/google-oauth-local.md).

@@ -4,6 +4,8 @@ Only Google's HTTP boundary, environment and clocks are substituted. No route,
 identity exchange, user repository or session service is mocked on success.
 """
 
+import gzip
+import json
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
@@ -19,7 +21,7 @@ from sqlalchemy import Engine, event, func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.api.auth import get_google_oidc_client, get_login_flow_store
+from app.api.auth import get_google_oidc_client
 from app.api.sessions import get_session_settings
 from app.core import session_security as security
 from app.core.oauth_flow import LoginFlowStore
@@ -44,12 +46,27 @@ class GoogleStub:
     failure: str | None = None
     exchanges: int = 0
     elapsed: list[float] = field(default_factory=lambda: [0.0])
+    compressed: bool = False
+
+    def json_response(self, payload: object) -> httpx.Response:
+        if not self.compressed:
+            return httpx.Response(200, json=payload)
+        body = gzip.compress(json.dumps(payload).encode())
+        return httpx.Response(
+            200,
+            headers={
+                "Content-Type": "application/json",
+                "Content-Encoding": "gzip",
+                "Content-Length": str(len(body)),
+            },
+            stream=httpx.ByteStream(body),
+        )
 
     def respond(self, request: httpx.Request) -> httpx.Response:
         if str(request.url) == GOOGLE_DISCOVERY_URL:
-            return httpx.Response(200, json=METADATA)
+            return self.json_response(METADATA)
         if str(request.url) == METADATA["jwks_uri"]:
-            return httpx.Response(200, json={"keys": [self.key.as_dict(private=False)]})
+            return self.json_response({"keys": [self.key.as_dict(private=False)]})
         assert str(request.url) == METADATA["token_endpoint"]
         assert request.method == "POST"
         self.exchanges += 1
@@ -83,9 +100,7 @@ class GoogleStub:
             raw = jwt.encode(
                 {"alg": "RS256", "kid": self.key.kid}, claims, RSAKey.generate_key(2048)
             )
-        return httpx.Response(
-            200, json={"access_token": "synthetic-access", "id_token": raw}
-        )
+        return self.json_response({"access_token": "synthetic-access", "id_token": raw})
 
 
 @pytest.fixture
@@ -94,7 +109,7 @@ def google(
 ) -> Iterator[GoogleStub]:
     for name, value in ENVIRONMENT.items():
         monkeypatch.setenv(name, value)
-    for getter in (get_google_oidc_client, get_login_flow_store, get_session_settings):
+    for getter in (get_google_oidc_client, get_session_settings):
         getter.cache_clear()
     now = [NOW]
     monkeypatch.setattr("app.services.sessions.get_engine", lambda: auth_database)
@@ -107,7 +122,6 @@ def google(
     yield stub
     get_google_oidc_client.cache_clear()
     get_session_settings.cache_clear()
-    get_login_flow_store.cache_clear()
 
 
 def start(browser: TestClient, google: GoogleStub) -> dict[str, str]:
@@ -162,12 +176,15 @@ def test_bad_state_and_consent_denial_never_exchange_or_write(
 @pytest.mark.parametrize(
     "origin", [ENVIRONMENT["APP_BASE_URL"], "https://roam.example"]
 )
+@pytest.mark.parametrize("compressed", [False, True])
 def test_verified_login_repeat_rotation_and_logout(
     google: GoogleStub,
     auth_database: Engine,
     monkeypatch: pytest.MonkeyPatch,
     origin: str,
+    compressed: bool,
 ) -> None:
+    google.compressed = compressed
     secure = origin.startswith("https:")
     prefix = "__Host-" if secure else ""
     monkeypatch.setenv("APP_ENV", "production" if secure else "test")

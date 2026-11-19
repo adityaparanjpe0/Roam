@@ -1,10 +1,33 @@
 # Local authentication manual verification
 
-Date prepared: 2026-11-18. Owner: human developers, assisted by Codex.
-**All live results are pending.** Check a box only after observing its result;
+Date prepared: 2026-11-18. Last updated: 2026-11-19.
+Owner: human developers, assisted by Codex.
+**Local sign-in and logout passed according to the human developer.** Remaining
+unchecked items require their own observations. Check a box only after observing its result;
 record PASS/FAIL/BLOCKED, date, browser and safe error code/request ID. Do not
 attach .env, callback URLs, OAuth codes, bearer/CSRF values, Google tokens,
 Network exports or unredacted profile screenshots.
+
+## Recorded results — 2026-11-19
+
+The human reported creating the local roam_dev role/database in their PostgreSQL
+19 setup on port 5432, completing the migration commands, updating the ignored
+environment file, and restarting FastAPI. They then reported successful Google
+sign-in and confirmed logout worked as described. These are **human-reported
+local results**, not an agent-observed browser run. Browser identity, raw HTTP
+responses, cookie inspection and UUID comparisons were not provided.
+
+| Check | Recorded outcome |
+|---|---|
+| Local database creation and migration commands | PASS, human-reported |
+| Live Google sign-in and signed-in UI | PASS, human-reported |
+| Logout | PASS, human-reported |
+| Refresh/profile response/returning-user UUID comparison | No separate detailed result recorded |
+| Two-tab revocation, timed expiry, invalid callback, consent denial | Not separately reported |
+| Failure recovery and manual accessibility review | Not separately reported |
+
+The last automated suite used PostgreSQL 17.0, not the user's native PostgreSQL
+19 instance. Production HTTPS and hosted Actions have not been verified.
 
 ## Setup checkpoint — report this first
 
@@ -14,11 +37,11 @@ confirming the intended development DATABASE_URL privately. Keep backend and
 frontend in separate terminals. Preserve any existing unsaved form before the
 full-page sign-in action.
 
-- [ ] Database running (Compose db healthy, or existing native service Running).
-- [ ] `alembic upgrade head` succeeds; `alembic current` reports 0002.
-- [ ] FastAPI starts at 127.0.0.1:8000; GET /health returns 200.
-- [ ] Vite starts or is already available at 127.0.0.1:5173; proxied /health returns 200.
-- [ ] Google Web client configured privately with the exact callback from AUTH.md.
+- [x] Native database running (service status observed by agent; setup reported by human).
+- [x] Migration commands completed successfully (human-reported; exact terminal output not supplied).
+- [x] FastAPI /health returned 200 during the agent's local preflight.
+- [x] Proxied /health returned 200 during the agent's local preflight.
+- [x] Google settings passed agent format/callback validation; human subsequently reported live sign-in success.
 
 Stop at the first blocker. Report only database path (Compose/native), migration
 revision/status, health HTTP statuses and safe errors. Do not report connection
@@ -29,10 +52,11 @@ strings or credential contents. Liveness success alone is not login success.
 - [ ] Use an intended development Google account not yet present in this local
   Roam database. If it already exists, mark first-time test BLOCKED/not applicable;
   do not delete the account or database to manufacture this test.
-- [ ] Open http://127.0.0.1:5173/ and click Sign in with Google. Check the expected
-  Google app/project identity and only basic identity permissions. Complete sign-in.
-- [ ] Browser returns to the app root; checking state settles on the actual user's
-  displayed name/email. No claimed success is accepted from a URL flag.
+- [x] Open http://127.0.0.1:5173/ and complete Google sign-in (human-reported).
+- [x] Roam displays the signed-in state after returning (human-reported).
+- [ ] Record inspection of the expected Google project identity, only basic
+  permissions, and exact configured-root return URL. Do not infer these UI details
+  from the general success report.
 - [ ] In DevTools Network, filter /api/auth/me: status 200 with only user
   id/email/display_name. Inspect locally; report status/shape, not private values.
 - [ ] Inspect cookie attributes locally: flow cookie cleared; roam_session is
@@ -50,8 +74,9 @@ strings or credential contents. Liveness success alone is not login success.
 
 ## Logout and invalidation
 
-- [ ] Click Sign out: POST /api/auth/logout is 204, then signed-out controls appear.
-  Session/CSRF cookies clear. A fresh same-origin /api/auth/me navigation returns 401.
+- [x] Click Sign out and confirm logout works (human-reported after the guided logout check).
+- [ ] Separately record POST /api/auth/logout 204, cleared session/CSRF cookies,
+  and a fresh same-origin /api/auth/me 401; raw status/cookie observations were not supplied.
 - [ ] Log in again, open two tabs. Log out in tab A, then focus tab B: its next
   /me returns 401 and the old profile is removed. This checks shared-browser
   invalidation without copying bearer tokens. Separate browser sessions are not
@@ -105,4 +130,5 @@ Safe error code/request ID, if any: ...
 ```
 
 Do not mark live testing complete from automated results. Record human-reported
-observations separately from agent-observed evidence. Milestone 10 stays unstarted.
+observations separately from agent-observed evidence. Final review and fixes are
+recorded in [the PR review](pr9-final-review.md); no commit/push/PR is implied.

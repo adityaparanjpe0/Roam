@@ -1,8 +1,10 @@
 # Roam authentication
 
 Status: PR #9 implementation through Milestone 8 is reported reviewed by the
-human. Milestone 9 documents it and prepares local verification; **live Google
-sign-in is not verified by the agent**. No released version is claimed.
+human. On 2026-11-19 the human reported successful local Google sign-in and
+logout after database setup and backend restart. **These are human-reported
+results, not an agent-observed browser run.** Remaining manual checks, hosted CI
+and production HTTPS are unverified. No released version is claimed.
 
 ## Architecture and data flow
 
@@ -336,13 +338,16 @@ needs additional state. Random-token SHA-256 hashing is suitable here because
 the input has high entropy, unlike a human password.
 
 Pending OAuth state is bounded to 256 attempts in one process, expires after ten
-minutes and is lost on restart. Shared durable flow state is required before
+minutes and is lost on restart. One store is constructed before requests are
+served, avoiding concurrent lazy-initialization races. Shared durable flow state is required before
 multi-worker deployment. This is not complete rate limiting. Session cleanup,
 retention/account deletion, public-launch Google review, production TLS/static
 serving/security headers/CSP and deployed proxy logging remain future work.
 Provider reads have five-second HTTPX timeouts and cooperative elapsed checks,
 64 KiB bodies, fixed endpoints, no retries/redirects/environment proxies; this is
-not a hard whole-login cancellation deadline. Roam logout does not revoke Google
+not a hard whole-login cancellation deadline. HTTPX-decoded gzip/deflate bodies
+are reconstructed without stale wire encoding/length headers, preserving the
+decoded-body size limit. Roam logout does not revoke Google
 consent, log out other browsers, or delete the user.
 
 Uvicorn callback queries are removed from access-log scope. Vite sanitizes proxy
@@ -354,7 +359,8 @@ Other reverse proxies need their own redaction.
 
 Use the [manual checklist](auth-manual-checklist.md) for first/returning login,
 refresh, /me, logout, invalidation, invalid callback, denial and frontend failures.
-All manual results remain pending until the human reports observations. The
+The checklist records human-reported local sign-in/logout success and keeps
+unreported checks pending. The
 [automated test guide](auth-testing.md) explains mocks and reproducible checks;
 synthetic passing tests do not prove live Google interoperability. See also the
 [security audit](auth-security-audit.md) and [session decisions](adr/0006-application-sessions.md).
@@ -366,3 +372,23 @@ documentation-file link checks passed. Default pytest separately passed 266
 with the 91 opt-in DB cases skipped. Existing TestClient deprecation warning
 remains. Docker Compose validation/build and hosted CI were not run. These results
 do not fill in any live manual checklist item.
+
+Earlier 2026-11-19 troubleshooting: healthy /health endpoints do not guarantee auth
+configuration. A safe local probe observed 503 AUTH_NOT_CONFIGURED at /api/auth/me
+and /auth/google/start; the environment loaded from the current root file lacked
+usable database/Google settings. No values were printed and the credential file
+was not overwritten. Put the actual values only in your ignored local environment
+file, then restart FastAPI with --env-file pointing to that exact file. Docker
+does not create native Windows database roles or make the uv process load a
+different file automatically. Follow-up synthetic verification passed 368 backend
+tests (93 PostgreSQL cases), 275 database-free tests and 200 frontend tests, plus
+format/lint/types/build. Those automated results use synthetic Google responses.
+
+Later 2026-11-19 the human reported completing local PostgreSQL 19 database/role
+creation and migration commands, entering the real configuration privately, and
+restarting the backend. They confirmed live Google sign-in and logout work
+locally, superseding the earlier reported configuration blocker. No credential,
+private profile or token values were captured. Exact response statuses, cookie
+inspection, UUID comparison, remaining failure-path manual tests and production
+HTTPS/hosted CI were not independently observed. See the manual checklist for
+the precise evidence boundary; the full PostgreSQL suite has not run on 19.

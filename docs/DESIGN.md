@@ -594,9 +594,20 @@ The actual implementation and local verification procedure are consolidated in
 [AUTH](AUTH.md) and the [manual checklist](auth-manual-checklist.md). PR #9
 Milestones 1–8 are reported reviewed by the human; Milestone 9 changes
 documentation, not architecture or application behavior. Live Google/production
-HTTPS results remain pending. PR #10 owner-scoped trip operations remain planned.
+HTTPS results were pending at that milestone. The human subsequently reported
+local Google sign-in/logout success on 2026-11-19; [the manual record](auth-manual-checklist.md)
+distinguishes that report from agent-observed and unreported tests. Production
+HTTPS remains unverified. PR #10 owner-scoped trip operations remain planned.
 
 ### Authentication flow
+
+2026-11-19 reliability correction: the bounded HTTPX adapter rebuilds decoded
+responses without stale content-encoding/content-length/transfer-encoding headers,
+so gzip/deflate responses decode once while the 64 KiB decoded-body limit remains.
+The process-local OAuth flow store is now constructed once at module initialization,
+before serving requests; the getter does not use a lazy lru_cache factory. This
+prevents overlapping initial requests from saving attempts in different stores.
+State/nonce/PKCE, identity validation and cookie/session policy are unchanged.
 
 PR #9 Milestone 1 was approved by the human; Milestone 2 (2026-11-17) prepared
 local Google configuration. Milestone 3 implements only synchronous

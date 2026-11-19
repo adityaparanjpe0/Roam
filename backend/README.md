@@ -71,6 +71,13 @@ server with Ctrl+C. Reload mode is for local development.
 
 ## Google authentication
 
+If auth returns 503 AUTH_NOT_CONFIGURED while /health works, privately check the
+actual environment file and restart with the documented --env-file command.
+Creating .env from the example does not supply database or Google credentials;
+do not overwrite an existing real file or paste values into chat. Named files
+such as backend.env must be passed explicitly instead of assuming ../.env loads
+them. The [AUTH guide](../docs/AUTH.md) documents the exact configuration contract.
+
 Google OAuth development preparation is documented in the
 [local OAuth runbook](../docs/runbooks/google-oauth-local.md).
 PR #9 Milestone 2 added configuration placeholders and setup instructions.
@@ -92,7 +99,8 @@ Existing health-only
 startup still needs no Google credentials. With auth settings loaded, direct
 requests to `http://127.0.0.1:8000/auth/google/start` can initiate authorization,
 and return through the configured Vite origin. React confirms the session using
-`/api/auth/me`; live Google login has not been verified in this milestone.
+`/api/auth/me`. The human subsequently reported successful local Google sign-in
+and logout on 2026-11-19; remaining detailed checks are in the manual record.
 Pending OAuth attempts expire after ten minutes, are limited to 256 per process,
 and are lost on restart. Application sessions are persisted independently in
 PostgreSQL, with seven-day absolute and 24-hour idle expiry. Login throttling

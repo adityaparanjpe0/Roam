@@ -7,9 +7,11 @@ for the MVP scope and architecture.
 Current code includes FastAPI liveness, PostgreSQL/SQLAlchemy migrations, the
 React trip form with local unsaved review, and Google OIDC with database-backed
 Roam sessions and account controls. PR #9 Milestones 1–8 are reported reviewed;
-Milestone 9 documents authentication and awaits human local Google verification.
+Milestone 9 documents authentication; the human subsequently reported local
+Google sign-in and logout working. Remaining manual checks are recorded separately.
 Trip CRUD, ownership enforcement, AI planning and production deployment remain
-planned. No released version or live Google login result is claimed.
+planned. No released version, agent-observed live browser run or deployed
+production verification is claimed.
 
 Follow the [backend setup instructions](backend/README.md) to install
 dependencies, start the local server, and run the available checks. Use the

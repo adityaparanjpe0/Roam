@@ -31,7 +31,7 @@ METADATA: dict[str, object] = {
 @pytest.fixture(autouse=True)
 def isolated_oauth(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     get_google_oidc_client.cache_clear()
-    get_login_flow_store.cache_clear()
+    monkeypatch.setattr("app.api.auth._login_flow_store", LoginFlowStore())
     get_session_settings.cache_clear()
     for name, value in ENVIRONMENT.items():
         monkeypatch.setenv(name, value)
@@ -51,7 +51,6 @@ def isolated_oauth(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     monkeypatch.setattr(httpx.HTTPTransport, "handle_request", deny_network)
     yield
     get_google_oidc_client.cache_clear()
-    get_login_flow_store.cache_clear()
     get_session_settings.cache_clear()
 
 

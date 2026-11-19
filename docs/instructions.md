@@ -5,6 +5,15 @@
 
 ## 1. Working agreement
 
+For local auth, keep actual values in an ignored environment file and explicitly
+pass that file to uv --env-file. /health 200 does not prove settings loaded:
+AUTH_NOT_CONFIGURED requires checking required names privately and restarting
+the backend. Never paste the file, dump process settings, or print rendered
+Compose credentials for troubleshooting. .env and named *.env / *.env.* files
+are ignored; placeholder *.env.example files remain eligible for Git. Keep the
+single eager OAuth store reset explicit in tests rather than clearing a cached
+factory. See [AUTH](AUTH.md) for startup and verified behavior.
+
 PR #9 Milestone 8: automated auth tests use synthetic Google responses/keys only.
 Default HTTPX transports and frontend fetch are blocked/replaced by test fixtures;
 provide explicit fake responses instead of enabling live provider traffic. Use

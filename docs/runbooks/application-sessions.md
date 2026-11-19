@@ -105,4 +105,5 @@ Keep the agreed browser origin `http://127.0.0.1:5173`, FastAPI upstream
 `http://127.0.0.1:8000`, and Google redirect
 `http://127.0.0.1:5173/auth/google/callback`. Shared OAuth flow storage, throttling,
 cleanup policy, and production verification remain future work. React controls
-and the proxy now have synthetic verification only. Stop before Milestone 7.
+and the proxy have synthetic verification; current live results and manual steps
+are maintained in [AUTH](../AUTH.md) and the [checklist](../auth-manual-checklist.md).

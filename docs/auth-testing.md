@@ -134,4 +134,24 @@ JSDOM accessibility assertions do not replace manual keyboard/screen-reader
 review or a browser accessibility audit. Database commit failure is injected;
 network partitions and ambiguous connection loss during commit are not simulated.
 Production session-retention/cleanup and shared OAuth flow-state infrastructure
-remain outside this milestone. Milestone 9 is unstarted.
+remain outside this milestone. Current manual verification status is in [AUTH](AUTH.md).
+
+## 2026-11-19 follow-up regressions
+
+The final review found two uncovered bugs: rebuilding a decoded response with
+its original compression headers, and overlapping lazy flow-store initialization.
+[Transport regressions](../backend/tests/test_google_transport.py) now exercise
+gzip/deflate, normal/chunked wire metadata and the exact decoded-body size bound.
+[Store initialization regression](../backend/tests/test_oauth_store_initialization.py)
+forces concurrent first access and confirms both attempts remain consumable.
+PostgreSQL login/repeat/rotation/logout tests now also run with compressed
+discovery, token and JWKS responses at localhost and HTTPS-configured origins.
+
+Before fixes the new focused cases produced 7 failures / 2 passes. After fixes,
+the full suite passed 368 cases (including 93 PostgreSQL cases); default pytest
+passed 275 with 93 intentional skips. Frontend remains 200 passing cases in 11
+files. Ruff format/check (63 files), mypy app (34 files), frontend lint/types/build
+passed. PostgreSQL 17.0 UTC was disposable; hosted CI/18.7 remains unverified.
+Subsequent local Google sign-in/logout success was human-reported and is recorded
+separately in [the manual checklist](auth-manual-checklist.md). No real provider
+credentials or paid calls were used by automated tests.

@@ -2,7 +2,8 @@
 
 For the current consolidated setup and live verification steps, use [AUTH](../AUTH.md)
 and the [manual checklist](../auth-manual-checklist.md). The sections below retain
-milestone history; no live Google success has been recorded by the agent.
+milestone history. Local Google sign-in/logout success was human-reported on
+2026-11-19; the agent has not independently observed the browser flow.
 
 Milestone 2 prepared Google credentials and the configuration contract.
 Milestone 3 adds the synchronous login-start route, typed settings, Authlib 1.9.9,
@@ -12,7 +13,8 @@ application sessions, CSRF protection, current-user lookup, and logout. Vite
 routing/UI are integrated in Milestone 6. Milestone 7 hardens cookie parsing,
 claim shapes, response deadlines, origin configuration and safe failure diagnostics;
 see the [security audit](../auth-security-audit.md). Milestone 8 adds
-[automated auth tests](../auth-testing.md); stop before Milestone 9.
+[automated auth tests](../auth-testing.md). Follow [AUTH](../AUTH.md) for current
+startup and verification status rather than historical milestone stop points.
 Human review/completion of Milestones 2–7 is reported; actual console
 settings and live Google behavior have not been inspected by the agent.
 
@@ -227,9 +229,10 @@ never use the test maintenance URL as the application's URL. See the
 Uvicorn's access-log scope has callback query strings removed before handling.
 The middleware discards the privately parsed query afterward. Future Vite and
 production proxies must independently redact callback queries; do not log them
-or share callback URLs. Vite now proxies `/auth`, but live Google flow is
-unverified. Do not change the registered URI as a workaround or claim completed
-live browser login. Session issuance, expiry, logout, and CSRF now have backend
+or share callback URLs. Vite now proxies `/auth`; the later human-reported local
+sign-in/logout result is recorded in AUTH. Do not change the registered URI as
+a workaround or treat that result as a production verification. Session issuance,
+expiry, logout, and CSRF now have backend
 tests; throttling and shared OAuth flow state remain future work. Milestone 6
 adds React account controls and the proxy, verified only with synthetic fixtures.
 
@@ -265,5 +268,6 @@ another Roam user's trips. CI must use fakes without real Google credentials.
 
 The human reports Milestones 2–4 complete/reviewed. Milestone 4 verifies callback
 behavior with synthetic signed tokens and persistence tests against disposable
-PostgreSQL. Milestone 5 adds tested backend sessions; live Google login and
-real-account/production authentication remain unverified. Stop before Milestone 7.
+PostgreSQL. Milestone 5 added tested backend sessions; later local sign-in/logout
+success is human-reported, while production authentication remains unverified. Current status and
+manual steps are maintained in [AUTH](../AUTH.md).

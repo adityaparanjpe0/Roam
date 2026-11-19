@@ -1,12 +1,72 @@
 # Roam durable project memory
 
 > Purpose: preserve verified context across developers and AI sessions  
-> Last updated: 2026-11-18
+> Last updated: 2026-11-19
 > Rule: this file records decisions and evidence; it must not turn plans into facts
 
 ## 1. Current snapshot
 
 ### Verified facts
+
+- 2026-11-19 human-reported local verification, owner: human developer with
+  Codex guidance. Human reported creating roam_dev role/database in pgAdmin
+  under their PostgreSQL 19 server on port 5432, then successful migration
+  commands after filling DATABASE_URL privately. After backend restart with
+  the environment file they reported Google sign-in working; in response to
+  the guided logout check they confirmed it works properly. This supersedes
+  earlier missing-configuration/local-connection blocker notes below as the
+  current human-reported state. The agent did not observe the browser flow,
+  query the live database version, capture HTTP/cookie/UUID details, or rerun
+  the automated suite on PostgreSQL 19. Other manual negative paths, exact
+  response inspection, hosted CI and production HTTPS remain unverified.
+  Documentation now attributes local success to the human and preserves those
+  remaining gaps. No fresh test-run claim is made for this documentation-only
+  edit; earlier 368 backend/200 frontend passes remain dated automated evidence.
+  No actual credential file contents were printed or changed in this edit;
+  no staging, commit, push, merge or PR creation performed by the agent.
+
+- 2026-11-19 local configuration follow-up: recursive project metadata search
+  found the real root .env and docker-compose.yml; no separate environment or
+  Docker file was found outside dependency/cache directories. Printed variable
+  names only: the existing file defined POSTGRES_DB/USER/PASSWORD/PORT, without
+  any required FastAPI database/origin/Google keys. Preserved those existing
+  values and appended missing app origin/callback defaults plus blank
+  DATABASE_URL/Google client fields for private completion. No real credential
+  was printed or committed; .env remains ignored/untracked. A read-only local
+  PostgreSQL probe with those existing settings failed both inside and outside
+  the sandbox (connection unavailable or authentication rejected); no database
+  data or roles were changed. Docker CLI/standard Windows binary was not found
+  by the agent. Docker initialization variables do not configure a separately
+  installed native PostgreSQL service or a Google OAuth client. Actual chosen
+  database connection and Google credentials remain pending user configuration.
+
+- 2026-11-19 PR #9 OAuth troubleshooting, owner: user with Codex assistance.
+  User requested configuration reconciliation and investigation of failed OAuth.
+  Real file paths/additional Docker files were requested without asking for secret
+  values; no credential file was overwritten. Existing root Compose uses variable
+  references. Root environment health check printed flags only: no usable
+  DATABASE_URL, Google client ID/secret or app settings were loaded. Both local
+  health endpoints returned 200; /api/auth/me and /auth/google/start returned
+  503 AUTH_NOT_CONFIGURED. This is a confirmed current configuration blocker,
+  separate from two code defects reproduced in final review. Backend restart
+  with the actual populated environment file remains necessary; live Google
+  success is not verified and no real token/credential was printed.
+  Fixed double decoding by removing stale wire encoding/length headers after
+  HTTPX decoding; size/time bounds unchanged. Replaced lazy flow-store factory
+  with one eager process-local instance; test fixtures reset it explicitly.
+  Added 9 unit regressions and 2 compressed full-flow PostgreSQL cases. Before
+  fixes focused regressions had 7 failures / 2 passes. After fixes: 71 focused
+  tests passed; full backend 368 passed (93 PostgreSQL cases) in 70.64 seconds
+  using an owned generated-credential PostgreSQL 17.0 UTC cluster, stopped and
+  removed afterward; default 275 passed / 93 opt-in skips. Ruff format/check
+  passed (63 files), mypy app passed (34 files), editor diagnostics clean.
+  Frontend lint/typecheck/build and 200 tests in 11 files passed. Existing
+  TestClient warning remains. No workflow/dependency/migration changes.
+  Gitignore now protects named *.env / *.env.* files while allowing placeholder
+  examples; no real environment file is tracked. Existing untracked .vscode
+  settings were preserved. Docker CLI remains unavailable to the agent; new
+  supplied-file reconciliation awaits the user's local paths. No commit/push/
+  merge/PR creation, no developer database migration or paid/provider test calls.
 
 - PR #9 Milestone 9 (2026-11-18), owner: user with Codex assistance, on
   `feat/google-auth-sessions`: human reported Milestone 8 complete/reviewed,

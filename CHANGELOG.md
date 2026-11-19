@@ -6,12 +6,24 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) co
 
 ## [Unreleased]
 
+### Fixed
+- Decode bounded gzip/deflate Google responses once and normalize reconstructed
+  body headers; retain decoded-body size/time limits.
+- Initialize one process-local OAuth flow store before serving requests, avoiding
+  lost pending attempts during overlapping first requests.
+- Replace stale milestone stop instructions in current authentication guides.
+
+### Changed
+- Ignore named real environment files such as docker.env and backend.env.production,
+  while keeping placeholder environment examples eligible for version control.
+
 ### Added
 - PR #9 Google OIDC authorization-code authentication using Authlib/joserfc,
   state/nonce and PKCE, verified issuer/subject user persistence, hashed opaque
   PostgreSQL sessions, current-user lookup, CSRF-protected logout and React
-  account controls. Automated tests use synthetic Google responses; live Google
-  and deployed HTTPS verification remain pending. This is unreleased work.
+  account controls. Automated tests use synthetic Google responses. Local live
+  sign-in/logout passed according to the human developer on 2026-11-19; remaining
+  manual checks, hosted CI and production HTTPS are unverified. This is unreleased work.
 - [Authentication architecture, setup, contracts and troubleshooting](docs/AUTH.md),
   [manual end-to-end checklist](docs/auth-manual-checklist.md), and
   [automated authentication coverage guide](docs/auth-testing.md). Trip ownership
