@@ -8,6 +8,16 @@
 
 ### Verified facts
 
+- 2026-11-19 frontend CI focus-assertion fix, owner: user with Codex assistance.
+  Auth integration tests now wait for effect-driven focus after bootstrap retry
+  and logout recovery, rather than assuming DOM appearance means focus is ready.
+  A local full-suite run reproduced the sibling logout assertion failing with
+  focus on body; after the assertion updates, all 201 tests in 11 files passed.
+  Lint, typecheck and production build also passed. Verification used installed
+  Node 24.11.1, not CI's pinned 24.22.3; hosted CI remains to be rerun. This is a
+  test-only timing correction; auth behavior and accessibility expectations are
+  unchanged. No architecture decision is superseded; no commit/push performed.
+
 - 2026-11-19 explicit human UX decision: plan to remove the manual "Check session"
   navbar button because normal users do not need it. Documented in frontend-auth,
   DESIGN and the handoff backlog. This is future work only; the current button

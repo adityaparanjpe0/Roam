@@ -97,10 +97,10 @@ test('logout outage exposes an accessible recoverable error, not success', async
   renderAuth()
   fireEvent.click(await account().findByRole('button', { name: 'Sign out' }))
   expect(await account().findByRole('alert')).toHaveTextContent('Could not confirm sign out')
-  expect(account().getByRole('button', { name: 'Retry sign-in check' })).toHaveFocus()
+  await waitFor(() => expect(account().getByRole('button', { name: 'Retry sign-in check' })).toHaveFocus())
   expect(screen.queryByText(/PRIVATE_DETAILS/)).not.toBeInTheDocument()
   fireEvent.click(account().getByRole('button', { name: 'Retry sign-in check' }))
-  expect(await account().findByRole('button', { name: 'Sign out' })).toHaveFocus()
+  await waitFor(() => expect(account().getByRole('button', { name: 'Sign out' })).toHaveFocus())
   expect(account().getByRole('status')).toHaveTextContent('Signed in as Student')
 })
 
@@ -130,7 +130,8 @@ test.each(['malformed', 'unavailable', 'network'])('bootstrap %s has safe, focus
   expect(await account().findByRole('alert')).toHaveTextContent('Could not check your sign-in status')
   expect(screen.queryByText(/PRIVATE_DETAILS/)).not.toBeInTheDocument()
   fireEvent.click(account().getByRole('button', { name: 'Retry sign-in check' }))
-  expect(await account().findByRole('button', { name: 'Sign out' })).toHaveFocus()
+  // Recovery focus is applied by an effect after the button is rendered.
+  await waitFor(() => expect(account().getByRole('button', { name: 'Sign out' })).toHaveFocus())
 })
 
 test('the HTTP timeout becomes an accessible timeout error and cancels fetch', async () => {
