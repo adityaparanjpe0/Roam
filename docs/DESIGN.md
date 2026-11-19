@@ -97,8 +97,9 @@ flowchart LR
 The planned production Docker image will contain the built React assets and
 FastAPI application, serving assets and `/api/v1` from one origin. This avoids
 cross-site cookie/CORS complexity and reduces hosting components. During current
-development, Vite runs separately and proxies only `/health`; API/auth proxy
-routes and production asset serving are not implemented yet.
+development, Vite runs separately and proxies `/health`, `/auth`, and `/api` to
+FastAPI, preserving cookie and Origin headers. Production asset serving is not
+implemented yet. No backend CORS grants are needed for this same-origin design.
 
 The web service is a **modular monolith**, not one undifferentiated file. Internal modules communicate through typed Python calls and interfaces. They share a deployment and database because the team and load do not justify distributed failure modes.
 
@@ -138,11 +139,13 @@ This is a tradeoff, not a claim that synchronous work scales indefinitely. If me
 
 PR #7 Milestones 1–3, on `feat/database-foundation`, implement the synchronous
 PostgreSQL connection/session foundation and initial Alembic revision `0001`
-for `users`, `trips`, `trip_days`, and `activities`. Other tables below remain
-planned. Exact initial bounds, deletion rules, JSON shape guards, and deferred
+for `users`, `trips`, `trip_days`, and `activities`. PR #9 Milestone 5 adds
+`sessions` in revision `0002`; other tables below remain planned.
+Exact initial bounds, deletion rules, JSON shape guards, and deferred
 validation are recorded in [ADR 0001](adr/0001-database-foundation.md).
 Existing `/health` remains
-database-independent; no business route consumes the database dependency yet.
+database-independent; authentication/session services now use the database,
+while trip business routes remain unimplemented.
 The lazy, thread-safe engine uses psycopg, bounded connection/pool/statement/lock
 waits, hidden SQL parameters, and explicit shutdown disposal. Session cleanup
 closes/rolls back; application services will own commit boundaries. Environment
@@ -187,7 +190,13 @@ Unique: `(oidc_issuer, oidc_subject)`. Email may change and must not identify ow
 | `revoked_at` | timestamptz nullable | logout/revocation |
 | `created_at` | timestamptz | not null |
 
-Session cleanup can be a maintenance command or opportunistic bounded delete initially; it does not justify a worker.
+PR #9 Milestone 5 implements this table in additive revision `0002`. Hashes are
+32-byte SHA-256 digests of independent CSPRNG-generated 256-bit bearer/CSRF
+values; raw tokens are never stored. Checks enforce digest lengths, timestamp
+ordering, and an absolute maximum of 168 hours (hours avoid DST calendar-day
+ambiguity). Services additionally reject 24-hour idle expiry. User/expiry indexes
+support access and future maintenance. Cleanup/retention tooling remains planned;
+expired/revoked rows cannot authenticate while retained. No worker is needed.
 
 ### `trips`
 
@@ -340,14 +349,19 @@ Primary key: `(user_id, usage_date_utc)`. Counters are incremented atomically. P
 
 Base path: `/api/v1`. JSON uses `snake_case`. Times are RFC 3339 instants; local dates are `YYYY-MM-DD`; currency amounts are `{ "minor": 8500, "currency": "USD" }` or explicit `*_minor` plus trip currency.
 
+Explicit human-requested Milestone 5 exception: current session APIs use
+`/api/auth/me` and `/api/auth/logout`. Earlier planned `/api/v1/me` and
+`/api/v1/auth/logout` were never implemented and are not compatibility aliases.
+Other business APIs retain `/api/v1`. See [ADR 0006](adr/0006-application-sessions.md).
+
 ### Authentication and health
 
 | Method | Path | Behavior |
 |---|---|---|
 | `GET` | `/auth/google/start` | Set signed/short-lived OAuth state and redirect to Google |
-| `GET` | `/auth/google/callback` | Validate response, upsert user, rotate Roam session, redirect safely |
-| `POST` | `/api/v1/auth/logout` | CSRF-protected revoke and clear cookie |
-| `GET` | `/api/v1/me` | Return minimal current-user profile and CSRF token/bootstrap data |
+| `GET` | `/auth/google/callback` | Validate identity; atomically upsert user, revoke presented prior session, create session; set cookies after commit; 303 to configured app origin root |
+| `POST` | `/api/auth/logout` | Authenticated, CSRF-protected server revocation; 204 and cleared cookies |
+| `GET` | `/api/auth/me` | 200 `{user: {id, email, display_name}}`; generic 401 when session invalid; no secrets/CSRF values in JSON |
 | `GET` | `/health` | PR #3 Milestone 2: unauthenticated liveness, HTTP 200 with `{"status":"ok"}`; no dependency calls |
 | `GET` | `/health/live` | Planned separate liveness path; not implemented in PR #3 |
 | `GET` | `/health/ready` | Planned bounded database readiness; no LLM/Maps call; not implemented in PR #3 |
@@ -576,7 +590,74 @@ This is safer and cheaper than regenerating the whole itinerary and makes the ch
 
 ## 10. Authentication and authorization
 
+The actual implementation and local verification procedure are consolidated in
+[AUTH](AUTH.md) and the [manual checklist](auth-manual-checklist.md). PR #9
+Milestones 1–8 are reported reviewed by the human; Milestone 9 changes
+documentation, not architecture or application behavior. Live Google/production
+HTTPS results were pending at that milestone. The human subsequently reported
+local Google sign-in/logout success on 2026-11-19; [the manual record](auth-manual-checklist.md)
+distinguishes that report from agent-observed and unreported tests. Production
+HTTPS remains unverified. PR #10 owner-scoped trip operations remain planned.
+
 ### Authentication flow
+
+2026-11-19 reliability correction: the bounded HTTPX adapter rebuilds decoded
+responses without stale content-encoding/content-length/transfer-encoding headers,
+so gzip/deflate responses decode once while the 64 KiB decoded-body limit remains.
+The process-local OAuth flow store is now constructed once at module initialization,
+before serving requests; the getter does not use a lazy lru_cache factory. This
+prevents overlapping initial requests from saving attempts in different stores.
+State/nonce/PKCE, identity validation and cookie/session policy are unchanged.
+
+PR #9 Milestone 1 was approved by the human; Milestone 2 (2026-11-17) prepared
+local Google configuration. Milestone 3 implements only synchronous
+`GET /auth/google/start`, typed settings, and Google discovery. FastAPI remains
+the OIDC client, React owns the UI, and PostgreSQL will hold opaque application
+session hashes. Authlib 1.9.9's protocol client constructs authorization URLs
+and PKCE; its secure token generator supplies state, nonce, and verifier values.
+Synchronous HTTPX retrieves metadata with fixed endpoints, size/time bounds,
+and a one-hour cache. Milestone 4 adds code exchange, trusted RSA/JWKS signature
+verification through joserfc, Authlib `CodeIDToken` validation (issuer, audience,
+expiry/issued-at/not-before, nonce, authorized party, optional access-token hash),
+and literal-boolean verified-email policy. Only RS256 is accepted, with 30-second
+clock skew. Google's documented canonical/legacy issuer values validate before
+normalization to `https://accounts.google.com`. Profile email is normalized and
+name bounded to 120 characters; neither selects account ownership.
+The agreed local callback is `http://127.0.0.1:5173/auth/google/callback`:
+the browser reaches Vite, which will proxy `/auth` to FastAPI on port 8000.
+The callback is implemented in FastAPI; Milestone 6 adds the Vite `/auth` and
+`/api` proxies and React account controls. Live Google/HTTPS verification remains
+outstanding. See
+[ADR 0003](adr/0003-local-oauth-configuration.md) and the
+[configuration runbook](runbooks/google-oauth-local.md).
+
+For initiation only, the browser gets a ten-minute opaque HttpOnly, SameSite=Lax
+flow-binding cookie (Secure with HTTPS, `__Host-` name and no Domain). A bounded,
+thread-safe process-local store holds nonce, state, verifier, callback URI, and
+expiry under the binding hash. It replaces the browser's previous pending
+attempt, prunes expired attempts on initiation, and returns 429 at 256 active
+attempts instead of evicting another browser. This is not an application
+session. Callback consumption now atomically removes a matching, unexpired
+browser/state record before exchange, rejecting replay and duplicate callbacks.
+Restart/multiple workers cannot share this state; durable shared storage is
+still required before deployment. The
+PostgreSQL-backed application-session architecture remains unchanged. See
+[ADR 0004](adr/0004-oidc-initiation-foundation.md).
+
+Milestone 4 persists only verified identity/profile fields using PostgreSQL
+`INSERT ... ON CONFLICT (oidc_issuer, oidc_subject) DO UPDATE ... RETURNING id`.
+The existing unique constraint supplies identity lookup and serializes concurrent
+first logins; updates preserve UUID, issuer, subject, creation time, and trip
+ownership. Missing optional name preserves an existing name. The transaction
+opens only after provider verification. Milestone 4 needed no schema change.
+Milestone 5 adds session revision `0002` and extends that final transaction to
+issue a fresh opaque session and revoke any presented prior bearer. Cookies are
+set only after commit; callback now clears flow cookies and returns a fixed 303
+to the configured app origin root, superseding Milestone 4's not-signed-in text.
+No Google tokens are persisted. Uvicorn's callback access-log scope has its query removed before
+handling; raw query data is privately parsed and discarded afterward. Future
+proxies must independently redact callback queries. See
+[ADR 0005](adr/0005-google-callback-user-persistence.md).
 
 Use Google OpenID Connect/OAuth authorization-code flow through a maintained Python library:
 
@@ -589,6 +670,65 @@ Use Google OpenID Connect/OAuth authorization-code flow through a maintained Pyt
 OAuth access/refresh tokens are not needed for ongoing Google API access when Google is used only for sign-in. Do not retain them unless a later user-authorized Google feature genuinely requires them.
 
 ### Session and CSRF
+
+Milestone 7 hardens failure boundaries without changing the session schema.
+Authentication cookie selection rejects duplicates using framework parsing,
+including whitespace-normalized names. Unbound callbacks cannot clear another
+pending browser flow. APP_BASE_URL must be a canonical lowercase origin without
+default ports; Secure derives from parsed scheme. Supplied optional azp/at_hash
+must be nonempty strings before library comparisons. Provider elapsed-time/body
+bounds check every available chunk; blocking reads retain separate HTTPX timeouts.
+Auth failure code/status and a fresh server UUID are logged without exception or
+request contents; JSON and X-Request-ID share the UUID. Expected rejections are
+INFO, outages WARNING. Provider outage errors differ from denied consent.
+See [ADR 0008](adr/0008-auth-failure-hardening.md) and the
+[audit matrix](auth-security-audit.md) for risks, tests and limits. The callback
+still returns safe JSON on failure and a fixed configured-root redirect on success.
+
+Milestone 5 implements seven-day absolute and 24-hour idle lifetimes. Every
+lookup locks the matching session row, checks revocation/expiry and current
+user, validates CSRF for unsafe methods, then refreshes last-seen in one short
+transaction. Invalid/CSRF-rejected requests do not refresh activity. Logout and
+rotation serialize with lookup, so a stale validation cannot revive revocation.
+`get_current_user` supplies a safe identity value; it automatically requires CSRF
+on unsafe methods. Future resource routes must still enforce ownership.
+
+Bearer cookies are HttpOnly; the separate CSRF delivery cookie is deliberately
+JavaScript-readable. Both are host-only, Path=/, SameSite=Lax, finite-lived,
+and Secure with `__Host-` names for HTTPS. Only explicit loopback development/test
+allows non-Secure names. Unsafe requests must supply the CSRF cookie value as
+`X-CSRF-Token`; both digests must match the authenticated session's stored
+`csrf_hash`, with constant-time comparisons, plus exact configured Origin
+(same-origin Referer fallback only if Origin is absent). This is stateful
+synchronizer-token protection delivered via a cookie, not unbound double submit.
+Tokens are never returned in JSON or placed in localStorage. Missing CSRF cookie
+requires signing in again; GET /me does not rotate it and invalidate other tabs.
+Application-session validation needs only APP_ENV/APP_BASE_URL/DATABASE_URL,
+not Google credentials or provider availability. SHA-256 is suitable for random
+256-bit tokens; no pepper/signing secret is needed. See [ADR 0006](adr/0006-application-sessions.md).
+
+Milestone 6 uses built-in React state/context for a small current-user snapshot,
+per the human preference, without a new state/cache dependency. It validates
+`GET /api/auth/me`, treats only 401 as unauthenticated, and offers recovery for
+network/server/shape errors. Login is full-page navigation to `/auth/google/start`;
+only a later /me response can establish UI sign-in. Logout uses same-origin
+cookies plus the CSRF delivery value in a header; only 204/401 confirm logout.
+CSRF failure checks /me once to distinguish a lost CSRF cookie from an ended
+session. Focus/visibility/reconnect checks recover expiry without polling that
+would keep idle sessions alive. Abort/revision guards prevent stale checks from
+undoing logout; Strict Mode cleanup is covered. Auth transitions do not remount
+the local trip form. Explicit-action focus recovery runs in a layout effect
+during commit so a delayed effect cannot consume a later action's focus request;
+initial/background checks still do not request focus. Full-page sign-in
+discloses draft loss. UI state never
+authorizes a resource. Vite proxy errors are sanitized and DEBUG serving is
+rejected because debug logs bypass that sanitizer. See
+[ADR 0007](adr/0007-react-authentication.md) and [frontend auth](frontend-auth.md).
+
+Planned UX cleanup (human decision, 2026-11-19): remove the routine "Check session"
+navbar control; users should not need to verify sessions manually. Automatic
+bootstrap/focus/visibility/reconnect checks, error-state retry, /me and backend
+validation remain. The control is still present until that future UI change.
 
 - `HttpOnly`, `Secure` except localhost, `SameSite=Lax`, narrow path/domain, finite idle and absolute expiry.
 - Rotate on login and meaningful security changes; revoke on logout.
@@ -677,6 +817,14 @@ The free-budget baseline may rely on host logs plus `planner_runs` and a small a
 
 ## 14. Testing strategy
 
+PR #9 Milestone 8 adds combined OAuth/session PostgreSQL tests using real
+Authlib/joserfc validation and synthetic Google HTTP responses, plus React
+component/service integration tests with fake fetch/navigation. Normal test
+HTTPX transports and frontend fetch reject accidental live calls by default.
+Existing scratch-database safety, migrations and noninteractive CI commands
+remain unchanged. See [the authentication testing map](auth-testing.md) for all
+eighteen requested behaviors, mock boundaries, local evidence and remaining gaps.
+
 PR #4 Milestone 2 adds a [backend CI workflow](../.github/workflows/backend-ci.yml)
 on `chore/github-actions-ci`: Python 3.12, locked uv dependency installation,
 Ruff formatting/lint, strict mypy, and the existing dependency-free health tests.
@@ -684,9 +832,10 @@ It targets pull requests into `main` and pushes to `main` on an Ubuntu runner.
 PR #4 Milestone 3 adds a separate [frontend CI workflow](../.github/workflows/frontend-ci.yml)
 using Node from `.nvmrc`, `npm ci`, ESLint, TypeScript, the existing Vitest tests,
 and the Vite production build. Both workflows use the same event filters and run
-independently without application secrets or services. GitHub execution remains
-unverified until runs are recorded. PostgreSQL integration/migrations, e2e,
-and production image checks remain planned.
+independently without application secrets. The backend workflow now includes a
+disposable PostgreSQL service for integration/migration/authentication tests.
+GitHub execution remains unverified until runs are recorded. Browser e2e and
+production image checks remain planned.
 
 PR #4 Milestone 4 reviews these package workflows without expanding CI scope:
 both run for all changed paths, use read-only tokens and immutable action pins,

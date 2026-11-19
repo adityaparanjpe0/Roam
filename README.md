@@ -4,10 +4,19 @@ Roam is a planned AI-native travel planner built by two student developers.
 See the [product handoff](docs/handoff.md) and [technical design](docs/DESIGN.md)
 for the MVP scope and architecture.
 
-The backend foundation is in progress in PR #3 on `feat/backend-foundation`.
-Milestones 1 through 3 add a minimal FastAPI application, reproducible Python
-setup, and a `GET /health` liveness endpoint with three locally passing tests.
-Teammate review and merge remain pending.
+Current code includes FastAPI liveness, PostgreSQL/SQLAlchemy migrations, the
+React trip form with local unsaved review, and Google OIDC with database-backed
+Roam sessions and account controls. PR #9 Milestones 1–8 are reported reviewed;
+Milestone 9 documents authentication; the human subsequently reported local
+Google sign-in and logout working. Remaining manual checks are recorded separately.
+Trip CRUD, ownership enforcement, AI planning and production deployment remain
+planned. No released version, agent-observed live browser run or deployed
+production verification is claimed.
 
 Follow the [backend setup instructions](backend/README.md) to install
-dependencies, start the local server, and run the available checks.
+dependencies, start the local server, and run the available checks. Use the
+[frontend guide](frontend/README.md), [authentication setup and architecture](docs/AUTH.md),
+and [manual login/logout checklist](docs/auth-manual-checklist.md) to run the full
+local authentication flow. Keep actual credentials in the ignored root .env;
+never share them in chat or Git. [Automated auth tests](docs/auth-testing.md)
+use synthetic provider responses and isolated PostgreSQL databases.

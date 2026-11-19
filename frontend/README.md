@@ -2,12 +2,18 @@
 
 React + TypeScript + Vite frontend for Roam. The current page introduces the planned travel planner; its itinerary preview is a static concept, not a generated or interactive itinerary.
 
-The development build includes a backend connection check using the existing FastAPI `/health` endpoint. Authentication, AI planning, maps, persistence, and PDF export are not implemented. No database, Docker, environment file, or provider keys are needed for this connection check.
+The development build includes a backend connection check using FastAPI `/health`.
+PR #9 Milestone 6 adds cookie-based account controls, current-user checks,
+backend-managed Google login navigation, and CSRF-protected logout. AI planning,
+maps, trip persistence, and PDF export remain unimplemented. The health check
+still needs no database/credentials; actual authentication requires the migrated
+backend and locally configured Google credentials. An unavailable backend shows
+a recoverable auth error while the local trip form remains usable.
 
 ## Prerequisites
 
 - Node **24.22.3**, pinned in [`.nvmrc`](../.nvmrc).
-- npm (verification used **11.5.1**).
+- npm (current authentication verification used **11.19.1**).
 
 Use one of the setup paths below. Commands start from the repository root.
 
@@ -49,6 +55,21 @@ This path requires registry access on the first download. Use the same `npm exec
 
 ## Development and verification
 
+Use [AUTH](../docs/AUTH.md) for the implemented OAuth/session architecture and
+three-process local startup, plus the [manual end-to-end checklist](../docs/auth-manual-checklist.md)
+for first/returning login, refresh, profile, logout, denial and recovery. Manual
+sign-in/logout success is now human-reported; remaining detailed manual checks
+are pending. Synthetic tests and human reports are recorded separately.
+
+For Google OAuth preparation, follow the
+[local OAuth runbook](../docs/runbooks/google-oauth-local.md).
+Keep OAuth credentials in the ignored root `.env`, never in frontend variables.
+The agreed browser-facing callback uses `http://127.0.0.1:5173/auth/google/callback`;
+the callback is implemented and Vite now proxies `/auth` and `/api`. Read the
+[frontend auth guide](../docs/frontend-auth.md) for states, CSRF, recovery, and
+the remaining live-verification limits. Do not enable DEBUG while running this
+auth proxy: startup rejects verbose callback-URL logging.
+
 Open **http://127.0.0.1:5173/**. Vite binds to this loopback address and uses `strictPort`: it exits if 5173 is occupied rather than silently choosing another port. Save a source file to update the running page. Stop the server with **Control+C**.
 
 ### Run the frontend and backend together
@@ -59,7 +80,7 @@ Terminal 1, from the repository root:
 
 ```sh
 cd backend
-uv run --locked uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+uv run --env-file ../.env --locked uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Terminal 2, from the repository root, using the pinned Node version:
@@ -78,7 +99,10 @@ npm exec --yes --package=node@24.22.3 -- npm run dev
 **Development servers intentionally keep running.** Once each prints its local
 URL/startup message, open the browser; do not wait for the terminal command to
 finish. Tests and builds exit on completion. Stop each development server with
-Control+C when finished. PostgreSQL does not need to be started for this workflow.
+Control+C when finished. Health-only diagnostics need no PostgreSQL; actual
+account/session checks require PostgreSQL migrated through revision `0002`.
+Preserve your ignored `.env`. For health-only startup without a local environment
+file, omit `--env-file ../.env`.
 
 Near the footer, the development-only **Backend connection** panel checks on
 mount. It shows loading, connected, or a recoverable error. A request has a
@@ -98,7 +122,16 @@ status and JSON content type, and validates the parsed shape at runtime. The
 proxy preserves `/health`; it does not prepend `/api/v1` or invent a new route.
 The browser makes a same-origin request, so no FastAPI CORS middleware or browser
 API-base environment variable is needed. The root `.env` is for local PostgreSQL
-and must not be copied into browser configuration.
+and backend Google/session settings; it must not be copied into browser configuration.
+
+Authentication uses full-page `/auth/google/start` navigation, `GET /api/auth/me`,
+and `POST /api/auth/logout`, all through the same Vite origin. Requests explicitly
+use same-origin cookies. A validated profile is the only sign-in evidence;
+errors never imply successful login/logout. Logout reads only the CSRF delivery
+cookie and echoes it in `X-CSRF-Token`. No bearer/Google token is read or stored
+in localStorage. Public trip editing/review remains local and unsaved. Sign-in
+warns that navigation clears unsaved details; logout/session refresh does not
+remount the form.
 
 Verify the complete flow:
 

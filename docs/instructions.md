@@ -5,6 +5,35 @@
 
 ## 1. Working agreement
 
+For local auth, keep actual values in an ignored environment file and explicitly
+pass that file to uv --env-file. /health 200 does not prove settings loaded:
+AUTH_NOT_CONFIGURED requires checking required names privately and restarting
+the backend. Never paste the file, dump process settings, or print rendered
+Compose credentials for troubleshooting. .env and named *.env / *.env.* files
+are ignored; placeholder *.env.example files remain eligible for Git. Keep the
+single eager OAuth store reset explicit in tests rather than clearing a cached
+factory. See [AUTH](AUTH.md) for startup and verified behavior.
+
+PR #9 Milestone 8: automated auth tests use synthetic Google responses/keys only.
+Default HTTPX transports and frontend fetch are blocked/replaced by test fixtures;
+provide explicit fake responses instead of enabling live provider traffic. Use
+the existing PostgreSQL opt-in fixtures and local TEST_DATABASE_ADMIN_URL for
+database tests, never a development/production URL fallback. Both CI workflows
+already discover the new tests; Vitest must use --run for a noninteractive run.
+See [the test coverage and command guide](auth-testing.md) for isolation, mocks,
+evidence and remaining browser/deployment verification.
+
+PR #9 Milestone 7: keep APP_BASE_URL canonical (lowercase scheme/host, no explicit
+default port or trailing slash). Local origin stays `http://127.0.0.1:5173`, with
+FastAPI on `http://127.0.0.1:8000` behind Vite's auth/API proxy; Google callback
+stays `http://127.0.0.1:5173/auth/google/callback`. Restart the backend after config
+changes. No additional environment variables or migrations are needed here.
+For auth failures, correlate the safe JSON request_id / X-Request-ID with
+`roam.auth` code/status logs. Configure that logger at INFO for expected
+rejections; server failures use WARNING. Never enable HTTP wire, SQL parameter,
+callback-query, cookie/header, or raw exception logging to diagnose a login.
+See [the security audit](auth-security-audit.md) for coverage and deployment limits.
+
 Roam is a learning project with professional engineering habits. The team optimizes for:
 
 - merged, demonstrable vertical slices;
@@ -83,9 +112,10 @@ Commit `.env.example` with placeholders and descriptions. Never commit `.env` or
 | `DATABASE_URL` | PostgreSQL connection URI | Yes |
 | `TEST_DATABASE_ADMIN_URL` | Opt-in tests only: local postgres maintenance URL; never a fallback for the application | Yes |
 | `OAUTH_STATE_SECRET` | Signs/binds short-lived OAuth state | Yes |
-| `SESSION_TOKEN_PEPPER` | HMAC/pepper for stored session-token hashes | Yes |
+| `SESSION_TOKEN_PEPPER` | Superseded proposal; not used/required for 256-bit random tokens hashed with SHA-256 (ADR 0006) | N/A |
 | `GOOGLE_OIDC_CLIENT_ID` | Google sign-in client ID | Treat as config |
 | `GOOGLE_OIDC_CLIENT_SECRET` | Google sign-in client secret | Yes |
+| `GOOGLE_OIDC_REDIRECT_URI` | Exact registered callback; local target `http://127.0.0.1:5173/auth/google/callback` | No |
 | `GOOGLE_MAPS_API_KEY` | Server-restricted Places/Routes key | Yes |
 | `VITE_GOOGLE_MAPS_BROWSER_KEY` | Browser-restricted map key if JavaScript map is enabled | Exposed by design; restrict by origin/API |
 | `LLM_PROVIDER` | Adapter selection such as `fake` or approved vendor | No |
@@ -98,7 +128,29 @@ Commit `.env.example` with placeholders and descriptions. Never commit `.env` or
 
 Rules:
 
-- Configuration is parsed and validated once at startup with typed settings.
+- PR #9 Milestone 3 loads `APP_ENV`, `APP_BASE_URL`, and `GOOGLE_OIDC_*`
+  on the first successful auth configuration request, caches the immutable
+  settings/client, and requires a backend restart after environment changes.
+  Missing/invalid values fail closed at `/auth/google/start` without breaking
+  health-only startup. Follow the [local OAuth runbook](runbooks/google-oauth-local.md).
+  `OAUTH_STATE_SECRET` is not needed for the current opaque binding;
+  `SESSION_TOKEN_PEPPER` is not used by application sessions. The opaque flow
+  cookie stores no flow data and needs no signing secret.
+  Do not generate unused secrets or put OAuth credentials in `VITE_` variables.
+  Milestone 5 requires schema revision `0002`; apply migrations explicitly before
+  using callback/session APIs. Callback user/session issuance is atomic after
+  Google validation. Session APIs are the explicitly requested `/api/auth/me`
+  and `/api/auth/logout`, not the earlier planned versioned paths. Never enable raw callback-query/body logging;
+  Uvicorn scope redaction is implemented, but future proxies need their own
+  redaction. Do not share callback URLs in screenshots/issues.
+  Session origin/cookie settings are loaded separately from Google credentials;
+  restart after configuration changes. Read the [session runbook](runbooks/application-sessions.md)
+  for HTTP-only bearer cookies and CSRF cookie/header requirements. No session
+  token is returned in JSON or stored in browser localStorage.
+
+- Target: configuration is parsed and validated once at startup with typed settings.
+  Current database and auth loaders are intentionally lazy to preserve health-only
+  startup; auth validation failures return safe 503 responses, not insecure defaults.
 - Production refuses insecure defaults or missing secrets.
 - Fake providers are the default for tests; development may require an explicit opt-in to live calls.
 - Browser-exposed keys are never treated as secrets; restrict them by exact origin and API. Server keys use API and network/application restrictions where supported.
@@ -177,8 +229,9 @@ npm ci
 npm run dev
 ```
 
-Vite currently proxies only the exact `/health` path. Proxying future `/api` and
-`/auth` routes remains planned. Keep ports and addresses in development
+Vite now proxies exact `/health` and the `/api` and `/auth` namespaces to FastAPI,
+preserving paths, cookies, and Origin. Proxy errors are sanitized and DEBUG
+serving is rejected to avoid callback-query logging. Keep ports and addresses in development
 configuration, not domain code. Production same-origin serving is still future work.
 
 Provide top-level convenience commands after the underlying commands work:
@@ -300,6 +353,10 @@ Avoid “utils” dumping grounds. Name modules after domain purpose.
 - Enable TypeScript strict mode; avoid `any` and unchecked casts.
 - Keep route components thin and organize behavior by feature.
 - Use TanStack Query for server state and invalidation; use component/context state for short-lived UI state.
+- PR #9 Milestone 6 follows the human preference for built-in React state/context
+  for the small auth snapshot. Native fetch validates the current session contract;
+  no new state dependency is needed. Future trip server state still defaults to
+  TanStack Query. See [frontend auth](frontend-auth.md).
 - Narrow PR #6 exception: the single development-only health diagnostic uses
   native fetch and local component state, as explicitly requested. Introduce
   TanStack Query when actual server-state features justify it, not for this probe.

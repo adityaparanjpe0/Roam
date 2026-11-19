@@ -1,6 +1,21 @@
 """Keep existing tests database-free unless the developer explicitly opts in."""
 
+import httpx
 import pytest
+
+
+@pytest.fixture(autouse=True)
+def no_live_provider_http(monkeypatch: pytest.MonkeyPatch) -> None:
+    """All provider HTTP must use an explicit fake; PostgreSQL is unaffected."""
+
+    def deny(*args: object, **kwargs: object) -> None:
+        raise AssertionError("Live HTTP is forbidden in automated tests")
+
+    async def deny_async(*args: object, **kwargs: object) -> None:
+        raise AssertionError("Live HTTP is forbidden in automated tests")
+
+    monkeypatch.setattr(httpx.HTTPTransport, "handle_request", deny)
+    monkeypatch.setattr(httpx.AsyncHTTPTransport, "handle_async_request", deny_async)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

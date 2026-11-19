@@ -1,9 +1,11 @@
 # Roam backend
 
-PR #3, Milestones 1 through 3 provide the Python environment, a minimal FastAPI
-app, a health endpoint, and automated endpoint tests.
-No database, credentials, environment variables, or other services
-are required to start this backend.
+The backend includes FastAPI liveness, PostgreSQL/SQLAlchemy migrations and
+Google OIDC with database-backed Roam sessions. Health-only startup needs no
+credentials or database. Actual login/session APIs require configured backend
+settings and a migrated local database. See [AUTH](../docs/AUTH.md) for actual
+contracts, private local environment setup, startup and troubleshooting, and the
+[manual checklist](../docs/auth-manual-checklist.md) for live verification.
 
 ## Prerequisites
 
@@ -50,8 +52,9 @@ Runtime dependencies include FastAPI (HTTP framework), Pydantic (typed response
 schemas/settings), Uvicorn (application server), SQLAlchemy 2.x (synchronous
 database sessions), psycopg with its binary extra (PostgreSQL driver), and
 Alembic (schema migrations). The development
-group provides Ruff (format/lint), mypy (type checking), pytest, and HTTPX
-(FastAPI test-client support).
+group provides Ruff (format/lint), mypy (type checking), and pytest. Authlib,
+joserfc, and synchronous HTTPX are runtime auth dependencies; HTTPX also supports
+the FastAPI test client. Milestone 5 needs no additional dependencies.
 
 ## Start the development server
 
@@ -65,6 +68,60 @@ Open <http://127.0.0.1:8000/docs> for FastAPI's interactive documentation or
 <http://127.0.0.1:8000/openapi.json> for the generated API schema. The root
 path `/` has no route and returns 404. Stop the
 server with Ctrl+C. Reload mode is for local development.
+
+## Google authentication
+
+If auth returns 503 AUTH_NOT_CONFIGURED while /health works, privately check the
+actual environment file and restart with the documented --env-file command.
+Creating .env from the example does not supply database or Google credentials;
+do not overwrite an existing real file or paste values into chat. Named files
+such as backend.env must be passed explicitly instead of assuming ../.env loads
+them. The [AUTH guide](../docs/AUTH.md) documents the exact configuration contract.
+
+Google OAuth development preparation is documented in the
+[local OAuth runbook](../docs/runbooks/google-oauth-local.md).
+PR #9 Milestone 2 added configuration placeholders and setup instructions.
+Milestone 3 implements synchronous `GET /auth/google/start` using Authlib 1.9.9
+and bounded Google discovery through runtime HTTPX. It returns an authorization
+redirect with state, nonce, and PKCE S256 after storing a pending attempt in
+server memory. Missing/invalid auth settings return a safe 503; health remains
+independent. Milestone 4 implements `GET /auth/google/callback`: single-use
+browser/state validation, bounded code exchange, trusted-key ID-token verification,
+verified-email policy, and atomic PostgreSQL user upsert. Milestone 5 extends the
+transaction with session issuance and prior-browser-session revocation, then
+sets cookies after commit and redirects to the configured frontend origin root.
+Use the [session runbook](../docs/runbooks/application-sessions.md) for revision
+`0002`, current-user lookup, expiration, CSRF, logout, and security limits.
+The callback is `/auth/google/callback`, browser-facing at
+`http://127.0.0.1:5173/auth/google/callback` through Vite's Milestone 6 auth proxy to
+FastAPI at `http://127.0.0.1:8000`. Keep that exact registered callback.
+Existing health-only
+startup still needs no Google credentials. With auth settings loaded, direct
+requests to `http://127.0.0.1:8000/auth/google/start` can initiate authorization,
+and return through the configured Vite origin. React confirms the session using
+`/api/auth/me`. The human subsequently reported successful local Google sign-in
+and logout on 2026-11-19; remaining detailed checks are in the manual record.
+Pending OAuth attempts expire after ten minutes, are limited to 256 per process,
+and are lost on restart. Application sessions are persisted independently in
+PostgreSQL, with seven-day absolute and 24-hour idle expiry. Login throttling
+and shared OAuth flow storage remain later work. Revision `0001` already has
+the user identity constraint; new revision `0002` adds application sessions.
+Apply migrations before callback persistence. Never look up
+or merge users by email. No Google access/refresh token is retained.
+Tests use synthetic credentials and mocked HTTP, never your `.env`:
+
+```text
+uv run --locked pytest tests/test_oauth_config.py tests/test_oauth_login.py tests/test_oauth_flow.py
+uv run --locked pytest tests/test_google_identity.py tests/test_oauth_callback.py
+uv run --locked pytest tests/test_session_security.py tests/test_session_api.py
+```
+
+The existing opt-in PostgreSQL suite also includes
+`tests/integration/test_google_users.py`, covering independent committed reads,
+profile updates, equal-email/different-subject separation, concurrent first
+logins, and rollback. Follow the isolated test configuration below; ordinary
+CI uses fakes for all Google calls. Callback queries are stripped from the ASGI
+scope used by Uvicorn access logging; any future proxy must redact them too.
 
 ## Health endpoint
 
@@ -91,7 +148,8 @@ future design options; neither is implemented in this PR.
 ### Database foundation — PR #7, Milestone 1
 
 The connection/session foundation and Milestone 2's four ORM models and initial
-Alembic migration exist. No business endpoint queries PostgreSQL.
+Alembic migration exist. Authentication/session APIs now use PostgreSQL;
+trip business endpoints remain planned. Revision `0002` adds login sessions.
 `/health` stays independent of database configuration and availability.
 
 Start the existing database using the [PostgreSQL runbook](../docs/runbooks/local-postgres.md).
@@ -159,7 +217,8 @@ needs to pass before merge. See the [CI guide](../docs/CI.md).
 constraints enforce foreign keys, unique identities/days, bounded dates/party
 sizes, nonnegative money, and valid intervals. Read [ADR 0001](../docs/adr/0001-database-foundation.md)
 for exact fields, JSON limits, and deferred application validation. There are no
-trip endpoints, authentication, provider records, or lock/version enforcement yet.
+trip endpoints, provider records, or lock/version enforcement yet. Google
+verification and application sessions are now implemented as described above.
 
 From `backend/`, with PostgreSQL running and your ignored `.env` configured:
 
@@ -275,7 +334,7 @@ uv run --env-file ../.env --locked alembic current
 uv run --env-file ../.env --locked alembic check
 ```
 
-Initially expect revision `0001 (head)` and no new upgrade operations. These
+The current expected revision is `0002 (head)` and no new upgrade operations. These
 commands finish and return to the prompt. The first upgrade creates application
 tables; it does not insert users, trips, or activities. For a safe test of actual
 database operations, run:

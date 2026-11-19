@@ -22,6 +22,19 @@ planned. See [ADR 0002](adr/0002-trip-form-validation.md).
 
 ## 1. Executive summary
 
+PR #9 Milestone 7 implements authentication failure hardening, reported complete
+and reviewed by the human. See the [audit matrix](auth-security-audit.md) for all fourteen requested
+security areas, concrete changes, regression coverage and deployment limits.
+Milestones 1–6 were reported complete/reviewed by the human. This does not add
+trip persistence or authorize deployment. Milestone 8 adds combined automated
+auth tests and is reported complete/reviewed; see [coverage and evidence](auth-testing.md).
+Milestone 9 adds [AUTH](AUTH.md) and
+the [manual checklist](auth-manual-checklist.md), with automated checks rerun;
+local database setup, migrations and Google sign-in/logout subsequently passed
+according to the human. Remaining detailed manual checks, production HTTPS and
+hosted CI are outstanding. Milestone 10 review/fixes are recorded in
+[the PR review](pr9-final-review.md); no publication is implied.
+
 Roam is an AI-native travel planner that converts a user's destination, dates, party size, budget, interests, and constraints into a realistic day-by-day itinerary. It uses a Places provider to find real venues and a Routes provider to obtain travel durations. An LLM chooses and arranges only grounded candidates and interprets natural-language change requests. Deterministic backend code verifies the result before it can be saved.
 
 The MVP is intentionally small enough for two college developers to own end to end and deep enough to support a strong resume discussion. Its engineering value comes from the boundary between probabilistic AI and reliable application logic: the model proposes; typed schemas, ownership checks, route data, lock rules, budget arithmetic, and schedule validation decide whether a proposal is acceptable.
@@ -193,6 +206,34 @@ unverified, and Milestone 6 has not begun.
 - Two edits based on the same version cause exactly one success and one `409`.
 
 ### Phase 2 — Authentication and authorization
+
+**Planned UX cleanup — not yet implemented**
+
+- [ ] Remove the manual "Check session" navbar button; session verification is
+  automatic and should not be a routine user task (human decision, 2026-11-19).
+  Retain automatic bootstrap/focus/visibility/reconnect checks, backend session
+  enforcement and recoverable error-state retry. Update UI/accessibility tests
+  and manual instructions with the eventual removal. No PR assignment is implied.
+
+PR #9 Milestone 3 now provides login initiation only at `/auth/google/start`,
+typed auth settings, and bounded Google discovery/PKCE generation. Callback,
+identity verification, application sessions, CSRF, logout, and the frontend
+were still unimplemented at that milestone. Milestone 4 now verifies callbacks
+and persists users under the existing unique issuer/subject constraint, without
+Google-token storage or a new migration. State consumption is single-use in one
+process. Milestone 5 now adds PostgreSQL-backed opaque sessions, current-user
+dependency, `/api/auth/me`, CSRF-protected `/api/auth/logout`, rotation, and
+expiry through revision `0002`. Callback now issues cookies only after its
+transaction commits and redirects safely, superseding the earlier text-only
+response. Frontend integration, throttling, and shared OAuth flow storage remain
+pending at Milestone 5. Milestone 6 now implements the React auth snapshot,
+accessible account controls, full-page login navigation, current-user recovery,
+CSRF logout, and Vite auth/API proxies. The trip form remains local/unsaved.
+Shared flow storage, throttling, retention tooling, live Google flow, and
+production verification remain outstanding. See [ADR 0007](adr/0007-react-authentication.md).
+Process-local pending flow data is not a saved user
+session; [ADR 0004](adr/0004-oidc-initiation-foundation.md) documents its limits.
+This milestone does not satisfy the full acceptance criteria below.
 
 **Deliverables**
 

@@ -1,12 +1,373 @@
 # Roam durable project memory
 
 > Purpose: preserve verified context across developers and AI sessions  
-> Last updated: 2026-11-17
+> Last updated: 2026-11-19
 > Rule: this file records decisions and evidence; it must not turn plans into facts
 
 ## 1. Current snapshot
 
 ### Verified facts
+
+- 2026-11-19 pre-commit focus audit, owner: user with Codex assistance.
+  History review traced the passive focus effect to f8f94cb; navbar commit
+  a3602b6 did not change it, and 7b1e929 changed only assertions. Against the
+  exact 7b1e929 component, four deterministic logout-focus cases failed (success
+  and outage, each with/without Strict Mode). The layout-effect fix passed all
+  206 tests in 11 files, including bootstrap/background focus preservation.
+  Clean npm ci (223 packages), lint, typecheck and production build passed in
+  an isolated source copy with the exact pinned Node 24.22.3 and committed lock.
+  This supersedes the earlier local-runtime verification gap; hosted Ubuntu CI
+  is still unverified for the uncommitted change. The first in-place clean
+  install hit Vite's Windows native-module file lock; verification used an
+  isolated copy to preserve the running server. No commit/push performed.
+
+- 2026-11-19 frontend focus lifecycle fix, owner: user with Codex assistance.
+  Hosted Frontend CI run 44623970894 tested commit 7b1e929 and still failed the
+  logout-outage focus assertion even with waitFor. This supersedes the earlier
+  assumption that waiting in tests alone was sufficient. A deterministic test
+  clicking sign-out during the authenticated commit reproduced lost focus on
+  the old passive effect. AuthControls now uses a layout effect for focus so an
+  older effect cannot consume a newly requested action. Success/outage regression
+  cases are included. All 203 tests in 11 files, lint, typecheck, build and diff
+  whitespace checks passed locally with Node 24.11.1; pinned 24.22.3/hosted rerun
+  remains unverified for this change. DESIGN/frontend-auth document the ordering
+  correction; API, cookies, session validation and schema are unchanged.
+  No new architecture decision; no commit/push performed by the agent.
+
+- 2026-11-19 frontend CI focus-assertion fix, owner: user with Codex assistance.
+  Auth integration tests now wait for effect-driven focus after bootstrap retry
+  and logout recovery, rather than assuming DOM appearance means focus is ready.
+  A local full-suite run reproduced the sibling logout assertion failing with
+  focus on body; after the assertion updates, all 201 tests in 11 files passed.
+  Lint, typecheck and production build also passed. Verification used installed
+  Node 24.11.1, not CI's pinned 24.22.3; hosted CI remains to be rerun. This is a
+  test-only timing correction; auth behavior and accessibility expectations are
+  unchanged. No architecture decision is superseded; no commit/push performed.
+
+- 2026-11-19 explicit human UX decision: plan to remove the manual "Check session"
+  navbar button because normal users do not need it. Documented in frontend-auth,
+  DESIGN and the handoff backlog. This is future work only; the current button
+  and all application behavior remain unchanged. Automatic mount/focus/visible-
+  tab/reconnect checks, backend session validation, /me and error-state retry
+  must remain when removing the control. No new polling or expiration-policy
+  change is planned. Documentation-only edit; no new application-test result
+  claimed and no staging/commit/push performed.
+
+- 2026-11-19 signed-in navbar polish, owner: user with Codex assistance.
+  Human requested visual consistency for the signed-in account controls.
+  Changed only auth JSX/CSS presentation: inline initials badge/name, matching
+  navigation typography, subtle divider and sign-out styling, icon session
+  refresh with preserved accessible name, ellipsis for long names and mobile
+  wrapping. Screen-reader signed-in status and existing action/focus handling
+  remain. Added an accessible refresh/identity regression. Frontend lint,
+  typecheck and production build passed; Vitest 201 passed in 11 files.
+  Agent reviewed desktop appearance in a separate test tab with synthetic
+  profile data; responsive geometry at widths 320/390/768/1440 had no horizontal
+  overflow with a long synthetic name, and keyboard Tab reached Sign out from
+  Check session. Test tab returned to blank and routes removed. No real auth
+  cookies, credentials or backend state were changed; no backend code changed.
+  This is presentation verification, not another live Google login test.
+  Editor settings were preserved; no staging/commit/push/merge performed.
+
+- 2026-11-19 human-reported local verification, owner: human developer with
+  Codex guidance. Human reported creating roam_dev role/database in pgAdmin
+  under their PostgreSQL 19 server on port 5432, then successful migration
+  commands after filling DATABASE_URL privately. After backend restart with
+  the environment file they reported Google sign-in working; in response to
+  the guided logout check they confirmed it works properly. This supersedes
+  earlier missing-configuration/local-connection blocker notes below as the
+  current human-reported state. The agent did not observe the browser flow,
+  query the live database version, capture HTTP/cookie/UUID details, or rerun
+  the automated suite on PostgreSQL 19. Other manual negative paths, exact
+  response inspection, hosted CI and production HTTPS remain unverified.
+  Documentation now attributes local success to the human and preserves those
+  remaining gaps. No fresh test-run claim is made for this documentation-only
+  edit; earlier 368 backend/200 frontend passes remain dated automated evidence.
+  No actual credential file contents were printed or changed in this edit;
+  no staging, commit, push, merge or PR creation performed by the agent.
+
+- 2026-11-19 local configuration follow-up: recursive project metadata search
+  found the real root .env and docker-compose.yml; no separate environment or
+  Docker file was found outside dependency/cache directories. Printed variable
+  names only: the existing file defined POSTGRES_DB/USER/PASSWORD/PORT, without
+  any required FastAPI database/origin/Google keys. Preserved those existing
+  values and appended missing app origin/callback defaults plus blank
+  DATABASE_URL/Google client fields for private completion. No real credential
+  was printed or committed; .env remains ignored/untracked. A read-only local
+  PostgreSQL probe with those existing settings failed both inside and outside
+  the sandbox (connection unavailable or authentication rejected); no database
+  data or roles were changed. Docker CLI/standard Windows binary was not found
+  by the agent. Docker initialization variables do not configure a separately
+  installed native PostgreSQL service or a Google OAuth client. Actual chosen
+  database connection and Google credentials remain pending user configuration.
+
+- 2026-11-19 PR #9 OAuth troubleshooting, owner: user with Codex assistance.
+  User requested configuration reconciliation and investigation of failed OAuth.
+  Real file paths/additional Docker files were requested without asking for secret
+  values; no credential file was overwritten. Existing root Compose uses variable
+  references. Root environment health check printed flags only: no usable
+  DATABASE_URL, Google client ID/secret or app settings were loaded. Both local
+  health endpoints returned 200; /api/auth/me and /auth/google/start returned
+  503 AUTH_NOT_CONFIGURED. This is a confirmed current configuration blocker,
+  separate from two code defects reproduced in final review. Backend restart
+  with the actual populated environment file remains necessary; live Google
+  success is not verified and no real token/credential was printed.
+  Fixed double decoding by removing stale wire encoding/length headers after
+  HTTPX decoding; size/time bounds unchanged. Replaced lazy flow-store factory
+  with one eager process-local instance; test fixtures reset it explicitly.
+  Added 9 unit regressions and 2 compressed full-flow PostgreSQL cases. Before
+  fixes focused regressions had 7 failures / 2 passes. After fixes: 71 focused
+  tests passed; full backend 368 passed (93 PostgreSQL cases) in 70.64 seconds
+  using an owned generated-credential PostgreSQL 17.0 UTC cluster, stopped and
+  removed afterward; default 275 passed / 93 opt-in skips. Ruff format/check
+  passed (63 files), mypy app passed (34 files), editor diagnostics clean.
+  Frontend lint/typecheck/build and 200 tests in 11 files passed. Existing
+  TestClient warning remains. No workflow/dependency/migration changes.
+  Gitignore now protects named *.env / *.env.* files while allowing placeholder
+  examples; no real environment file is tracked. Existing untracked .vscode
+  settings were preserved. Docker CLI remains unavailable to the agent; new
+  supplied-file reconciliation awaits the user's local paths. No commit/push/
+  merge/PR creation, no developer database migration or paid/provider test calls.
+
+- PR #9 Milestone 9 (2026-11-18), owner: user with Codex assistance, on
+  `feat/google-auth-sessions`: human reported Milestone 8 complete/reviewed,
+  superseding its pending-review note below. Added docs/AUTH.md for the actual
+  architecture, scopes/config placeholders, route contracts, persistence,
+  cookies/CSRF, React state, startup, troubleshooting, limits and planned PR #10
+  ownership enforcement; added a manual first/returning-login, refresh, /me,
+  logout/invalidation, callback/denial and recovery checklist. Updated relevant
+  READMEs, DESIGN links, setup history and Unreleased changelog; no application,
+  dependency, migration or workflow changes. No released version is claimed.
+  Agent did not read the actual .env or OAuth client secret, start the developer
+  database/server, or attempt live Google authentication. Agent preflight found
+  no Docker CLI on PATH, native postgresql-x64-17 service Stopped, and both
+  127.0.0.1:8000/health and :5173/health unreachable from the agent. These are
+  local observations, not a claim about another developer's environment.
+  Verification rerun: Ruff format/check passed (61 files), mypy app passed
+  (34 files); default pytest 266 passed / 91 intentional database skips; full
+  pytest 357 passed with no skips in 33.75 seconds against an owned disposable
+  PostgreSQL 17.0 UTC cluster with generated test-only credentials. Cluster
+  stopped/removed; actual developer cluster remained untouched. Frontend lint,
+  typecheck/build passed, Vitest 200 passed in 11 files. Existing TestClient
+  deprecation warning remains. Relative documentation links and git diff --check
+  passed; ignore patterns protect actual env/client-secret paths. Docker Compose
+  validation/build and hosted CI were unavailable/unrun; no live Google or HTTPS
+  result is claimed. Human setup checkpoint and all live manual checklist results
+  are PENDING; wait for safe user-reported observations before continuing that
+  verification. Milestone 10 is unstarted. No commit/push/merge/PR created.
+
+- PR #9 Milestone 8 (2026-11-18), owner: user with Codex assistance, on
+  `feat/google-auth-sessions`: human reported Milestone 7 complete/reviewed,
+  superseding its pending-review status below. Added 16 PostgreSQL auth-flow
+  cases with real Authlib/joserfc verification and HTTPX fake discovery/token/
+  JWKS responses, covering localhost/HTTPS cookies, stable user upsert/repeat
+  login, rotation, CSRF, logout/replay, invalid claims/state, provider failure,
+  expiry and commit rollback. Added two HTTPX guard regression tests plus
+  global sync/async transport denial. Added 12 React/service integration cases
+  and one real navigation-helper test; frontend fetch is fake by default.
+  No application code, dependency, migration or workflow configuration changed.
+  Evidence: Ruff format/check passed (61 files), mypy app passed (34 source
+  files); default pytest 266 passed / 91 opt-in skips. Full pytest 357 passed
+  without skips in 51.50 seconds against a disposable generated-credential
+  PostgreSQL 17.0 UTC cluster, stopped and removed afterward. Frontend lint,
+  typecheck and build passed; Vitest 200 passed in 11 files under Node 24.22.3/
+  npm 11.19.1. Existing Starlette TestClient/httpx warning remains visible.
+  Existing workflow discovery, database marker/fixtures and noninteractive
+  Vitest commands cover these tests without Google secrets; hosted Actions
+  execution and pinned remote artifact availability were not verified here.
+  docs/auth-testing.md maps all 18 requested areas and remaining real-browser,
+  Google, HTTPS and deployment gaps. No live provider or paid calls; no commit,
+  push or merge. Milestone 8 review pending; Milestone 9 remains unstarted.
+
+- PR #9 Milestone 7 (2026-11-17), owner: user with Codex assistance, on
+  `feat/google-auth-sessions`: human reported Milestone 6 complete/reviewed.
+  Hardened framework-normalized duplicate auth-cookie handling in OAuth and
+  session routes, preserved pending browser bindings on unbound callbacks,
+  rejected malformed supplied optional azp/at_hash claims before library checks,
+  and checked provider response elapsed/size budgets per available chunk.
+  Fixed case-sensitive HTTPS cookie detection and required canonical origins.
+  Added safe code/status/request-ID diagnostics and distinct provider-outage
+  versus denied-consent responses. ADR 0008 and the authentication audit record
+  all fourteen requested security areas, regressions and remaining limits.
+  No new dependency, migration, environment variable or frontend behavior.
+  Evidence: Ruff format/check passed (59 files), strict mypy passed (34 source
+  files), database-free pytest 264 passed / 75 opt-in skipped; final full pytest
+  339 passed against a generated-credential disposable PostgreSQL 17.0 UTC
+  cluster, stopped and removed after testing. This includes migrations/schema
+  drift, session rotation/revocation/expiry, concurrency and atomic rollback.
+  Frontend lint/typecheck/build passed and Vitest 187 tests in 9 files passed
+  under Node 24.22.3/npm 11.19.1. Editor diagnostics and git diff --check passed.
+  Backend retains the existing Starlette TestClient/httpx deprecation warning;
+  unrelated transport migration was not attempted. CI targets PostgreSQL 18.7;
+  hosted CI, live Google, production HTTPS/proxy/CSP verification remain unrun.
+  Flow state remains single-process and ephemeral; rate limiting, cleanup and
+  production serving are not added. Milestone 7 human review is pending;
+  Milestone 8 is unstarted. No commit/push/merge performed.
+
+- PR #9 Milestone 6 (2026-11-17), owner: user with Codex assistance, on
+  `feat/google-auth-sessions`: human reported Milestone 5 complete/reviewed.
+  Added a native-fetch auth service, small React state/context snapshot,
+  accessible header controls, current-user bootstrap/recovery, backend-managed
+  full-page login navigation, and CSRF logout. Only validated /me 200 establishes
+  UI identity; 401 ends it, other failures stay unknown/recoverable. Logout waits
+  for 204/401; missing CSRF/403 confirms /me once before inferring session absence.
+  Focus/visibility/reconnect checks avoid polling/idle keepalive. Abort/revision
+  guards cover Strict Mode and late responses after logout. Auth transitions
+  preserve local trip fields; full-page sign-in discloses draft loss. No token
+  storage or frontend resource authorization is added. Human preference for
+  built-in React is a narrow exception to planned TanStack Query, documented in
+  [ADR 0007](adr/0007-react-authentication.md) and [frontend auth](frontend-auth.md).
+  Vite now forwards /auth, /api, and exact /health with query/Origin/cookies
+  preserved. Installed Vite source inspection found default proxy errors expose
+  callback URLs; sanitized logging and a DEBUG-serving guard prevent that path.
+  No backend app/migration, trip-feature source, manifest, or lockfile changes.
+  Verification: official portable Node **24.22.3** ZIP matched its published
+  SHA-256; npm **11.19.1** performed a clean locked install (**223 packages**).
+  Sandbox network attempts were blocked/stalled; approved network-enabled setup
+  succeeded without global installation or persistent PATH edits. Lint, strict
+  typecheck, production build, editor diagnostics, and `git diff --check` passed.
+  Vitest **187 tests in 9 files** passed (45 new cases; prior form coverage kept).
+  Tests include HTTP/HTTPS CSRF, runtime Unicode/shape guards, timeout/cancellation,
+  expiry, failed logout, duplicate prevention, focus, and trip-state preservation.
+  A separate browser tab on test port 5187 used synthetic responses only:
+  account scroll width matched client width at 320/375/768/1440 with anonymous
+  and 120-character-name states; mock logout sent the expected CSRF header,
+  retained Destination, and focused Sign in. Enter on Sign in performed a full
+  navigation intercepted before Google. Local proxy verification preserved query,
+  Origin, Cookie, and response Set-Cookie; backend failure returned 502 with
+  redacted logs. Test routes were removed, the test tab cleared, and temporary
+  servers stopped; the shared tab was not navigated or edited. This supersedes
+  earlier frontend/proxy-absent status only. No real credentials/Google accounts,
+  paid calls, commits, pushes, merges, trip save/CRUD, or Milestone 7 work.
+  Backend tests were not rerun because app/migration code is unchanged. Real Google
+  consent/session/logout, production HTTPS, full screen-reader/cross-browser
+  checks, shared OAuth flow storage, throttling, and retention remain unverified
+  or unfinished. No full authentication/deployment certification is claimed.
+
+- PR #9 Milestone 5 (2026-11-17), owner: user with Codex assistance, on
+  `feat/google-auth-sessions`: human reported Milestone 4 complete/reviewed.
+  Added `sessions`/Alembic revision `0002`, opaque 256-bit CSPRNG bearer and CSRF
+  values with only SHA-256 digests in PostgreSQL, seven-day absolute and 24-hour
+  idle lifetimes, login rotation, generic invalid-session rejection, current-user
+  dependency, and server-side logout. The human explicitly requested
+  `/api/auth/me` and `/api/auth/logout`; those replace the earlier unimplemented
+  versioned session paths only. AGENTS/design/API docs record the exception.
+  The verified Google callback now atomically upserts profile/revokes presented
+  prior session/inserts a fresh session, sets cookies after commit, clears
+  transient flow cookies, and 303 redirects to the configured app origin root.
+  Primary cookie is HttpOnly; a separate readable cookie delivers a session-bound
+  CSRF value for the custom header. Both are host-only/Lax, Secure with `__Host-`
+  names for HTTPS. Unsafe methods through the auth dependency require matching
+  cookie/header/database hashes and exact Origin (Referer fallback only if
+  Origin absent). No secrets in JSON/localStorage; no Google-token persistence.
+  Row locks serialize validation/activity refresh with revocation; failed/CSRF
+  requests cannot refresh idle time. App origin policy loads independently of
+  Google credentials. No new dependencies or signing/pepper secret is needed.
+  See [ADR 0006](adr/0006-application-sessions.md) and the
+  [session runbook](runbooks/application-sessions.md). This supersedes Milestone
+  4's no-app-session/text-only callback behavior; OAuth validation is preserved.
+  Verification on Windows/Python 3.12.16: default pytest **214 passed / 75
+  intentionally skipped**; all tests with a disposable UTC PostgreSQL **17.0**
+  cluster **289 passed**, including 21 new session integration tests and the new
+  existing-user migration preservation test. Covers rollback, concurrent
+  validation/logout, copied-token replay, cross-session CSRF, idle/absolute
+  boundaries, DST-safe duration constraints, and callback → me → logout.
+  The cluster used generated withheld credentials, an independent loopback port,
+  and fixture-owned databases; it was stopped and removed afterward. No normal
+  development database was migrated. Ruff format (**57 files**), lint, strict
+  mypy (**33 app files**), frozen sync/lock check, editor diagnostics, OpenAPI
+  profile/route inspection, and `git diff --check` passed. One existing
+  Starlette/HTTPX deprecation warning remains unsuppressed. No frontend/proxy,
+  trip CRUD, roles, Google requests, real credentials read, commits, pushes, or
+  merges. Shared durable OAuth flow state, throttling, expired-session retention
+  tooling, frontend integration, hosted PostgreSQL 18.7 CI, and live HTTPS/Google
+  verification remain outstanding. Milestone 6 has not begun.
+
+- PR #9 Milestone 4 (2026-11-17), owner: user with Codex assistance, on
+  `feat/google-auth-sessions`: human reported Milestone 3 complete/reviewed.
+  Added `/auth/google/callback`, atomic single-use browser/state consumption,
+  Authlib code exchange through bounded synchronous HTTPX, joserfc RS256
+  signature verification against fixed trusted Google JWKS, and Authlib OIDC
+  claims validation with 30-second skew. Literal-boolean verified email and
+  bounded profile fields are required. joserfc 1.8.0 was already installed via
+  Authlib and is now directly declared; no dependency versions changed.
+  Inspected `User`/revision `0001`: unique issuer/subject already exists, so
+  **no migration** was added. A short service-owned PostgreSQL transaction
+  atomically upserts on that identity constraint, updates only permitted profile
+  fields, preserves UUID/ownership, and never identifies/merges by email.
+  No transaction spans Google I/O. Google tokens are not persisted. Callback
+  clears flow cookies and returns explicit NOT-signed-in plain text, with no
+  application session or identity returned. Uvicorn callback-query scope
+  redaction is tested; future proxies must redact independently. See
+  [ADR 0005](adr/0005-google-callback-user-persistence.md). This supersedes only
+  Milestone 3's absent callback/validation/persistence status. Process-local
+  flow storage remains limited to one process; restarts lose attempts.
+  Verification: Windows/Python 3.12.16, final ordinary pytest **168 passed / 53
+  intentionally skipped**. PostgreSQL-enabled verification passed **220 tests**
+  before adding a final HTTP-error-status regression, which passed in the final
+  ordinary suite. That full run included **53 PostgreSQL integration tests** against
+  a separately initialized disposable local **PostgreSQL 17.0** cluster using
+  UTC, generated withheld credentials, isolated UUID databases, and a separate
+  loopback port. Includes six new user-persistence tests (concurrent first-login
+  race and rollback included). Real RSA/JOSE/claim fixtures and mocked HTTP prove
+  token/error behavior without Google requests. One pre-existing Starlette/HTTPX
+  deprecation warning remains unsuppressed. Ruff format (**47 files**), lint,
+  strict mypy (**27 app files**), frozen dependency sync, lock consistency,
+  editor diagnostics, and `git diff --check` passed. The initial Windows launcher
+  needed output-handle correction; an initial full cluster run passed 211 tests
+  but exposed one existing UTC-offset assertion because initdb inherited local
+  New York timezone. Setting the disposable server to UTC matched the intended
+  test environment; no application logic or test assertion was weakened. Test
+  clusters were stopped and removed. PostgreSQL 18.7/hosted CI and live Google
+  login are not verified by this run. No real credentials read, frontend/proxy
+  implementation, app sessions, commits, pushes, or merges. Milestone 5 has not
+  begun.
+
+- PR #9 Milestone 3 (2026-11-17), owner: user with Codex assistance, on
+  `feat/google-auth-sessions`: human reported Milestone 2 complete/reviewed and
+  authorized initiation only. Added typed lazy Google settings and synchronous
+  `GET /auth/google/start`, real Authlib 1.9.9 authorization-code URL generation
+  with state/nonce/PKCE S256, and bounded fixed-host discovery using runtime
+  HTTPX 0.28.1. Authlib's installed BSD-3-Clause license and relevant source APIs
+  were inspected. The lockfile adds Authlib and its transitive crypto dependencies;
+  HTTPX moved from development-only to runtime. Authlib is untyped, so only its
+  imports receive a mypy missing-stubs override; Roam app checks remain strict.
+  A ten-minute opaque HttpOnly/Lax browser cookie binds a bounded process-local
+  flow record (maximum 256); HTTPS uses Secure and a `__Host-` name. No Google
+  secret or PKCE verifier enters that cookie or redirect. No callback, token
+  exchange/validation, application sessions, DB writes/migrations, or frontend
+  changes were added. State/nonce validation and atomic replay prevention are
+  NOT implemented yet. [ADR 0004](adr/0004-oidc-initiation-foundation.md) documents
+  the initiation-only storage decision; the final PostgreSQL session plan is
+  unchanged. Process restart/multiple workers lose pending flow state.
+  This supersedes Milestone 2's no-loader/no-initiation/Authlib-not-installed
+  status only. Live Google/client PKCE enforcement, completed authentication,
+  hosted CI, and deployment are unverified; Milestone 4 has not begun.
+  Verification on Windows/Python 3.12.16: default `pytest` **88 passed / 47
+  intentionally skipped**, including 53 new isolated auth tests with synthetic
+  credentials/deterministic token generation and denied live HTTP. One existing
+  Starlette/HTTPX deprecation warning remains unsuppressed. Ruff format check
+  (**38 files**), Ruff lint, strict mypy (**21 app files**), frozen all-groups
+  sync, offline lock check, and `git diff --check` passed. No live credentials
+  read, Google requests made, paid services used, commits, pushes, or merges.
+
+- PR #9 Milestone 2 (2026-11-17), owner: user with Codex assistance, on
+  `feat/google-auth-sessions`: human approved Milestone 1 and authorized only
+  Google OAuth development configuration. Added blank credential placeholders,
+  agreed local browser/callback values, a [manual setup runbook](runbooks/google-oauth-local.md),
+  [ADR 0003](adr/0003-local-oauth-configuration.md), and ignore patterns for Google
+  client-secret downloads. The callback target is
+  `http://127.0.0.1:5173/auth/google/callback`; FastAPI's route and Vite's `/auth`
+  proxy remain unimplemented. Authlib remains proposed, not installed. No auth
+  loader consumes the new variables yet. Google console setup, real credentials,
+  live login, and runtime security remain unverified. No secrets read/generated,
+  dependencies installed, servers started, paid APIs enabled, or Git publication
+  performed. Verification: `git diff --check` passed; editor diagnostics reported
+  no errors in the nine changed files; `git check-ignore -v --no-index` confirmed
+  representative root/nested environment and Google-download paths are ignored;
+  tracked credential-pattern queries returned no matches. Application tests were
+  not run for this documentation/ignore-only change. This supersedes no runtime
+  implementation evidence. Milestone 3 has not begun.
 
 - PR #8 Milestone 8 (2026-11-17), owner: user with Codex assistance, on
   `feat/trip-creation-form`: polishes feature-scoped text wrapping, mobile action
@@ -299,8 +660,9 @@
 ### Not yet verified or implemented
 
 - The original documentation-only and backend-placeholder snapshots are superseded by the foundation merge records above and the PR #5 database verification. Production deployment remains planned.
-- Beyond the foundations, HTTP health integration, and PR #7's four-table
-  schema/migration above, no authentication, LLM/Places/Routes integration, validation/replanning
+- Backend Google verification and application sessions now have isolated evidence
+  below; live Google/frontend-integrated authentication remains unverified.
+  Beyond those foundations, no LLM/Places/Routes integration, validation/replanning
   engine, PDF generator, production application image, deployment, benchmark, or
   production run is claimed. Backend/frontend CI workflow files are present;
   hosted CI execution remains unverified.
@@ -355,7 +717,7 @@ Material changes should receive an ADR under `docs/adr/` and a row here. Dates a
 | D-005 | 2026-11-07 | PLANNED | Retrieve real place candidates before LLM planning; model references allowlisted IDs only. | Prevents fabricated venue identity and bounds provider/model work. |
 | D-006 | 2026-11-07 | PLANNED | Deterministic Python code is authoritative for authorization, locks, time, routes, known hours, and budget arithmetic. | Probabilistic output cannot enforce hard application invariants. |
 | D-007 | 2026-11-07 | PLANNED | Replanning uses a typed scoped patch against stable IDs and a base trip version. | Preserves unaffected work, supports locks, costs less, and is explainable. |
-| D-008 | 2026-11-07 | PLANNED | Google OIDC login plus opaque server-side session cookie. | Avoids password storage; supports revocation and same-origin security. |
+| D-008 | 2026-11-17 | IN_PROGRESS | Google OIDC verification plus opaque PostgreSQL-backed session cookie and React account UI. | Backend/session and frontend synthetic checks verified through Milestone 6; live Google/production proof pending. See ADRs 0006–0007. |
 | D-009 | 2026-11-07 | PLANNED | Authorization is owner-based; no RBAC/admin role in MVP. | There is only one meaningful permission model; avoid decorative complexity. |
 | D-010 | 2026-11-07 | PLANNED | Browser generates PDF from canonical saved trip data. | No server renderer or per-export external cost; simple file sharing. |
 | D-011 | 2026-11-07 | PLANNED | Planning is a bounded synchronous operation with idempotency and no queue/worker. | Appropriate to demo load; durable async is the measured scaling step. |
@@ -395,7 +757,7 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 | Frontend/backend health integration / PR #6 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | `d66391a`, `ab6e482`; [client](../frontend/src/api/health.ts), [UI](../frontend/src/features/connection/ConnectionStatus.tsx), live verification below | Documentation review, teammate review, and merge evidence |
 | Trip schema/migrations/CRUD | IN_PROGRESS | User with Codex assistance; reviewer pending | [Models](../backend/app/db/models/), [initial revision](../backend/migrations/versions/0001_create_users_trips_days_and_activities.py), PostgreSQL tests | CRUD and cross-owner authorization remain planned |
 | PostgreSQL foundation / PR #7 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | [Settings](../backend/app/core/config.py), [sessions](../backend/app/db/session.py), [ADR 0001](adr/0001-database-foundation.md), [CI](../.github/workflows/backend-ci.yml), evidence below | Milestone 3 review, hosted Backend checks success, and teammate schema walkthrough before merge |
-| Google OIDC/session/CSRF | PLANNED | Unassigned | None | Invalid state/claims and secure cookie tests |
+| Google OIDC/session/CSRF | IN_PROGRESS | User with Codex assistance; Milestone 6 review pending | ADRs 0006–0007, backend/PostgreSQL and frontend synthetic tests | Shared flow state, throttling, retention, live Google/HTTPS and deployment verification |
 | Provider-neutral Places/Routes | PLANNED | Unassigned | None | Fake + live opt-in normalization/failure proof |
 | Grounded LLM generation | PLANNED | Unassigned | None | Unknown-ID rejection and atomic valid save |
 | Deterministic validator | PLANNED | Unassigned | None | Unit/property/integration invariant suite |

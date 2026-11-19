@@ -1,0 +1,273 @@
+# Local Google OAuth configuration and callback — PR #9, Milestones 2–7
+
+For the current consolidated setup and live verification steps, use [AUTH](../AUTH.md)
+and the [manual checklist](../auth-manual-checklist.md). The sections below retain
+milestone history. Local Google sign-in/logout success was human-reported on
+2026-11-19; the agent has not independently observed the browser flow.
+
+Milestone 2 prepared Google credentials and the configuration contract.
+Milestone 3 adds the synchronous login-start route, typed settings, Authlib 1.9.9,
+and bounded discovery through HTTPX. Milestone 4 adds callback verification and
+PostgreSQL user persistence. Milestone 5 adds independent database-backed
+application sessions, CSRF protection, current-user lookup, and logout. Vite
+routing/UI are integrated in Milestone 6. Milestone 7 hardens cookie parsing,
+claim shapes, response deadlines, origin configuration and safe failure diagnostics;
+see the [security audit](../auth-security-audit.md). Milestone 8 adds
+[automated auth tests](../auth-testing.md). Follow [AUTH](../AUTH.md) for current
+startup and verification status rather than historical milestone stop points.
+Human review/completion of Milestones 2–7 is reported; actual console
+settings and live Google behavior have not been inspected by the agent.
+
+## Architecture and exact URLs
+
+React will navigate to FastAPI's Google login flow. FastAPI will use a maintained
+OIDC library, validate Google's response, identify users by `(issuer, sub)`, and
+issue an opaque Roam session backed by PostgreSQL. Google tokens and session
+bearer secrets must never enter localStorage. See [DESIGN](../DESIGN.md#10-authentication-and-authorization)
+and [ADR 0003](../adr/0003-local-oauth-configuration.md).
+
+| Purpose | Local value | Current status |
+|---|---|---|
+| React / browser origin | `http://127.0.0.1:5173` | Configured in Vite |
+| FastAPI upstream | `http://127.0.0.1:8000` | Documented development server |
+| Login path | `/auth/google/start` | Implemented FastAPI route; returns 302 or safe 400/429/503 |
+| Callback path | `/auth/google/callback` | Implemented in FastAPI; validates identity, commits user/session, sets cookies, redirects safely |
+| Authorized redirect URI | `http://127.0.0.1:5173/auth/google/callback` | Agreed registration target; Vite auth proxy now implemented |
+
+The backend registers `/health`, `/auth/google/start`, and `/auth/google/callback`.
+Vite now proxies exact `/health` and complete `/api` and `/auth` namespaces to
+port 8000, preserving path, query, cookies, and Origin. Port 5173 is intentional:
+it is the browser origin even though FastAPI handles the callback. Do not
+substitute port 8000 or add a trailing slash. Use `127.0.0.1` consistently;
+`localhost` is a different host. Do not add the frontend `#create-trip` fragment
+to the redirect URI. Registration, authorization, and code exchange must use
+the same exact URI. The backend can now issue application sessions; end-to-end
+browser login still needs manual real-Google verification. See [frontend auth](../frontend-auth.md).
+
+APP_BASE_URL must use the canonical browser origin: lowercase scheme and host,
+no explicit default port, path or trailing slash. Use `https://roam.example`,
+not `HTTPS://roam.example` or `https://roam.example:443`. Secure cookie policy
+comes from the parsed scheme; production HTTP is rejected. Failures return a
+safe JSON request_id and matching X-Request-ID for correlation with `roam.auth`
+code/status logs (INFO for expected rejections, WARNING for outages). Do not
+enable verbose request/token/header logging. A failed callback shows JSON and
+requires restarting sign-in; it never redirects to provider-supplied error URLs.
+
+## Manual Google Auth Platform checklist
+
+Perform these steps yourself in [Google Cloud Console](https://console.cloud.google.com/).
+Never paste credentials into chat or include them in screenshots/issues.
+
+1. Create or select a dedicated development project, for example **Roam Local
+   Development**. Confirm the selected project before editing. This is a Google
+   Auth Platform setup, not Firebase/Identity Platform or a Maps integration.
+   Do not enable billing or paid APIs, and do not create a service account.
+2. Open **Google Auth Platform**. If prompted, choose **Get started**. Under
+   **Branding**, use a clear development app name, a support email you monitor,
+   and developer contact information. The consent screen explains which app is
+   requesting identity data. Enter truthful required information; do not invent
+   a public domain or upload a logo just to complete local setup. Branding and
+   public-launch verification are separate from this milestone.
+3. Under **Audience**, choose **External** for personal accounts or developers
+   outside one Workspace organization. **Internal** applies only to an eligible
+   Workspace organization and excludes outside accounts. Keep publishing status
+   **Testing**; do not publish the development app.
+4. Add both developers' intended Google accounts under **Test users** where
+   available. Google documents an exception for identity-only scopes: with only
+   `openid`, `email`, and `profile`, Testing can allow users outside that list.
+   Therefore the list is not a reliable private-app access control for Roam.
+   Workspace administrators can also block access independently. Do not claim
+   an enforced two-user allowlist unless Roam later implements one explicitly.
+5. Under **Data Access**, configure only basic identity scopes. The application
+   request will use `openid email profile`. The console may display the email
+   and profile scopes as `https://www.googleapis.com/auth/userinfo.email` and
+   `https://www.googleapis.com/auth/userinfo.profile`. Do not select Gmail,
+   Calendar, Drive, Contacts, Maps, or other data access. No Google+ API is needed.
+6. Under **Clients**, choose **Create client**, type **Web application**, and a
+   clear name such as **Roam local web**. The backend can protect a client secret;
+   do not choose Desktop, Android, or a service account.
+7. Add exactly this **Authorized redirect URI**:
+
+   ```text
+   http://127.0.0.1:5173/auth/google/callback
+   ```
+
+   **Authorized JavaScript origins** may stay empty: the approved flow uses
+   backend redirects, not a Google browser SDK/popup. Do not add JavaScript SDK
+   code or expose credentials just to populate that optional field.
+8. Save the client. Copy its client ID and secret directly into your ignored
+   root `.env`, locally. Preserve existing database values; do not overwrite
+   an existing `.env` with the example. A fresh file can be copied from
+   [the example](../../.env.example) only if no local `.env` exists.
+9. Confirm the selected project, External/Testing status, scopes, redirect URI,
+   and intended test accounts. The Vite proxy is implemented; after starting the
+   migrated backend and frontend, follow the manual checklist. Record completion
+   without recording credentials. An authorization redirect alone does not prove login.
+
+Google can change console labels. Use these official references rather than
+following prompts to enable unrelated products:
+[OIDC setup and server flow](https://developers.google.com/identity/openid-connect/openid-connect),
+[web-server redirect rules](https://developers.google.com/identity/protocols/oauth2/web-server),
+and [audience/testing behavior](https://developers.google.com/identity/protocols/oauth2/production-readiness/overview).
+Reviewed 2026-11-17. No project creation, credential issuance, or successful
+Google login has been independently verified by the agent.
+
+## Scopes and credentials explained
+
+| Scope | Why Roam requests it |
+|---|---|
+| `openid` | OIDC identity token and stable subject identifier |
+| `email` | Email and verification claim for local profile policy; email is not the identity key |
+| `profile` | Basic display profile, such as name; request does not require storing every returned field |
+
+The **client ID** identifies the registered application; it is not a password.
+The **client secret** authenticates the backend application during code exchange
+and must remain server-only. Neither is a user's Google password, a Maps API
+key, or a Roam session secret. Do not request offline access or store Google
+tokens for later API access. This slice needs no additional Google API enabled.
+
+## Backend environment contract
+
+The five auth values below are validated on first auth use and the successfully
+configured client is cached until restart. Existing health-only startup remains
+independent of credentials. Missing/invalid auth config returns 503 at the start
+route; it never falls back to a test user or permissive settings.
+
+| Variable | Local value / purpose | Secret? |
+|---|---|---|
+| `APP_ENV` | Explicit `development`, `test`, or `production`; HTTP permitted only on loopback in development/test | No |
+| `APP_BASE_URL` | `http://127.0.0.1:5173`; browser origin | No |
+| `GOOGLE_OIDC_REDIRECT_URI` | `http://127.0.0.1:5173/auth/google/callback` | No |
+| `GOOGLE_OIDC_CLIENT_ID` | Value from your development Web application client | No, but keep backend configuration here |
+| `GOOGLE_OIDC_CLIENT_SECRET` | Secret from that same client | Yes |
+| `DATABASE_URL` | PostgreSQL URL with current migrations through `0002`; users and sessions | Yes |
+
+`TEST_DATABASE_ADMIN_URL` is only for opt-in isolated database tests, never a
+runtime auth URL. Neither `OAUTH_STATE_SECRET` nor `SESSION_TOKEN_PEPPER` is
+needed: flow binding is opaque and application sessions hash CSPRNG-generated
+256-bit tokens. No signing/JWT secret is added. No `VITE_GOOGLE_*` OAuth variables are needed.
+Do not add the client secret to frontend environment files or browser storage.
+
+The root `.env` is not automatically loaded by backend settings.
+Use the existing environment-file convention to enable initiation locally:
+
+```sh
+cd backend
+uv run --env-file ../.env --locked uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Run the frontend separately using its [existing guide](../../frontend/README.md).
+Registration alone does not need running servers. Initiation now uses installed
+Authlib plus runtime HTTPX, pinned by the backend lockfile. No live Google call is
+needed for ordinary automated tests.
+
+## What initiation implements
+
+After loading valid settings, `GET http://127.0.0.1:8000/auth/google/start` fetches
+Google's well-known discovery metadata over verified TLS (without credentials),
+checks fixed trusted endpoints/capabilities, and caches valid metadata for one
+hour. HTTP calls have five-second timeouts; document reads have a five-second
+window and 64 KiB cap; redirects and retries are disabled. Discovery failure
+returns a sanitized 503 with no cookie or authorization redirect.
+
+Authlib constructs the authorization-code request with only `openid email
+profile`, fresh state/nonce, and PKCE S256. The Google client secret is not
+required for this URL and is never sent to the browser. The implemented token exchange
+uses the secret and the original server-held PKCE verifier. Do not set
+`AUTHLIB_INSECURE_TRANSPORT`.
+
+A ten-minute opaque browser-binding cookie is HttpOnly, SameSite=Lax, Path=/,
+and has no Domain. HTTPS uses Secure and the `__Host-roam_oauth` name. Only
+loopback development/test can use the non-Secure `roam_oauth` cookie. The browser
+sees state, nonce, and the challenge in the Google redirect; only their matching
+record and the secret verifier stay in server memory. The cookie contains none
+of those flow fields and is not an authenticated application session.
+
+At most 256 live pending attempts exist per process. Starting again replaces
+that browser's earlier attempt; expired entries are pruned on initiation, and
+full capacity returns 429 without evicting other browsers. Restarting the process
+loses attempts. Do not use multiple workers for future callback testing until
+shared storage exists. This is a bounded development foundation, not production
+authentication or complete login throttling. See [ADR 0004](../adr/0004-oidc-initiation-foundation.md).
+
+## What the callback now implements (Milestone 4)
+
+The callback atomically consumes a valid, unexpired browser/state record before
+exchange. Duplicate/replayed callbacks, ambiguous parameters, wrong bindings,
+and malformed responses fail safely. Denied consent performs no provider or DB
+work and never reflects provider error descriptions. Any consumed failed flow
+requires restarting sign-in; code exchange is not automatically retried.
+
+Authlib constructs and parses the standard authorization-code exchange over the
+existing bounded synchronous HTTPX transport, with BasicAuth client credentials
+and the server-held PKCE verifier/original callback. joserfc verifies RS256
+signatures using only Google's trusted fixed JWKS endpoint. Authlib's
+`CodeIDToken` validates issuer, audience, expiry/issued-at/not-before, nonce,
+authorized party, and optional access-token hash with 30 seconds of skew. Then
+Roam requires the literal boolean `email_verified=true`, validates profile
+shape, normalizes email, and bounds the optional display name. Token contents
+are never used to select a user before verification.
+
+Only afterward does a short PostgreSQL transaction upsert by `(issuer, sub)`.
+Google's supported issuer forms are validated then normalized to the canonical
+HTTPS issuer. Existing revision `0001` already has the required unique constraint,
+so no migration is added. Equal emails do not merge different subjects;
+concurrent first logins return one UUID. Returning users keep their UUID,
+creation time, identity key, and trips. Only email/name/update time change;
+an absent optional name preserves the existing one.
+
+Milestone 5 supersedes the text-only callback: the same final transaction now
+also revokes any presented prior session and creates the new opaque session.
+Only after commit does the response set application/CSRF cookies, clear flow
+cookies, and return a fixed 303 to the configured app origin root. Google tokens
+are still never persisted. Apply additive revision `0002` for sessions; the
+existing user schema is unchanged. Use migrated `DATABASE_URL` for runtime;
+never use the test maintenance URL as the application's URL. See the
+[session runbook](application-sessions.md) and
+[ADR 0005](../adr/0005-google-callback-user-persistence.md).
+
+Uvicorn's access-log scope has callback query strings removed before handling.
+The middleware discards the privately parsed query afterward. Future Vite and
+production proxies must independently redact callback queries; do not log them
+or share callback URLs. Vite now proxies `/auth`; the later human-reported local
+sign-in/logout result is recorded in AUTH. Do not change the registered URI as
+a workaround or treat that result as a production verification. Session issuance,
+expiry, logout, and CSRF now have backend
+tests; throttling and shared OAuth flow state remain future work. Milestone 6
+adds React account controls and the proxy, verified only with synthetic fixtures.
+
+## Secret protection and future security gates
+
+The root ignore rules protect `.env`, `.env.*` (except `.env.example`),
+`credentials.json`, `service-account.json`, `client_secret*.json`, and
+`client_secrets*.json`, including those names in subdirectories. Prefer copying
+values directly rather than downloading a credential file. If you download one,
+keep it outside the repository; an arbitrarily renamed JSON file is not
+automatically protected. Ignore rules do not protect files already tracked.
+
+Safe checks from the repository root (they print paths/rules, not contents):
+
+```sh
+git check-ignore -v --no-index .env .env.local backend/.env frontend/.env.local client_secret_example.apps.googleusercontent.com.json credentials.json
+git ls-files -- .env .env.local 'client_secret*.json' 'client_secrets*.json' credentials.json
+```
+
+The second command should print nothing. Never print `.env`, use a bare command
+that dumps all environment variables, or paste downloaded JSON into a PR.
+If a real secret is exposed, rotate it in Google; merely deleting it from Git
+does not revoke it. Anyone with the secret must be treated as a trusted backend
+operator. Use a separate production client with HTTPS redirect registration.
+
+The loopback HTTP exception is for local development only. Application-session
+cookies are HttpOnly, host-only, SameSite=Lax and Secure for HTTPS; a distinct
+readable cookie delivers the session-bound CSRF value for an unsafe request
+header. No tokens are returned in JSON or stored in localStorage. See the
+[session security decision](../adr/0006-application-sessions.md).
+Google consent does not authorize access to
+another Roam user's trips. CI must use fakes without real Google credentials.
+
+The human reports Milestones 2–4 complete/reviewed. Milestone 4 verifies callback
+behavior with synthetic signed tokens and persistence tests against disposable
+PostgreSQL. Milestone 5 added tested backend sessions; later local sign-in/logout
+success is human-reported, while production authentication remains unverified. Current status and
+manual steps are maintained in [AUTH](../AUTH.md).

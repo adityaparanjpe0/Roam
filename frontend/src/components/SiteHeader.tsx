@@ -1,3 +1,5 @@
+import AuthControls from '../features/auth/AuthControls'
+
 function SiteHeader() {
   return (
     <header className="site-header page-width" id="top">
@@ -7,10 +9,13 @@ function SiteHeader() {
         </svg>
         roam<span className="wordmark-dot">.</span>
       </a>
-      <nav aria-label="Main navigation">
-        <a href="#the-idea">Planned features</a>
-        <a href="#about">About</a>
-      </nav>
+      <div className="site-header-actions">
+        <nav aria-label="Main navigation">
+          <a href="#the-idea">Planned features</a>
+          <a href="#about">About</a>
+        </nav>
+        <AuthControls />
+      </div>
     </header>
   )
 }
