@@ -9,7 +9,12 @@ from sqlalchemy.orm import Session
 from app.core.config import DatabaseConfigurationError
 from app.db.models.trip import Trip
 from app.db.session import get_engine
-from app.db.trip_repository import get_owned_trip, has_owned_trip_days, list_owned_trips
+from app.db.trip_repository import (
+    get_owned_trip,
+    has_locked_owned_activities,
+    has_owned_trip_days,
+    list_owned_trips,
+)
 from app.schemas.trips import (
     TripCreate,
     TripCursor,
@@ -41,6 +46,10 @@ class TripHasItinerary(ValueError):
 
 class TripInvalidUpdate(ValueError):
     """Merged data failed validation; never expose stored/request values."""
+
+
+class TripLockedActivity(ValueError):
+    """Deleting the trip would also delete a protected activity."""
 
 
 def create_trip(owner_id: UUID, data: TripCreate) -> TripResponse:
@@ -144,5 +153,26 @@ def update_trip(owner_id: UUID, trip_id: UUID, data: TripPatch) -> TripResponse:
             db.flush()
             result = TripResponse.model_validate(trip)
         return result
+    except (DatabaseConfigurationError, SQLAlchemyError):
+        raise TripStorageUnavailable from None
+
+
+def delete_trip(owner_id: UUID, trip_id: UUID, base_version: int) -> None:
+    try:
+        with Session(get_engine()) as db, db.begin():
+            trip = get_owned_trip(
+                db, owner_id=owner_id, trip_id=trip_id, for_update=True
+            )
+            if trip is None:
+                raise TripNotFound
+            if trip.version != base_version:
+                raise TripVersionConflict(trip.version)
+            # All future itinerary writers must acquire this parent lock first.
+            if has_locked_owned_activities(db, owner_id=owner_id, trip_id=trip_id):
+                raise TripLockedActivity
+            # Unloaded child collections use the existing PostgreSQL FK cascades.
+            db.delete(trip)
+            db.flush()
+        # Returning normally means the commit, not merely the flush, succeeded.
     except (DatabaseConfigurationError, SQLAlchemyError):
         raise TripStorageUnavailable from None

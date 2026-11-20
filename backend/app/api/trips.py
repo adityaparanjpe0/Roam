@@ -1,9 +1,10 @@
 """Authenticated trip metadata routes; never trust a client-supplied owner."""
 
+import re
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Header, Query, Request, Response
 
 from app.api.errors import APIError
 from app.api.sessions import get_current_user
@@ -38,6 +39,62 @@ def create(data: TripCreate, user: UserDependency, response: Response) -> TripRe
     response.headers["Location"] = f"/api/v1/trips/{result.id}"
     response.headers["Cache-Control"] = "no-store"
     return result
+
+
+@router.delete(
+    "/{trip_id}",
+    status_code=204,
+    response_class=Response,
+    responses={status: {"model": ErrorResponse} for status in (404, 409)},
+)
+def delete(
+    trip_id: UUID,
+    user: UserDependency,
+    request: Request,
+    if_match: Annotated[
+        str,
+        Header(
+            alias="If-Match",
+            max_length=12,
+            description='One quoted trip version, e.g. "2".',
+        ),
+    ],
+) -> Response:
+    """Permanently delete an owned, version-matched trip without locked activities."""
+    match = re.fullmatch(r'"([1-9][0-9]{0,9})"', if_match)
+    if (
+        len(request.headers.getlist("if-match")) != 1
+        or match is None
+        or int(match[1]) > 2_147_483_647
+    ):
+        raise APIError(
+            422,
+            "VALIDATION_FAILED",
+            "Check the request fields.",
+            {"If-Match": "Use one quoted positive trip version."},
+        )
+    try:
+        trips.delete_trip(user.id, trip_id, int(match[1]))
+    except trips.TripNotFound:
+        raise APIError(404, "RESOURCE_NOT_FOUND", "Trip not found.") from None
+    except trips.TripVersionConflict as error:
+        raise APIError(
+            409,
+            "VERSION_CONFLICT",
+            "This trip changed. Reload and try again.",
+            {"current_version": error.current_version},
+        ) from None
+    except trips.TripLockedActivity:
+        raise APIError(
+            409,
+            "LOCKED_ACTIVITY",
+            "This trip contains a locked activity and cannot be deleted.",
+        ) from None
+    except trips.TripStorageUnavailable:
+        raise APIError(
+            503, "DATABASE_UNAVAILABLE", "Cannot delete trip right now."
+        ) from None
+    return Response(status_code=204, headers={"Cache-Control": "no-store"})
 
 
 @router.get("", response_model=TripListResponse)

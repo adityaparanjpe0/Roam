@@ -46,17 +46,22 @@ def test_auth_error_wire_contract_is_preserved() -> None:
     }
 
 
-def test_trip_openapi_exposes_milestone_two_without_delete() -> None:
+def test_trip_openapi_exposes_complete_crud_contract() -> None:
     document = app.openapi()
     collection = document["paths"]["/api/v1/trips"]
     detail = document["paths"]["/api/v1/trips/{trip_id}"]
-    assert set(collection) == {"get", "post"} and set(detail) == {"get", "patch"}
+    assert set(collection) == {"get", "post"} and set(detail) == {
+        "get",
+        "patch",
+        "delete",
+    }
     assert "201" in collection["post"]["responses"]
     for operation in [
         collection["post"],
         collection["get"],
         detail["get"],
         detail["patch"],
+        detail["delete"],
     ]:
         for status in ["401", "403", "422", "503"]:
             assert operation["responses"][status]["content"]["application/json"][
@@ -64,6 +69,11 @@ def test_trip_openapi_exposes_milestone_two_without_delete() -> None:
             ]["$ref"].endswith("/ErrorResponse")
     assert "404" in detail["get"]["responses"]
     assert "409" in detail["patch"]["responses"]
+    assert "404" in detail["delete"]["responses"]
+    assert "409" in detail["delete"]["responses"]
+    assert "content" not in detail["delete"]["responses"]["204"]
+    header = next(p for p in detail["delete"]["parameters"] if p["in"] == "header")
+    assert header["name"] == "If-Match" and header["required"] is True
     patch = document["components"]["schemas"]["TripPatch"]
     assert patch["required"] == ["base_version"]
     assert patch["properties"]["title"]["type"] == "string"
@@ -148,6 +158,7 @@ def test_storage_outage_is_safe(
         ("get", "/api/v1/trips/00000000-0000-0000-0000-000000000001"),
         ("post", "/api/v1/trips"),
         ("patch", "/api/v1/trips/00000000-0000-0000-0000-000000000001"),
+        ("delete", "/api/v1/trips/00000000-0000-0000-0000-000000000001"),
     ],
 )
 def test_all_trip_operations_require_authentication(

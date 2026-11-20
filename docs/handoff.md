@@ -1,13 +1,13 @@
 # Roam MVP handoff
 
-> Status: local main includes the frontend/form, PostgreSQL/ORM/migrations and OAuth/session foundations at ff53069. Trip CRUD Milestones 1–2 implement create/list/detail/PATCH on feat/trip-crud-api; they are not claimed merged. Deployment remains planned. See [memory.md](memory.md) for evidence.
+> Status: local main includes the frontend/form, PostgreSQL/ORM/migrations and OAuth/session foundations at ff53069. Trip CRUD Milestones 1–3 implement create/list/detail/PATCH/protected DELETE on feat/trip-crud-api; they are not claimed merged. Deployment remains planned. See [memory.md](memory.md) for evidence.
 
 PR #7 Milestones 1–3 add a connection/session foundation, four
 ORM models, and an initial Alembic migration on `feat/database-foundation`.
 See [ADR 0001](adr/0001-database-foundation.md) for the deliberately partial
 schema. Backend CI now configures disposable PostgreSQL/migration tests;
-hosted verification and teammate schema review remain required. Business APIs
-remain future work.
+hosted verification and teammate schema review remain required. That foundation
+did not expose business APIs; the current CRUD branch is described below.
 This does not change the MVP scope or claim production deployment.
 
 PR #8 Milestone 5 adds client-only trip validation and normalized local drafts.
@@ -192,11 +192,11 @@ unverified, and Milestone 6 has not begun.
 
 ### Phase 1 — Data model, migrations, and trip CRUD
 
-Trip CRUD Milestones 1–2 add authenticated create/list/detail/PATCH endpoints with
+Trip CRUD Milestones 1–3 add authenticated create/list/detail/PATCH/DELETE endpoints with
 owner-scoped SQL, existing CSRF/session validation, strict request schemas,
 bounded pagination and safe transaction errors. See [the contract](trip-api.md).
 PATCH now enforces versions, merged validation and title-only edits when days
-exist. Protected DELETE remains a separate review milestone;
+exist. DELETE checks If-Match and locked activities under the same parent lock;
 the local frontend form is not wired to persistence. Existing schema 0002 is
 reused; no new migration or provider feature is added.
 

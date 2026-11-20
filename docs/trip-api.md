@@ -1,7 +1,7 @@
-# Trip metadata API — Milestones 1–2
+# Trip metadata API — Milestones 1–3
 
-Implemented on `feat/trip-crud-api`: create, list, retrieve, and partially update
-an owned trip. DELETE, itinerary endpoints and frontend save integration remain planned.
+Implemented on `feat/trip-crud-api`: create, list, retrieve, partially update,
+and safely delete an owned trip. Itinerary endpoints and frontend saving remain planned.
 See [ADR 0009](adr/0009-trip-crud-api.md) for decisions and rollback/security limits.
 
 ## Prerequisites and data flow
@@ -24,8 +24,9 @@ the owner filter authorizes which trips that user can access.
 | GET | `/api/v1/trips?limit=20&cursor=…` | 200, summaries and nullable next cursor |
 | GET | `/api/v1/trips/{trip_id}` | 200, complete metadata |
 | PATCH | `/api/v1/trips/{trip_id}` | 200, version-checked updated metadata |
+| DELETE | `/api/v1/trips/{trip_id}` | 204, empty body after committed deletion |
 
-All require the Roam session cookie. POST/PATCH also require the matching readable
+All require the Roam session cookie. POST/PATCH/DELETE also require the matching readable
 CSRF cookie and `X-CSRF-Token`, and a trusted browser Origin/Referer. Session
 cookie names remain `roam_session` / `roam_csrf` for local HTTP and `__Host-`
 prefixed on HTTPS. Cookies are sent by the browser, not copied into request JSON.
@@ -166,6 +167,33 @@ SQL failures return sanitized 503; failed validation/conflicts/commits do not
 persist values, timestamps or version changes. Authentication's own last-seen
 transaction remains separate, as documented in the ADR.
 
+### Permanent deletion
+
+```http
+DELETE /api/v1/trips/95bc33a8-2238-4467-9660-cc60f760826d
+If-Match: "2"
+X-CSRF-Token: <session-bound value>
+```
+
+Send no JSON body. `If-Match` is required: exactly one quoted decimal version
+between 1 and 2,147,483,647, without leading zeros. Missing, duplicate, bare,
+weak (`W/"2"`), wildcard and multi-value headers return 422. Use the version from
+the last read; this API uses its documented 409 version-conflict envelope rather
+than HTTP 412. There is no ETag response or general HTTP conditional-request support.
+
+Within one transaction, lock the owner-filtered trip, check the version, check
+for locked activities, then delete. Missing/other-owner trips return the same
+404 before version disclosure. An owned stale version returns 409 VERSION_CONFLICT.
+Any locked activity returns 409 LOCKED_ACTIVITY; no trip, day or activity changes.
+There is no force-delete or unlock endpoint in this PR. Future itinerary/lock
+writers must acquire the parent trip lock and enforce its version before mutation.
+
+For an allowed deletion, existing PostgreSQL foreign keys cascade to the trip's
+days and activities. Users and other trips survive. This is permanent removal,
+not archival. Success is 204 with no JSON body and `Cache-Control: no-store`,
+only after commit. SQL/commit failures return safe 503 and roll back all cascades.
+A repeated DELETE returns 404; it does not recreate the resource or repeat work.
+
 ### Failures
 
 | HTTP | Code | Meaning |
@@ -173,9 +201,10 @@ transaction remains separate, as documented in the ADR.
 | 401 | `AUTHENTICATION_REQUIRED` | Missing/invalid/expired/revoked session |
 | 403 | `CSRF_FAILED` | Unsafe request lacks valid session-bound proof/origin |
 | 404 | `RESOURCE_NOT_FOUND` | Missing or other-owner trip, identical public behavior |
-| 422 | `VALIDATION_FAILED` | Invalid body, UUID, cursor or pagination limit |
-| 409 | `VERSION_CONFLICT` | Supplied update version is stale; details contains current_version |
+| 422 | `VALIDATION_FAILED` | Invalid body, UUID, cursor, limit or If-Match header |
+| 409 | `VERSION_CONFLICT` | Supplied mutation version is stale; details contains current_version |
 | 409 | `TRIP_HAS_ITINERARY` | Non-title fields supplied for a trip with day records |
+| 409 | `LOCKED_ACTIVITY` | Deletion would remove a protected activity |
 | 503 | `DATABASE_UNAVAILABLE` | Authentication storage or trip persistence unavailable |
 | 503 | `AUTH_NOT_CONFIGURED` | Existing authentication-origin settings invalid |
 
@@ -201,8 +230,10 @@ From `backend/`, run focused tests:
 ```sh
 uv run --locked pytest tests/test_trip_schemas.py tests/test_trip_api_errors.py
 uv run --locked pytest tests/test_trip_patch_schemas.py
+uv run --locked pytest tests/test_trip_delete_api.py
 uv run --env-file ../.env --locked pytest --run-db-tests tests/integration/test_trip_crud_api.py
 uv run --env-file ../.env --locked pytest --run-db-tests tests/integration/test_trip_patch_api.py
+uv run --env-file ../.env --locked pytest --run-db-tests tests/integration/test_trip_delete_api.py
 ```
 
 The database command requires an explicit local maintenance
@@ -246,5 +277,11 @@ use the same cookie/header approach with `method: 'PATCH'`, the returned trip ID
 and JSON such as `{base_version: 1, title: 'Updated plan'}`. Expect 200/version 2;
 resending version 1 must return 409 without overwriting. Test another account's
 ID for 404. These checks mutate development records; use the isolated automated
-tests for rollback, concurrency and adversarial fixtures instead. Protected
-DELETE remains the next milestone; no deletion endpoint is implemented yet.
+tests for rollback, concurrency and adversarial fixtures instead.
+
+Only if you intentionally want to permanently remove a synthetic development
+trip, use `method: 'DELETE'`, no body, and headers containing the same CSRF proof
+plus `'If-Match': '"2"'` (replace 2 with its current version). Expect 204 with an
+empty body; do not call `response.json()` on it. Verify a subsequent GET returns
+404. Use automated scratch-database tests for locked activities/cascades; never
+seed or delete normal development records merely to run destructive tests.

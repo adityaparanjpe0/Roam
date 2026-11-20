@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
+from app.db.models.activity import Activity
 from app.db.models.trip import Trip
 from app.db.models.trip_day import TripDay
 
@@ -29,6 +30,21 @@ def has_owned_trip_days(db: Session, *, owner_id: UUID, trip_id: UUID) -> bool:
             select(TripDay.id)
             .join(Trip, Trip.id == TripDay.trip_id)
             .where(Trip.id == trip_id, Trip.owner_id == owner_id)
+            .limit(1)
+        )
+        is not None
+    )
+
+
+def has_locked_owned_activities(db: Session, *, owner_id: UUID, trip_id: UUID) -> bool:
+    return (
+        db.scalar(
+            select(Activity.id)
+            .join(TripDay, TripDay.id == Activity.trip_day_id)
+            .join(Trip, Trip.id == TripDay.trip_id)
+            .where(
+                Trip.id == trip_id, Trip.owner_id == owner_id, Activity.locked.is_(True)
+            )
             .limit(1)
         )
         is not None

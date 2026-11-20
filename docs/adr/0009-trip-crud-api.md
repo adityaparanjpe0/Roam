@@ -1,7 +1,7 @@
 # ADR 0009: Owner-scoped trip metadata API
 
 - Date: 2026-11-20
-- Status: accepted plan; Milestones 1–2 implemented on `feat/trip-crud-api`
+- Status: accepted; Milestones 1–3 implemented on `feat/trip-crud-api`
 - Owner: user with Codex assistance; teammate review pending
 
 ## Problem and decision
@@ -13,12 +13,12 @@ session dependency, SQLAlchemy engine and small service/repository modules.
 This matches the existing architecture without a generic repository framework.
 
 Milestone 1 implements POST plus collection/detail GET; Milestone 2 adds PATCH.
-DELETE remains a separate approved milestone. There is no frontend wiring,
+Milestone 3 adds protected DELETE. There is no frontend wiring,
 itinerary generation, provider request, schema migration, or new dependency.
 
 ## Authentication and ownership
 
-Reuse `get_current_user`: it validates the opaque Roam session, and POST also
+Reuse `get_current_user`: it validates the opaque Roam session, and all writes also
 requires the session-bound CSRF cookie/header and trusted Origin/Referer. A
 client's `owner_id` is forbidden input. New trips use the verified user's UUID.
 Every list/detail query filters by owner; detail additionally filters by trip ID.
@@ -120,10 +120,26 @@ or silently alter existing activities. The trip title is independent of protecte
 activity titles. A title edit preserves days and locked activities exactly.
 This restriction is deliberately conservative until itinerary editing exists.
 
-## Remaining milestone
+## Milestone 3: protected permanent deletion
 
-DELETE will require a version and reject removal of locked activities. It is not
-implemented here. Repeated POSTs intentionally create distinct UUIDs; idempotency
+DELETE requires exactly one `If-Match` header containing a quoted positive
+PostgreSQL integer version (no leading zeros, weak tags, wildcard or list).
+Malformed/missing/duplicate headers return 422. This is a trip-version contract,
+not general HTTP ETag negotiation: stale versions use the existing 409
+VERSION_CONFLICT envelope, not 412. Owner lookup precedes version disclosure.
+
+Under the same parent SELECT FOR UPDATE lock as PATCH, compare version, reject
+any locked activity with 409 LOCKED_ACTIVITY, then delete and commit. Existing
+foreign-key cascades remove days/activities; parent users and other trips remain.
+The unloaded ORM relationships use passive database deletes. Return an empty
+204/no-store only after commit. A failed commit rolls back cascades too.
+Repeated deletion gives the non-enumerating 404. There is no force-delete,
+archival shortcut or unlock operation. Future activity writers must lock the
+parent trip and enforce its version first, including separate unlock operations.
+Raw database writes can bypass application guards; they are not an authorized
+application mutation path. Tests cover DELETE/DELETE and DELETE/PATCH races.
+
+Repeated POSTs intentionally create distinct UUIDs; idempotency
 keys remain required only for the planned generation/replan operations.
 
 ## Alternatives and verification

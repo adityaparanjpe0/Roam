@@ -5,11 +5,14 @@
 
 ## 1. Working agreement
 
-Trip CRUD Milestones 1–2 add authenticated create/list/detail and version-checked
-PATCH under `/api/v1/trips`; DELETE and frontend saving remain future milestones.
+Trip CRUD Milestones 1–3 add authenticated create/list/detail, version-checked
+PATCH and protected DELETE under `/api/v1/trips`; frontend saving remains planned.
 PATCH requires CSRF plus `base_version`; omitted fields stay unchanged, null only
 clears constraints, and trips with day records allow title-only updates. Keep
 owner/version checks and the write within one transaction/owned-row lock.
+DELETE requires one quoted positive version in `If-Match`, rejects locked
+activities, and returns empty 204 only after commit. Future activity/lock writers
+must acquire the parent trip lock and enforce its version before mutation.
 Follow the [trip API guide](trip-api.md) for strict input rules, ownership/CSRF,
 cursor pagination, and safe testing. Use the existing opt-in PostgreSQL scratch
 fixtures, never the development database, for destructive/rollback tests. The

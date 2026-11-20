@@ -73,6 +73,7 @@ async def validation_error_response(
         "limit",
         "trip_id",
         "base_version",
+        "If-Match",
     }
     messages = {
         "missing": "This field is required.",
