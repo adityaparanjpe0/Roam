@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { startGoogleSignIn } from '../../api/auth'
 import { useAuth } from './authContext'
 import './AuthControls.css'
@@ -7,6 +7,7 @@ function AuthControls() {
   const { state, signingOut, signOut, retry } = useAuth()
   const [leaving, setLeaving] = useState(false)
   const [navigationError, setNavigationError] = useState<string | null>(null)
+  const [hintDismissed, setHintDismissed] = useState(false)
   const noteId = useId()
   const actionFocus = useRef(false)
   const signInButton = useRef<HTMLButtonElement>(null)
@@ -14,6 +15,15 @@ function AuthControls() {
   const retryButton = useRef<HTMLButtonElement>(null)
   const displayName = state.status === 'authenticated' ? state.user.display_name?.trim() || state.user.email : ''
   const initials = displayName.split(/\s+/).slice(0, 2).map((part) => Array.from(part)[0]).join('').toUpperCase()
+
+  // Escape must dismiss a pointer-opened hint even when focus is elsewhere.
+  useEffect(() => {
+    const dismissHint = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setHintDismissed(true)
+    }
+    window.addEventListener('keydown', dismissHint)
+    return () => window.removeEventListener('keydown', dismissHint)
+  }, [])
 
   // Finish focus handling during commit so an older passive effect cannot
   // consume the focus request from a newly clicked retry/sign-out action.
@@ -38,7 +48,7 @@ function AuthControls() {
   }
 
   return (
-    <section className={`auth-controls${state.status === 'authenticated' ? ' auth-controls--authenticated' : ''}`} aria-label="Account" aria-busy={state.status === 'loading' || signingOut || leaving}>
+    <section className={`auth-controls${state.status === 'authenticated' ? ' auth-controls--authenticated' : ''}${hintDismissed ? ' auth-controls--hint-dismissed' : ''}`} aria-label="Account" aria-busy={state.status === 'loading' || signingOut || leaving} onMouseEnter={() => setHintDismissed(false)}>
       {state.status === 'loading' && <p role="status">Checking sign-in…</p>}
       {state.status === 'authenticated' && <>
         <div className="auth-profile">
@@ -48,27 +58,21 @@ function AuthControls() {
           </p>
         </div>
         <div className="auth-actions">
-          <button className="auth-refresh" type="button" aria-label="Check session" title="Check session" onClick={retryCheck} disabled={signingOut}>
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 7v5h-5M4 17v-5h5" />
-              <path d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17" />
-            </svg>
-          </button>
           <button ref={signOutButton} className="auth-sign-out" type="button" onClick={requestSignOut} disabled={signingOut}>{signingOut ? 'Signing out…' : 'Sign out'}</button>
         </div>
       </>}
       {state.status === 'error' && <>
-        <p role="alert">{state.message}</p>
-        <button ref={retryButton} type="button" onClick={retryCheck}>Retry sign-in check</button>
+        <p role="alert" className="auth-feedback">{state.message}</p>
+        <button ref={retryButton} type="button" aria-label="Retry sign-in check" onClick={retryCheck}>Retry</button>
       </>}
-      {state.status === 'unauthenticated' && state.notice && <p role="status">{state.notice}</p>}
+      {state.status === 'unauthenticated' && state.notice && <p role="status" className="auth-sr-only">{state.notice}</p>}
       {(state.status === 'unauthenticated' || state.status === 'error') && <>
-        <button ref={signInButton} className="auth-sign-in" type="button" onClick={signIn} disabled={leaving} aria-describedby={noteId}>
+        <button ref={signInButton} className="auth-sign-in" type="button" onFocus={() => setHintDismissed(false)} onClick={signIn} disabled={leaving} aria-describedby={noteId}>
           {leaving ? 'Opening sign-in…' : 'Sign in with Google'}
         </button>
         <p className="auth-help" id={noteId}>Signing in leaves this page and clears unsaved trip details.</p>
       </>}
-      {navigationError && <p role="alert">{navigationError}</p>}
+      {navigationError && <p role="alert" className="auth-feedback">{navigationError}</p>}
     </section>
   )
 }

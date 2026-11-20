@@ -51,14 +51,13 @@ test('a validated profile is rendered literally and email is the missing-name fa
   await waitFor(() => expect(account().getByRole('status')).toHaveTextContent(user.email))
 })
 
-test('compact account controls retain accessible identity and session refresh', async () => {
+test('compact account controls retain identity and automatic refresh without a manual session button', async () => {
   const check = vi.spyOn(auth, 'getCurrentUser').mockResolvedValue(user)
   renderAuth()
   await account().findByRole('button', { name: 'Sign out' })
   expect(account().getByRole('status')).toHaveTextContent('Signed in as Student')
-  const refresh = account().getByRole('button', { name: 'Check session' })
-  expect(refresh).toBeEnabled()
-  fireEvent.click(refresh)
+  expect(account().queryByRole('button', { name: 'Check session' })).not.toBeInTheDocument()
+  fireEvent(window, new Event('focus'))
   await waitFor(() => expect(check).toHaveBeenCalledTimes(2))
   expect(account().getByRole('status')).toHaveTextContent('Signed in as Student')
 })

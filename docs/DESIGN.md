@@ -725,10 +725,18 @@ authorizes a resource. Vite proxy errors are sanitized and DEBUG serving is
 rejected because debug logs bypass that sanitizer. See
 [ADR 0007](adr/0007-react-authentication.md) and [frontend auth](frontend-auth.md).
 
-Planned UX cleanup (human decision, 2026-11-19): remove the routine "Check session"
-navbar control; users should not need to verify sessions manually. Automatic
-bootstrap/focus/visibility/reconnect checks, error-state retry, /me and backend
-validation remain. The control is still present until that future UI change.
+Navbar overhaul (2026-11-19, `feat/navbar-overhaul`): the routine "Check session"
+control is removed. Automatic bootstrap/focus/visibility/reconnect checks,
+error-state retry, /me and backend validation remain. The compact sticky header
+offers three section links with active weight/underline and one account group.
+Below 56rem a labeled Menu button opens a native modal side drawer; Escape/Close
+return focus to the trigger, while navigation moves focus to the target section.
+Scroll padding clears the header. Draft-loss help stays associated with sign-in:
+desktop focus/hover reveals a dismissible hint, and mobile shows it in the drawer.
+Signed-out notices remain live announcements without adding a permanent header
+row. Auth transport, session policy and trip state are unchanged. Navigation uses
+installed Avenir Next/Trebuchet MS fonts, with the existing serif wordmark;
+no font downloads or new runtime dependency are introduced.
 
 - `HttpOnly`, `Secure` except localhost, `SameSite=Lax`, narrow path/domain, finite idle and absolute expiry.
 - Rotate on login and meaningful security changes; revoke on logout.

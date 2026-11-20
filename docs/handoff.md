@@ -207,13 +207,15 @@ unverified, and Milestone 6 has not begun.
 
 ### Phase 2 — Authentication and authorization
 
-**Planned UX cleanup — not yet implemented**
+**Navbar UX cleanup — implemented on `feat/navbar-overhaul`**
 
-- [ ] Remove the manual "Check session" navbar button; session verification is
+- [x] Remove the manual "Check session" navbar button; session verification is
   automatic and should not be a routine user task (human decision, 2026-11-19).
   Retain automatic bootstrap/focus/visibility/reconnect checks, backend session
-  enforcement and recoverable error-state retry. Update UI/accessibility tests
-  and manual instructions with the eventual removal. No PR assignment is implied.
+  enforcement and recoverable error-state retry. The compact sticky header now
+  has section tracking, a sign-in action, and a native mobile menu drawer;
+  UI/accessibility tests and manual instructions are updated. Teammate review
+  and hosted verification remain required.
 
 PR #9 Milestone 3 now provides login initiation only at `/auth/google/start`,
 typed auth settings, and bounded Google discovery/PKCE generation. Callback,

@@ -47,11 +47,11 @@ function LandingPage() {
         </figure>
       </section>
 
-      <section className="trip-creation page-width" id="create-trip" aria-label="Create a trip">
+      <section className="trip-creation page-width" id="create-trip" tabIndex={-1} aria-label="Create a trip">
         <TripCreation />
       </section>
 
-      <section className="idea-section page-width" id="the-idea" aria-labelledby="idea-heading">
+      <section className="idea-section page-width" id="the-idea" tabIndex={-1} aria-labelledby="idea-heading">
         <div className="section-intro">
           <h2 id="idea-heading">One place to shape your trip.</h2>
           <p>These are the features we’re working toward.</p>
@@ -66,7 +66,7 @@ function LandingPage() {
         </div>
       </section>
 
-      <section className="about-section page-width" id="about" aria-labelledby="about-heading">
+      <section className="about-section page-width" id="about" tabIndex={-1} aria-labelledby="about-heading">
         <div>
           <h2 id="about-heading">Built by two students who want to make trip planning simpler.</h2>
         </div>

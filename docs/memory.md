@@ -8,6 +8,39 @@
 
 ### Verified facts
 
+- 2026-11-19 navbar overhaul, owner: user with Codex assistance, on
+  `feat/navbar-overhaul`. Replaced the stacked account block with a compact
+  sticky header: three section links, active weight/rust underline, a single
+  sign-in action, and named Avenir Next/Trebuchet MS navigation typography.
+  The serif home wordmark remains. Mobile Menu opens a native modal side drawer
+  below 56rem; Close/Escape restore trigger focus, section navigation focuses the
+  destination, and a non-sticky top anchor preserves home/back-to-top behavior.
+- The earlier planned manual "Check session" removal is now implemented.
+  Bootstrap/focus/visibility/reconnect checks and error-state retry remain;
+  provider/session APIs and local trip state are unchanged. Signed-out notices
+  remain screen-reader live announcements. Draft-loss help stays attached to
+  sign-in, appears on desktop hover/focus, and is inline in the mobile drawer.
+  Browser testing caught Escape failing for a mouse-opened hint while focus was
+  elsewhere; the window-level dismissal handler fixed that reproduced case.
+- Verification: lint, TypeScript, production build, and **210 tests in 12 files**
+  passed. Four new header tests cover current anchors, native-dialog controls,
+  section focus, and resize dismissal. The refresh regression now exercises
+  automatic focus-based checking. Editor diagnostics and diff whitespace pass.
+  Independent headless Chrome used synthetic signed-out/long-name/error fixtures:
+  all 18 combinations at 320/390/768/896/1024/1440px had no horizontal overflow
+  and an 81px header. Mobile links/actions measured 48–56px. Keyboard skip-link,
+  modal background inertness, Escape focus restoration, section focus/clearance,
+  home navigation, CTA darkening and the hint-Escape regression passed. The trip
+  anchor landed at about 104px below an 81px header. Desktop/mobile captures
+  were visually inspected. New normal-state label/background contrast pairs
+  measured 5.53:1–10.71:1; this is not a full WCAG certification.
+- Verification tools ran in disposable directories/browser contexts and were
+  removed. No project dependency, downloaded font, backend, environment file,
+  credential, database, API, or session-policy change. No live Google/login/logout
+  action was used for UI verification. Changes are uncommitted; hosted CI and
+  teammate review remain pending. The dated older navbar/planned-cleanup notes
+  below are superseded by this implementation.
+
 - 2026-11-19 pre-commit focus audit, owner: user with Codex assistance.
   History review traced the passive focus effect to f8f94cb; navbar commit
   a3602b6 did not change it, and 7b1e929 changed only assertions. Against the

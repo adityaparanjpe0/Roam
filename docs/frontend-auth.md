@@ -1,10 +1,12 @@
 # React authentication — PR #9 Milestone 6
 
 The header now shows checking, signed-in, signed-out, or recoverable-error state.
-Signed-in controls use an inline initials badge, truncated display name, a
-session-check icon labelled "Check session", and a navigation-style sign-out
-button. Full identity text remains accessible, with visible focus and a responsive
-layout for narrow screens. This presentation change does not alter authentication.
+The sticky header uses an inline sign-in action or initials/name and sign-out.
+Routine signed-out notices are live announcements rather than permanent rows.
+Full identity text remains accessible. Desktop sign-in help appears on hover/
+focus and can be dismissed with Escape; mobile help stays visible inside the
+native modal drawer. Error messages and retry remain available. This presentation
+change does not alter authentication.
 Only backend current-user data establishes sign-in. The PR #8 form, validation,
 review, and edit screens stay local/unsaved. Auth alone never saves trips or
 authorizes a resource. No trip CRUD or roles are added.
@@ -62,18 +64,22 @@ Sign-in navigation clears unsaved details, disclosed on the control. Logout,
 expiry, and retries keep the form mounted. No draft auto-save is introduced.
 Profile text is rendered literally; no avatar/provider URLs or raw HTML are used.
 
-## Planned UI cleanup: remove manual session checking
+## Compact navigation and automatic session checking
 
-Human decision, 2026-11-19: remove the navbar's "Check session" button in a future
-UI change. Users should not need to manage or manually verify their session.
-The button is still implemented today; this note does not claim its removal.
+Implemented on `feat/navbar-overhaul`, 2026-11-19: the manual "Check session"
+button is removed, following the earlier human decision. Users do not need to
+manage or manually verify their session.
 
 Keep automatic current-user checks on mount, focus, reconnect and visible-tab
 return, along with backend validation on protected requests. Preserve the
 "Retry sign-in check" action for recoverable error states. Do not add polling,
 change expiration rules or remove GET /api/auth/me as part of this cleanup.
-When implementing removal, update the component/accessibility tests and manual
-instructions to use automatic recovery or the error-state retry action.
+Component tests now use focus-triggered automatic checking; manual verification
+should use automatic recovery or error-state retry. Three section links stay
+within the five-item cap, so no extra desktop overflow control is needed. Below
+56rem, Menu opens a native modal drawer with 48px minimum actions, scroll locking,
+Escape/Close, and focus return. Selecting a section closes the drawer and focuses
+that section. Native browser modal behavior supplies background inertness.
 
 ## Local setup
 

@@ -103,8 +103,9 @@ strings or credential contents. Liveness success alone is not login success.
 ## Frontend failure handling
 
 - [ ] After finishing any Google flow, keep Vite running and stop only your local
-  FastAPI process with Ctrl+C. Click Check session if signed in, or reload the
-  app. Expect an accessible auth error/retry, not invented login/logout success.
+  FastAPI process with Ctrl+C. Switch away from the tab and return, or reload the
+  app, to trigger automatic checking. Expect an accessible auth error/retry, not
+  invented login/logout success. On mobile, open Menu to reach account recovery.
 - [ ] Restart FastAPI with the documented environment-file command. Click Retry
   sign-in check. Confirm real /me determines the recovered state; a persisted
   valid session can recover without Google, an ended session requires sign-in.
