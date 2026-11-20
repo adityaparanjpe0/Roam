@@ -46,18 +46,31 @@ def test_auth_error_wire_contract_is_preserved() -> None:
     }
 
 
-def test_trip_openapi_exposes_only_milestone_one_operations() -> None:
+def test_trip_openapi_exposes_milestone_two_without_delete() -> None:
     document = app.openapi()
     collection = document["paths"]["/api/v1/trips"]
     detail = document["paths"]["/api/v1/trips/{trip_id}"]
-    assert set(collection) == {"get", "post"} and set(detail) == {"get"}
+    assert set(collection) == {"get", "post"} and set(detail) == {"get", "patch"}
     assert "201" in collection["post"]["responses"]
-    for operation in [collection["post"], collection["get"], detail["get"]]:
+    for operation in [
+        collection["post"],
+        collection["get"],
+        detail["get"],
+        detail["patch"],
+    ]:
         for status in ["401", "403", "422", "503"]:
             assert operation["responses"][status]["content"]["application/json"][
                 "schema"
             ]["$ref"].endswith("/ErrorResponse")
     assert "404" in detail["get"]["responses"]
+    assert "409" in detail["patch"]["responses"]
+    patch = document["components"]["schemas"]["TripPatch"]
+    assert patch["required"] == ["base_version"]
+    assert patch["properties"]["title"]["type"] == "string"
+    assert "default" not in patch["properties"]["title"]
+    assert {
+        part["type"] for part in patch["properties"]["free_text_constraints"]["anyOf"]
+    } == {"string", "null"}
     assert (
         document["components"]["schemas"]["TripCreate"]["additionalProperties"] is False
     )
@@ -134,6 +147,7 @@ def test_storage_outage_is_safe(
         ("get", "/api/v1/trips"),
         ("get", "/api/v1/trips/00000000-0000-0000-0000-000000000001"),
         ("post", "/api/v1/trips"),
+        ("patch", "/api/v1/trips/00000000-0000-0000-0000-000000000001"),
     ],
 )
 def test_all_trip_operations_require_authentication(
@@ -144,9 +158,14 @@ def test_all_trip_operations_require_authentication(
     get_session_settings.cache_clear()
     try:
         with TestClient(app) as client:
-            response = client.request(
-                method, path, json=trip_payload() if method == "post" else None
+            body = (
+                trip_payload()
+                if method == "post"
+                else {"base_version": 1, "title": "New"}
+                if method == "patch"
+                else None
             )
+            response = client.request(method, path, json=body)
         assert response.status_code == 401
         assert response.json()["error"]["code"] == "AUTHENTICATION_REQUIRED"
     finally:

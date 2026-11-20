@@ -72,6 +72,7 @@ async def validation_error_response(
         "cursor",
         "limit",
         "trip_id",
+        "base_version",
     }
     messages = {
         "missing": "This field is required.",

@@ -1,7 +1,7 @@
 # ADR 0009: Owner-scoped trip metadata API
 
 - Date: 2026-11-20
-- Status: accepted plan; Milestone 1 implemented on `feat/trip-crud-api`
+- Status: accepted plan; Milestones 1–2 implemented on `feat/trip-crud-api`
 - Owner: user with Codex assistance; teammate review pending
 
 ## Problem and decision
@@ -12,8 +12,8 @@ REST operations under `/api/v1/trips` using the existing PostgreSQL schema,
 session dependency, SQLAlchemy engine and small service/repository modules.
 This matches the existing architecture without a generic repository framework.
 
-Milestone 1 implements POST plus collection/detail GET. PATCH and DELETE remain
-unimplemented until separately approved milestones. There is no frontend wiring,
+Milestone 1 implements POST plus collection/detail GET; Milestone 2 adds PATCH.
+DELETE remains a separate approved milestone. There is no frontend wiring,
 itinerary generation, provider request, schema migration, or new dependency.
 
 ## Authentication and ownership
@@ -77,7 +77,7 @@ pagination is not promised.
 ## Errors and contracts
 
 Share the existing error envelope; retain auth's OpenAPI model names and existing
-wire shape. Detail values may now include safe integers for later version
+wire shape. Detail values may now include safe integers for version
 conflicts. Business API request validation gets a generated request ID, stable
 code, allowlisted field names and fixed messages, without echoing private input,
 unknown key names, Pydantic exception text or SQL. Validation handling outside
@@ -88,15 +88,43 @@ There is no generated frontend client today. FastAPI generates the OpenAPI
 contract; tests cover its routes/models. The approved no-frontend scope defers
 TypeScript generation/integration rather than introducing tooling here.
 
-## Later approved milestones — not implemented here
+## Milestone 2: atomic partial updates
 
-PATCH will merge explicitly supplied fields, validate the effective state, lock
-the owned row, require the client's version and increment it atomically. Metadata
-changes affecting an existing itinerary will be guarded rather than silently
-rewriting days/activities. DELETE will require a version and reject removal of
-locked activities. Those guards and concurrency behavior are not claimed by
-Milestone 1. Repeated POSTs intentionally create distinct UUIDs; idempotency keys
-remain required only for the planned generation/replan operations.
+PATCH requires a strict positive `base_version` and at least one editable field.
+Omission preserves values; explicit null clears only constraints. The Pydantic
+model tracks explicitly supplied fields, rejects null for non-nullable fields,
+and hides its internal omission marker from the OpenAPI field schema. This
+avoids generated callers treating a missing field as an instruction to clear it.
+Common metadata validators serve create and full merged-state validation;
+create/explicit budget edits require a known positive budget, while an untouched
+legacy null remains unknown. Other metadata is still validated against current
+API rules. Default titles are generated on create, never regenerated on PATCH.
+
+The owner-filtered lookup uses SELECT FOR UPDATE. Under that short row lock,
+compare base_version, check day-record guards, validate merged values, apply only
+supplied fields, increment once, flush, build the DTO, and commit before success.
+This is equivalent to an atomic owner/version-conditioned mutation: a waiting
+second writer sees the committed version and returns 409 instead of losing an
+edit. Client versioning remains optimistic; no lock spans user think time.
+Future trip/itinerary writers must coordinate on the same parent/version policy.
+
+Missing/other-owner resources have the same 404 before version comparison;
+only an owner receives `details.current_version`. Empty/version-only or invalid
+merged updates return 422. Failed commits roll back values/version/timestamps.
+Supplied values equal to stored values still count as a nonempty mutation and
+increment the version once; there is no special no-op/deduplication protocol.
+
+If any day exists, only title may be supplied. Reject other metadata with 409
+TRIP_HAS_ITINERARY rather than implement partial scheduling/budget/lock validation
+or silently alter existing activities. The trip title is independent of protected
+activity titles. A title edit preserves days and locked activities exactly.
+This restriction is deliberately conservative until itinerary editing exists.
+
+## Remaining milestone
+
+DELETE will require a version and reject removal of locked activities. It is not
+implemented here. Repeated POSTs intentionally create distinct UUIDs; idempotency
+keys remain required only for the planned generation/replan operations.
 
 ## Alternatives and verification
 

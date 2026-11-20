@@ -7,10 +7,32 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from app.db.models.trip import Trip
+from app.db.models.trip_day import TripDay
 
 
-def get_owned_trip(db: Session, *, owner_id: UUID, trip_id: UUID) -> Trip | None:
-    return db.scalar(select(Trip).where(Trip.id == trip_id, Trip.owner_id == owner_id))
+def get_owned_trip(
+    db: Session,
+    *,
+    owner_id: UUID,
+    trip_id: UUID,
+    for_update: bool = False,
+) -> Trip | None:
+    statement = select(Trip).where(Trip.id == trip_id, Trip.owner_id == owner_id)
+    if for_update:
+        statement = statement.with_for_update()
+    return db.scalar(statement)
+
+
+def has_owned_trip_days(db: Session, *, owner_id: UUID, trip_id: UUID) -> bool:
+    return (
+        db.scalar(
+            select(TripDay.id)
+            .join(Trip, Trip.id == TripDay.trip_id)
+            .where(Trip.id == trip_id, Trip.owner_id == owner_id)
+            .limit(1)
+        )
+        is not None
+    )
 
 
 def list_owned_trips(

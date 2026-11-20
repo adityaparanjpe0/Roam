@@ -16,9 +16,12 @@ from pydantic import (
     ConfigDict,
     Field,
     StringConstraints,
+    ValidationInfo,
     field_validator,
     model_validator,
 )
+from pydantic.config import JsonDict
+from pydantic.json_schema import SkipJsonSchema
 
 Title = Annotated[
     str,
@@ -38,6 +41,13 @@ Interest = Literal[
     "adventure",
     "relaxation",
 ]
+MinorBudget = Annotated[int, Field(strict=True, ge=1, le=100_000_000)]
+TravelerCount = Annotated[int, Field(strict=True, ge=1, le=20)]
+TimezoneName = Annotated[
+    str, StringConstraints(strict=True, min_length=1, max_length=64)
+]
+Constraints = Annotated[str, StringConstraints(strict=True, max_length=4000)]
+Interests = Annotated[list[Interest], Field(min_length=1, max_length=8)]
 
 
 @lru_cache(maxsize=1)
@@ -45,23 +55,21 @@ def supported_timezones() -> frozenset[str]:
     return frozenset(available_timezones()) - {"localtime", "posixrules"}
 
 
-class TripCreate(BaseModel):
+class TripMetadata(BaseModel):
+    """Complete effective state; an untouched legacy budget may remain unknown."""
+
     model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
 
     destination_label: Destination
     title: Title | None = None
-    timezone: Annotated[
-        str, StringConstraints(strict=True, min_length=1, max_length=64)
-    ]
+    timezone: TimezoneName
     start_date: date
     end_date: date
-    traveler_count: Annotated[int, Field(strict=True, ge=1, le=20)]
-    budget_per_person_minor: Annotated[int, Field(strict=True, ge=1, le=100_000_000)]
+    traveler_count: TravelerCount
+    budget_per_person_minor: MinorBudget | None
     currency: Literal["USD"]
-    interests: Annotated[list[Interest], Field(min_length=1, max_length=8)]
-    free_text_constraints: (
-        Annotated[str, StringConstraints(strict=True, max_length=4000)] | None
-    ) = None
+    interests: Interests
+    free_text_constraints: Constraints | None = None
 
     @field_validator("start_date", "end_date", mode="before")
     @classmethod
@@ -102,7 +110,7 @@ class TripCreate(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def date_range(self) -> "TripCreate":
+    def date_range(self) -> "TripMetadata":
         if not 0 <= (self.end_date - self.start_date).days < 14:
             raise ValueError("Choose 1 to 14 inclusive days")
         return self
@@ -110,6 +118,90 @@ class TripCreate(BaseModel):
     @property
     def resolved_title(self) -> str:
         return self.title if self.title is not None else self.destination_label[:120]
+
+
+class TripCreate(TripMetadata):
+    # New creates need a known positive budget; stored legacy null remains readable.
+    budget_per_person_minor: MinorBudget
+
+
+def omit_internal_default(schema: JsonDict) -> None:
+    """An internal omission marker is not a client-visible default value."""
+    schema.pop("default", None)
+
+
+class TripPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
+
+    base_version: Annotated[int, Field(strict=True, ge=1, le=2_147_483_647)]
+    # None marks an omitted field internally. Explicit null is rejected below;
+    # SkipJsonSchema keeps the wire contract non-nullable for these fields.
+    title: Title | SkipJsonSchema[None] = Field(
+        default=None, json_schema_extra=omit_internal_default
+    )
+    destination_label: Destination | SkipJsonSchema[None] = Field(
+        default=None, json_schema_extra=omit_internal_default
+    )
+    timezone: TimezoneName | SkipJsonSchema[None] = Field(
+        default=None, json_schema_extra=omit_internal_default
+    )
+    start_date: date | SkipJsonSchema[None] = Field(
+        default=None, json_schema_extra=omit_internal_default
+    )
+    end_date: date | SkipJsonSchema[None] = Field(
+        default=None, json_schema_extra=omit_internal_default
+    )
+    traveler_count: TravelerCount | SkipJsonSchema[None] = Field(
+        default=None, json_schema_extra=omit_internal_default
+    )
+    budget_per_person_minor: MinorBudget | SkipJsonSchema[None] = Field(
+        default=None, json_schema_extra=omit_internal_default
+    )
+    currency: Literal["USD"] | SkipJsonSchema[None] = Field(
+        default=None, json_schema_extra=omit_internal_default
+    )
+    interests: Interests | SkipJsonSchema[None] = Field(
+        default=None, json_schema_extra=omit_internal_default
+    )
+    free_text_constraints: Constraints | None = None
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def reject_explicit_null(cls, value: object, info: ValidationInfo) -> object:
+        if value is None and info.field_name != "free_text_constraints":
+            raise ValueError("This field cannot be cleared")
+        return value
+
+    @field_validator("start_date", "end_date", mode="before")
+    @classmethod
+    def calendar_date(cls, value: object) -> date:
+        return TripMetadata.calendar_date(value)
+
+    @field_validator("timezone")
+    @classmethod
+    def iana_timezone(cls, value: str | None) -> str | None:
+        return TripMetadata.iana_timezone(value) if value is not None else None
+
+    @field_validator("interests")
+    @classmethod
+    def unique_interests(cls, value: list[Interest] | None) -> list[Interest] | None:
+        return TripMetadata.unique_interests(value) if value is not None else None
+
+    @field_validator("free_text_constraints")
+    @classmethod
+    def normalize_constraints(cls, value: str | None) -> str | None:
+        return TripMetadata.normalize_constraints(value)
+
+    @field_validator("destination_label", "title", "free_text_constraints")
+    @classmethod
+    def postgres_text(cls, value: str | None) -> str | None:
+        return TripMetadata.postgres_text(value)
+
+    @model_validator(mode="after")
+    def nonempty_update(self) -> "TripPatch":
+        if not self.model_fields_set - {"base_version"}:
+            raise ValueError("Supply at least one field to update")
+        return self
 
 
 class TripSummary(BaseModel):

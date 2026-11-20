@@ -372,14 +372,24 @@ readiness. Revisit the separate paths when database readiness is implemented.
 
 ### Trips and activities
 
-Trip CRUD Milestone 1 (2026-11-20), on `feat/trip-crud-api`, implements only
-POST `/api/v1/trips` and collection/detail GET. The table below remains the
-broader target; PATCH, DELETE, itinerary loading and provider operations are not
-implemented by this milestone. See [the exact metadata contract](trip-api.md)
+Trip CRUD Milestones 1–2 (2026-11-20), on `feat/trip-crud-api`, implement
+POST `/api/v1/trips`, collection/detail GET, and version-checked PATCH. The table
+below remains the broader target; DELETE, itinerary loading and provider
+operations are not implemented by these milestones. See [the exact metadata contract](trip-api.md)
 and [ADR 0009](adr/0009-trip-crud-api.md). Authentication reuses the existing
-session dependency, including CSRF for POST. Queries filter owner ID, creation
+session dependency, including CSRF for POST/PATCH. Queries filter owner ID, creation
 never accepts owner ID, and missing/other-owner details return the same 404.
 Services own short transactions and return DTOs only after successful commit.
+
+PATCH locks the owned trip row, checks `base_version`, validates the merged
+metadata, and increments version exactly once before commit. Omission preserves
+stored values; only constraints can be cleared with null. An untouched legacy
+null budget remains unknown. Stale writes return 409 VERSION_CONFLICT; missing/
+other-owner IDs return 404 before version disclosure. If day records exist,
+only title may be supplied: other metadata returns 409 TRIP_HAS_ITINERARY until
+itinerary revalidation is implemented. No locked activity/day fields are changed.
+Failed validation or commit rolls back the complete update. Future itinerary
+writers must coordinate on the same parent-trip/version boundary.
 
 The API adopts the frontend's positive integer-cent USD budget and eight
 interest IDs. The explicit IANA timezone is required; omitted/null title gets a
@@ -388,7 +398,7 @@ changing storage constraints or guessing a destination timezone. Pagination uses
 the existing `(owner_id, updated_at DESC, id)` index, with a bounded timestamp/
 UUID cursor and no relationship loading. Concurrent changes are not a snapshot.
 Existing auth error model names remain; shared details now permit safe integer
-values for later version conflicts. Business validation errors do not echo raw
+values for version conflicts. Business validation errors do not echo raw
 input. TypeScript generation stays with the later frontend API integration;
 no generator/client exists yet.
 

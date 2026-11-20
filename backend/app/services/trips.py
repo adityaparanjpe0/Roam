@@ -2,17 +2,20 @@
 
 from uuid import UUID
 
+from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.config import DatabaseConfigurationError
 from app.db.models.trip import Trip
 from app.db.session import get_engine
-from app.db.trip_repository import get_owned_trip, list_owned_trips
+from app.db.trip_repository import get_owned_trip, has_owned_trip_days, list_owned_trips
 from app.schemas.trips import (
     TripCreate,
     TripCursor,
     TripListResponse,
+    TripMetadata,
+    TripPatch,
     TripResponse,
     TripSummary,
     encode_cursor,
@@ -25,6 +28,19 @@ class TripNotFound(ValueError):
 
 class TripStorageUnavailable(ValueError):
     """Safe error boundary; never include the underlying SQL exception."""
+
+
+class TripVersionConflict(ValueError):
+    def __init__(self, current_version: int) -> None:
+        self.current_version = current_version
+
+
+class TripHasItinerary(ValueError):
+    """Planning inputs cannot change until itinerary revalidation is implemented."""
+
+
+class TripInvalidUpdate(ValueError):
+    """Merged data failed validation; never expose stored/request values."""
 
 
 def create_trip(owner_id: UUID, data: TripCreate) -> TripResponse:
@@ -84,6 +100,49 @@ def list_trips(
                 items=[TripSummary.model_validate(trip) for trip in page],
                 next_cursor=next_cursor,
             )
+        return result
+    except (DatabaseConfigurationError, SQLAlchemyError):
+        raise TripStorageUnavailable from None
+
+
+def update_trip(owner_id: UUID, trip_id: UUID, data: TripPatch) -> TripResponse:
+    changes = data.model_dump(mode="json", exclude_unset=True, exclude={"base_version"})
+    try:
+        with Session(get_engine()) as db, db.begin():
+            trip = get_owned_trip(
+                db, owner_id=owner_id, trip_id=trip_id, for_update=True
+            )
+            if trip is None:
+                raise TripNotFound
+            if trip.version != data.base_version:
+                raise TripVersionConflict(trip.version)
+            if changes.keys() - {"title"} and has_owned_trip_days(
+                db,
+                owner_id=owner_id,
+                trip_id=trip_id,
+            ):
+                raise TripHasItinerary
+            current = {
+                "title": trip.title,
+                "destination_label": trip.destination_label,
+                "timezone": trip.timezone,
+                "start_date": trip.start_date.isoformat(),
+                "end_date": trip.end_date.isoformat(),
+                "traveler_count": trip.traveler_count,
+                "budget_per_person_minor": trip.budget_per_person_minor,
+                "currency": trip.currency,
+                "interests": trip.interests,
+                "free_text_constraints": trip.free_text_constraints,
+            }
+            try:
+                effective = TripMetadata.model_validate(current | changes)
+            except ValidationError:
+                raise TripInvalidUpdate from None
+            for field in changes:
+                setattr(trip, field, getattr(effective, field))
+            trip.version += 1
+            db.flush()
+            result = TripResponse.model_validate(trip)
         return result
     except (DatabaseConfigurationError, SQLAlchemyError):
         raise TripStorageUnavailable from None

@@ -12,6 +12,7 @@ from app.schemas.errors import ErrorResponse
 from app.schemas.trips import (
     TripCreate,
     TripListResponse,
+    TripPatch,
     TripResponse,
     decode_cursor,
 )
@@ -78,6 +79,49 @@ def retrieve(trip_id: UUID, user: UserDependency, response: Response) -> TripRes
     except trips.TripStorageUnavailable:
         raise APIError(
             503, "DATABASE_UNAVAILABLE", "Cannot load trip right now."
+        ) from None
+    response.headers["Cache-Control"] = "no-store"
+    return result
+
+
+@router.patch(
+    "/{trip_id}",
+    response_model=TripResponse,
+    responses={status: {"model": ErrorResponse} for status in (404, 409)},
+)
+def update(
+    trip_id: UUID,
+    data: TripPatch,
+    user: UserDependency,
+    response: Response,
+) -> TripResponse:
+    """Update owned metadata with CSRF and the version from the client's read."""
+    try:
+        result = trips.update_trip(user.id, trip_id, data)
+    except trips.TripNotFound:
+        raise APIError(404, "RESOURCE_NOT_FOUND", "Trip not found.") from None
+    except trips.TripVersionConflict as error:
+        raise APIError(
+            409,
+            "VERSION_CONFLICT",
+            "This trip changed. Reload and try again.",
+            {"current_version": error.current_version},
+        ) from None
+    except trips.TripHasItinerary:
+        raise APIError(
+            409,
+            "TRIP_HAS_ITINERARY",
+            "This trip has itinerary data. Only its title can be changed here.",
+        ) from None
+    except trips.TripInvalidUpdate:
+        raise APIError(
+            422,
+            "VALIDATION_FAILED",
+            "Check the complete trip, including its date range.",
+        ) from None
+    except trips.TripStorageUnavailable:
+        raise APIError(
+            503, "DATABASE_UNAVAILABLE", "Cannot update trip right now."
         ) from None
     response.headers["Cache-Control"] = "no-store"
     return result

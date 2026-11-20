@@ -1,7 +1,7 @@
-# Trip metadata API — Milestone 1
+# Trip metadata API — Milestones 1–2
 
-Implemented on `feat/trip-crud-api`: create, list, and retrieve an owned trip.
-PATCH/DELETE, itinerary endpoints and frontend save integration remain planned.
+Implemented on `feat/trip-crud-api`: create, list, retrieve, and partially update
+an owned trip. DELETE, itinerary endpoints and frontend save integration remain planned.
 See [ADR 0009](adr/0009-trip-crud-api.md) for decisions and rollback/security limits.
 
 ## Prerequisites and data flow
@@ -23,8 +23,9 @@ the owner filter authorizes which trips that user can access.
 | POST | `/api/v1/trips` | 201, complete metadata, relative `Location` header |
 | GET | `/api/v1/trips?limit=20&cursor=…` | 200, summaries and nullable next cursor |
 | GET | `/api/v1/trips/{trip_id}` | 200, complete metadata |
+| PATCH | `/api/v1/trips/{trip_id}` | 200, version-checked updated metadata |
 
-All require the Roam session cookie. POST also requires the matching readable
+All require the Roam session cookie. POST/PATCH also require the matching readable
 CSRF cookie and `X-CSRF-Token`, and a trusted browser Origin/Referer. Session
 cookie names remain `roam_session` / `roam_csrf` for local HTTP and `__Host-`
 prefixed on HTTPS. Cookies are sent by the browser, not copied into request JSON.
@@ -106,6 +107,65 @@ the current owner's filter. Concurrent updates can move records between pages;
 there is no snapshot guarantee or expensive total-count query. Detail exposes
 metadata only; fetching it does not generate or load an itinerary.
 
+### Partial update
+
+```http
+PATCH /api/v1/trips/95bc33a8-2238-4467-9660-cc60f760826d
+Content-Type: application/json
+X-CSRF-Token: <session-bound value>
+```
+
+```json
+{
+  "base_version": 1,
+  "traveler_count": 3,
+  "free_text_constraints": null
+}
+```
+
+Use the version from the last detail/read/create response. `base_version` is a
+required strict positive integer fitting PostgreSQL's integer version column.
+Supply at least one metadata field; an empty object or version alone returns 422.
+The editable fields are title, destination label, timezone, dates, travelers,
+budget, currency, interests and constraints. Owner, status, version, timestamps,
+provider ID and preferences remain server-controlled/forbidden request fields.
+
+Omitted fields retain their stored values. Explicit null is allowed only for
+constraints, where it clears the value; whitespace-only constraints also clear.
+Other fields keep create's type/length/allowlist rules. PATCH does not regenerate
+the title when destination changes. Explicit budget updates must be positive
+integer cents; an untouched legacy null budget stays unknown, never zero.
+
+The service locks the owned trip row, compares its version, and validates the
+complete merged metadata before modifying anything. For example, changing only
+start_date still checks the stored end_date and the 14-day inclusive bound.
+Other invalid legacy metadata must be repaired to the current API rules before
+an update can succeed; PATCH is not a blanket validator bypass for stored data.
+On a successful nonempty PATCH, version increments exactly once and updated_at
+refreshes, including when the supplied values equal the old values. Created_at,
+owner and omitted fields remain unchanged. The 200 body is the same complete
+metadata shape as detail, with `Cache-Control: no-store`.
+
+If the supplied version is stale, return 409 `VERSION_CONFLICT` with safe integer
+`details.current_version`. Retrieve the current trip before intentionally
+reapplying edits; do not blindly replace the version and retry an old patch.
+Two concurrent updates based on version 1 produce one 200/version 2 and one 409.
+Missing/other-owner UUIDs return the same 404 before exposing a current version.
+
+If any trip-day record exists, **only title may be supplied**. Other metadata
+updates return 409 `TRIP_HAS_ITINERARY`, even if a supplied value equals its stored
+value. This conservative guard avoids changing dates, budget, location or
+constraints without an itinerary revalidation engine. Title edits leave all
+day/activity records, including locked activity fields, unchanged. No itinerary
+rows are deleted, regenerated, unlocked or rescheduled by PATCH.
+
+Every check and write occurs in one short transaction. The row lock is released
+on commit/rollback, never held while the user edits or during provider calls.
+Future itinerary writers must coordinate on the parent trip/version as well.
+SQL failures return sanitized 503; failed validation/conflicts/commits do not
+persist values, timestamps or version changes. Authentication's own last-seen
+transaction remains separate, as documented in the ADR.
+
 ### Failures
 
 | HTTP | Code | Meaning |
@@ -114,6 +174,8 @@ metadata only; fetching it does not generate or load an itinerary.
 | 403 | `CSRF_FAILED` | Unsafe request lacks valid session-bound proof/origin |
 | 404 | `RESOURCE_NOT_FOUND` | Missing or other-owner trip, identical public behavior |
 | 422 | `VALIDATION_FAILED` | Invalid body, UUID, cursor or pagination limit |
+| 409 | `VERSION_CONFLICT` | Supplied update version is stale; details contains current_version |
+| 409 | `TRIP_HAS_ITINERARY` | Non-title fields supplied for a trip with day records |
 | 503 | `DATABASE_UNAVAILABLE` | Authentication storage or trip persistence unavailable |
 | 503 | `AUTH_NOT_CONFIGURED` | Existing authentication-origin settings invalid |
 
@@ -138,7 +200,9 @@ From `backend/`, run focused tests:
 
 ```sh
 uv run --locked pytest tests/test_trip_schemas.py tests/test_trip_api_errors.py
+uv run --locked pytest tests/test_trip_patch_schemas.py
 uv run --env-file ../.env --locked pytest --run-db-tests tests/integration/test_trip_crud_api.py
+uv run --env-file ../.env --locked pytest --run-db-tests tests/integration/test_trip_patch_api.py
 ```
 
 The database command requires an explicit local maintenance
@@ -177,5 +241,10 @@ local HTTP only; production HTTPS cookie names differ. Repeat detail/list reads
 using the returned ID; another account must receive 404 for that ID and never
 see it in its list. The frontend form itself still does not save trips.
 
-PATCH/version checks and protected DELETE remain the next milestones, so use
-disposable test databases for repeated creation while developing this API.
+To manually update a synthetic owned development trip from Roam's 5173 origin,
+use the same cookie/header approach with `method: 'PATCH'`, the returned trip ID,
+and JSON such as `{base_version: 1, title: 'Updated plan'}`. Expect 200/version 2;
+resending version 1 must return 409 without overwriting. Test another account's
+ID for 404. These checks mutate development records; use the isolated automated
+tests for rollback, concurrency and adversarial fixtures instead. Protected
+DELETE remains the next milestone; no deletion endpoint is implemented yet.

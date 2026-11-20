@@ -1,6 +1,6 @@
 # Roam MVP handoff
 
-> Status: local main includes the frontend/form, PostgreSQL/ORM/migrations and OAuth/session foundations at ff53069. Trip CRUD Milestone 1 implements create/list/detail on feat/trip-crud-api; it is not claimed merged. Deployment remains planned. See [memory.md](memory.md) for evidence.
+> Status: local main includes the frontend/form, PostgreSQL/ORM/migrations and OAuth/session foundations at ff53069. Trip CRUD Milestones 1–2 implement create/list/detail/PATCH on feat/trip-crud-api; they are not claimed merged. Deployment remains planned. See [memory.md](memory.md) for evidence.
 
 PR #7 Milestones 1–3 add a connection/session foundation, four
 ORM models, and an initial Alembic migration on `feat/database-foundation`.
@@ -192,10 +192,11 @@ unverified, and Milestone 6 has not begun.
 
 ### Phase 1 — Data model, migrations, and trip CRUD
 
-Trip CRUD Milestone 1 adds authenticated create/list/detail endpoints with
+Trip CRUD Milestones 1–2 add authenticated create/list/detail/PATCH endpoints with
 owner-scoped SQL, existing CSRF/session validation, strict request schemas,
 bounded pagination and safe transaction errors. See [the contract](trip-api.md).
-PATCH/version enforcement and protected DELETE remain separate review milestones;
+PATCH now enforces versions, merged validation and title-only edits when days
+exist. Protected DELETE remains a separate review milestone;
 the local frontend form is not wired to persistence. Existing schema 0002 is
 reused; no new migration or provider feature is added.
 

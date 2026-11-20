@@ -8,6 +8,46 @@
 
 ### Verified facts
 
+- 2026-11-20 Trip CRUD Milestone 2, owner: user with Codex assistance, on
+  `feat/trip-crud-api`. Developer committed Milestone 1 as `ac3d905`; the working
+  tree was clean before this milestone. Added authenticated/CSRF-protected PATCH
+  `/api/v1/trips/{trip_id}` with a strict required base_version, nonempty partial
+  updates, explicit-field merging, and full effective metadata validation.
+  Omission preserves values; explicit null clears only constraints. An untouched
+  legacy null budget stays unknown. Create's positive-budget policy is unchanged.
+- Owner-filtered SELECT FOR UPDATE, version comparison, day-record guard,
+  validation, updates, version increment, flush and commit share one transaction.
+  Stale owned writes return 409 VERSION_CONFLICT with integer current_version;
+  missing/other-owner IDs return identical 404 before version disclosure. Any
+  day record restricts this endpoint to title-only input, avoiding implicit
+  itinerary/lock/budget revalidation or child mutation. Nonempty identical-value
+  patches also increment once. DELETE remains unimplemented.
+- PATCH's OpenAPI schema distinguishes optional fields from nullable fields;
+  internal None omission markers are not exposed as client defaults. Installed
+  Pydantic's schema hook requires JsonDict, verified at runtime and used without
+  type ignores. Validators are shared between create and merged metadata; prior
+  create/cursor/auth contracts remain covered. API guide, ADR 0009, contributor
+  instructions and stale backend-foundation status text are reconciled.
+- Verification: **542 backend tests passed** with disposable PostgreSQL 18.7 in
+  24.71 seconds; default suite **418 passed / 124 opt-in skipped**. Includes 43
+  new PATCH-schema cases, an additional unauthenticated PATCH case, and 17 new
+  PostgreSQL HTTP cases. The concurrent test uses independent valid sessions
+  for one user and simultaneous lock attempts: exactly one 200/version 2 and
+  one 409; the stored record equals the winner. Other cases cover merged-date
+  rejection, cross-owner privacy, CSRF/origin failure, clearing/omission,
+  unchanged legacy unknown money, day/locked-activity preservation, and injected
+  commit failure rolling back values/version/timestamp before successful recovery.
+- Frozen dependency sync, lock check, Ruff format (75 files)/lint, strict mypy
+  app (40 files), and editor diagnostics passed. Existing Starlette/HTTPX
+  deprecation warning remains. Tests used a separate generated-credential
+  loopback PostgreSQL container and fixture-owned scratch databases; only those
+  resources were removed. Development container state/mounts and Docker volume
+  inventory matched before/after. No real Google calls, development DB writes,
+  environment/credential edits, frontend, dependencies/lockfile, migration,
+  OAuth service, or workflow changes. Milestone 2 remains uncommitted; hosted
+  CI and teammate review are pending. No commit/push/merge/PR creation by Codex.
+  The older PATCH-planned notes below are superseded for this branch only.
+
 - 2026-11-20 Trip CRUD Milestone 1, owner: user with Codex assistance, on
   `feat/trip-crud-api`, initially clean at `ff53069`. Implemented authenticated
   POST `/api/v1/trips`, collection GET and detail GET, with strict metadata
@@ -798,7 +838,7 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 | Frontend foundation / historical PR #2 | IMPLEMENTED | Frontend contributor; reviewer not recorded | Local `main` merge `2281737`; [tests](../frontend/src/App.test.tsx); historical verification below | CI and reviewer evidence not recorded |
 | Local PostgreSQL / historical PR #5 | IMPLEMENTED | User with Codex assistance; reviewer not recorded | Local `main` merge `2e4fa6f`; `f715de3`, `6bb7bea`, `7cf6e1f`; [runbook](runbooks/local-postgres.md) | Production hardening remains planned; reviewer evidence not recorded |
 | Frontend/backend health integration / PR #6 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | `d66391a`, `ab6e482`; [client](../frontend/src/api/health.ts), [UI](../frontend/src/features/connection/ConnectionStatus.tsx), live verification below | Documentation review, teammate review, and merge evidence |
-| Trip schema/migrations/CRUD | IN_PROGRESS | User with Codex assistance; reviewer pending | [Trip API](trip-api.md), [ADR 0009](adr/0009-trip-crud-api.md), models/migrations and PostgreSQL HTTP tests | Create/list/detail verified on feat/trip-crud-api; Milestone 1 review, PATCH/version checks and protected DELETE remain |
+| Trip schema/migrations/CRUD | IN_PROGRESS | User with Codex assistance; reviewer pending | [Trip API](trip-api.md), [ADR 0009](adr/0009-trip-crud-api.md), models/migrations and PostgreSQL HTTP tests | Create/list/detail/PATCH verified on feat/trip-crud-api; Milestone 2 review and protected DELETE remain |
 | PostgreSQL foundation / PR #7 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | [Settings](../backend/app/core/config.py), [sessions](../backend/app/db/session.py), [ADR 0001](adr/0001-database-foundation.md), [CI](../.github/workflows/backend-ci.yml), evidence below | Milestone 3 review, hosted Backend checks success, and teammate schema walkthrough before merge |
 | Google OIDC/session/CSRF | IN_PROGRESS | User with Codex assistance; Milestone 6 review pending | ADRs 0006–0007, backend/PostgreSQL and frontend synthetic tests | Shared flow state, throttling, retention, live Google/HTTPS and deployment verification |
 | Provider-neutral Places/Routes | PLANNED | Unassigned | None | Fake + live opt-in normalization/failure proof |
