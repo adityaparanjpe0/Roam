@@ -123,6 +123,27 @@ logins, and rollback. Follow the isolated test configuration below; ordinary
 CI uses fakes for all Google calls. Callback queries are stripped from the ASGI
 scope used by Uvicorn access logging; any future proxy must redact them too.
 
+## Trip metadata API — CRUD Milestones 1–3
+
+The `feat/trip-crud-api` branch implements authenticated `POST /api/v1/trips`,
+`GET /api/v1/trips`, `GET /api/v1/trips/{trip_id}`, version-checked PATCH and DELETE.
+Creation uses the verified
+session user as owner and enforces existing CSRF/origin checks; reads are
+owner-filtered. Missing and other-owner records return the same 404. List uses
+bounded cursor pagination. PATCH reuses CSRF, requires `base_version`, merges
+explicit fields and validates the result under an owned-row lock; stale writes
+return 409. Trips with day records allow title-only updates. DELETE requires a
+quoted version in `If-Match`, blocks locked activities, and commits cascaded
+child deletion before an empty 204. Frontend save integration remains planned.
+No schema migration or new environment
+variable is introduced.
+
+See the [trip contract and safe manual/test workflow](../docs/trip-api.md) and
+[ADR 0009](../docs/adr/0009-trip-crud-api.md). The API requires destination
+timezone, although the current frontend draft does not supply one yet. It stores
+metadata only and makes no Google/provider calls. Existing schema revision 0002
+and a valid Roam session are required. Successful writes return only after commit.
+
 ## Health endpoint
 
 Open <http://127.0.0.1:8000/health> or request it from another terminal:
@@ -216,9 +237,10 @@ needs to pass before merge. See the [CI guide](../docs/CI.md).
 `app/db/models/` maps users → owned trips → trip days → activities. Database
 constraints enforce foreign keys, unique identities/days, bounded dates/party
 sizes, nonnegative money, and valid intervals. Read [ADR 0001](../docs/adr/0001-database-foundation.md)
-for exact fields, JSON limits, and deferred application validation. There are no
-trip endpoints, provider records, or lock/version enforcement yet. Google
-verification and application sessions are now implemented as described above.
+for exact fields, JSON limits, and deferred application validation. Trip CRUD
+Milestones 1–3 now add metadata create/read/PATCH/DELETE and version enforcement as
+described above. Provider records and activity mutation/lock endpoints remain
+planned. Google verification and application sessions are implemented.
 
 From `backend/`, with PostgreSQL running and your ignored `.env` configured:
 
