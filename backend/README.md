@@ -123,6 +123,21 @@ logins, and rollback. Follow the isolated test configuration below; ordinary
 CI uses fakes for all Google calls. Callback queries are stripped from the ASGI
 scope used by Uvicorn access logging; any future proxy must redact them too.
 
+## Trip metadata API — CRUD Milestone 1
+
+The `feat/trip-crud-api` branch implements authenticated `POST /api/v1/trips`,
+`GET /api/v1/trips`, and `GET /api/v1/trips/{trip_id}`. Creation uses the verified
+session user as owner and enforces existing CSRF/origin checks; reads are
+owner-filtered. Missing and other-owner records return the same 404. List uses
+bounded cursor pagination. PATCH/DELETE and frontend save integration are not
+implemented yet. No schema migration or new environment variable is introduced.
+
+See the [trip contract and safe manual/test workflow](../docs/trip-api.md) and
+[ADR 0009](../docs/adr/0009-trip-crud-api.md). The API requires destination
+timezone, although the current frontend draft does not supply one yet. It stores
+metadata only and makes no Google/provider calls. Existing schema revision 0002
+and a valid Roam session are required. Successful writes return only after commit.
+
 ## Health endpoint
 
 Open <http://127.0.0.1:8000/health> or request it from another terminal:

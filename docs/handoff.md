@@ -1,6 +1,6 @@
 # Roam MVP handoff
 
-> Status: frontend/backend and local PostgreSQL foundations are present in local `main`. PR #6 health integration is verified on `feat/front-back-int`; application database integration and deployment remain planned. See [memory.md](memory.md) for evidence.
+> Status: local main includes the frontend/form, PostgreSQL/ORM/migrations and OAuth/session foundations at ff53069. Trip CRUD Milestone 1 implements create/list/detail on feat/trip-crud-api; it is not claimed merged. Deployment remains planned. See [memory.md](memory.md) for evidence.
 
 PR #7 Milestones 1–3 add a connection/session foundation, four
 ORM models, and an initial Alembic migration on `feat/database-foundation`.
@@ -191,6 +191,13 @@ unverified, and Milestone 6 has not begun.
 - `memory.md` names both developers and records the first ownership split.
 
 ### Phase 1 — Data model, migrations, and trip CRUD
+
+Trip CRUD Milestone 1 adds authenticated create/list/detail endpoints with
+owner-scoped SQL, existing CSRF/session validation, strict request schemas,
+bounded pagination and safe transaction errors. See [the contract](trip-api.md).
+PATCH/version enforcement and protected DELETE remain separate review milestones;
+the local frontend form is not wired to persistence. Existing schema 0002 is
+reused; no new migration or provider feature is added.
 
 **Deliverables**
 

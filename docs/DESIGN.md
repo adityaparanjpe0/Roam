@@ -372,6 +372,26 @@ readiness. Revisit the separate paths when database readiness is implemented.
 
 ### Trips and activities
 
+Trip CRUD Milestone 1 (2026-11-20), on `feat/trip-crud-api`, implements only
+POST `/api/v1/trips` and collection/detail GET. The table below remains the
+broader target; PATCH, DELETE, itinerary loading and provider operations are not
+implemented by this milestone. See [the exact metadata contract](trip-api.md)
+and [ADR 0009](adr/0009-trip-crud-api.md). Authentication reuses the existing
+session dependency, including CSRF for POST. Queries filter owner ID, creation
+never accepts owner ID, and missing/other-owner details return the same 404.
+Services own short transactions and return DTOs only after successful commit.
+
+The API adopts the frontend's positive integer-cent USD budget and eight
+interest IDs. The explicit IANA timezone is required; omitted/null title gets a
+bounded destination-based default. This closes HTTP validation gaps without
+changing storage constraints or guessing a destination timezone. Pagination uses
+the existing `(owner_id, updated_at DESC, id)` index, with a bounded timestamp/
+UUID cursor and no relationship loading. Concurrent changes are not a snapshot.
+Existing auth error model names remain; shared details now permit safe integer
+values for later version conflicts. Business validation errors do not echo raw
+input. TypeScript generation stays with the later frontend API integration;
+no generator/client exists yet.
+
 | Method | Path | Key contract |
 |---|---|---|
 | `POST` | `/trips` | Create owned draft; client supplies selected destination reference or unresolved text |

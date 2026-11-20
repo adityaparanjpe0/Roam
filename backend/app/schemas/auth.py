@@ -4,15 +4,14 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-
-class AuthErrorDetail(BaseModel):
-    code: str
-    message: str
-    request_id: str
-    details: dict[str, str]
+from app.schemas.errors import ErrorDetail, ErrorResponse
 
 
-class AuthErrorResponse(BaseModel):
+class AuthErrorDetail(ErrorDetail):
+    """Retain the existing auth OpenAPI name and JSON representation."""
+
+
+class AuthErrorResponse(ErrorResponse):
     error: AuthErrorDetail
 
 

@@ -5,6 +5,14 @@
 
 ## 1. Working agreement
 
+Trip CRUD Milestone 1 adds authenticated create/list/detail reads under
+`/api/v1/trips`; PATCH/DELETE and frontend saving remain future milestones.
+Follow the [trip API guide](trip-api.md) for strict input rules, ownership/CSRF,
+cursor pagination, and safe testing. Use the existing opt-in PostgreSQL scratch
+fixtures, never the development database, for destructive/rollback tests. The
+existing backend CI discovers these tests without workflow changes. Preserve
+auth error responses while using the shared envelope for business errors.
+
 For local auth, keep actual values in an ignored environment file and explicitly
 pass that file to uv --env-file. /health 200 does not prove settings loaded:
 AUTH_NOT_CONFIGURED requires checking required names privately and restarting

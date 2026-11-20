@@ -1,12 +1,55 @@
 # Roam durable project memory
 
 > Purpose: preserve verified context across developers and AI sessions  
-> Last updated: 2026-11-19
+> Last updated: 2026-11-20
 > Rule: this file records decisions and evidence; it must not turn plans into facts
 
 ## 1. Current snapshot
 
 ### Verified facts
+
+- 2026-11-20 Trip CRUD Milestone 1, owner: user with Codex assistance, on
+  `feat/trip-crud-api`, initially clean at `ff53069`. Implemented authenticated
+  POST `/api/v1/trips`, collection GET and detail GET, with strict metadata
+  schemas, owner-scoped SQL, cursor pagination, safe errors and explicit service
+  transactions. [ADR 0009](adr/0009-trip-crud-api.md) and the [API guide](trip-api.md)
+  record the contract. PATCH/version enforcement and protected DELETE remain
+  later milestones; the frontend still does not save trips.
+- New trip creation takes owner ID only from the existing verified session
+  dependency and enforces its session-bound CSRF/origin checks. Unknown fields
+  (including owner/status/version/provider fields) are rejected. Missing and
+  other-owner detail requests share the same 404. Pagination defaults to 20,
+  caps at 100, and preserves the owner filter regardless of cursor contents.
+  Responses are explicit DTOs with UTC audit timestamps and no-store headers.
+  Creation returns 201/Location only after commit; independent reads prove
+  persistence and an injected commit failure proves rollback/no false success.
+- The request policy matches positive integer-cent USD budgets and the eight
+  frontend interest IDs. Title omitted/null defaults to a bounded destination
+  label; explicit IANA timezone remains required for later frontend integration.
+  NUL-input acceptance was reproduced and corrected before DB use; invalid
+  Unicode/type/date/limit/unknown-field cases have regressions. The shared error
+  envelope permits safe integer details while auth's model names and existing
+  wire behavior remain; business validation does not reflect private input.
+- Verification: Python 3.12.16, existing PostgreSQL 18.7 image. **481 tests
+  passed** with PostgreSQL enabled in 20.58 seconds, including all prior
+  OAuth/session/health tests, 99 new schema/error cases and 14 new PostgreSQL
+  HTTP cases. Final default suite: **374 passed / 107 opt-in skips**. Frozen
+  all-group sync, lock check, Ruff format (73 files)/lint and strict mypy app
+  (40 source files) passed. Editor diagnostics reported no new-source/test errors.
+  The existing Starlette/HTTPX deprecation warning remains unsuppressed.
+- Database tests used an independent generated-credential loopback container
+  and fixture-owned scratch databases. Docker was initially unavailable, so
+  Docker Desktop was started before the successful run. Only disposable test
+  resources were removed; development container ID/state/mounts and Docker
+  volume-name inventory matched before/after. No development DB tables, schema,
+  environment settings, user sessions or credentials were modified or printed.
+  No real Google/provider call was used for automated verification.
+- No frontend, dependency/lockfile, ORM model, migration, OAuth-service or CI
+  workflow change. Existing CI discovers the new tests; hosted execution and
+  teammate review remain pending. Milestone 1 changes are uncommitted. No commit,
+  push, merge, PR creation, PATCH or DELETE implementation by Codex. This
+  supersedes older blanket "trip CRUD/authorization not implemented" status
+  below only for create/list/detail on this branch.
 
 - 2026-11-19 pre-commit focus audit, owner: user with Codex assistance.
   History review traced the passive focus effect to f8f94cb; navbar commit
@@ -755,7 +798,7 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 | Frontend foundation / historical PR #2 | IMPLEMENTED | Frontend contributor; reviewer not recorded | Local `main` merge `2281737`; [tests](../frontend/src/App.test.tsx); historical verification below | CI and reviewer evidence not recorded |
 | Local PostgreSQL / historical PR #5 | IMPLEMENTED | User with Codex assistance; reviewer not recorded | Local `main` merge `2e4fa6f`; `f715de3`, `6bb7bea`, `7cf6e1f`; [runbook](runbooks/local-postgres.md) | Production hardening remains planned; reviewer evidence not recorded |
 | Frontend/backend health integration / PR #6 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | `d66391a`, `ab6e482`; [client](../frontend/src/api/health.ts), [UI](../frontend/src/features/connection/ConnectionStatus.tsx), live verification below | Documentation review, teammate review, and merge evidence |
-| Trip schema/migrations/CRUD | IN_PROGRESS | User with Codex assistance; reviewer pending | [Models](../backend/app/db/models/), [initial revision](../backend/migrations/versions/0001_create_users_trips_days_and_activities.py), PostgreSQL tests | CRUD and cross-owner authorization remain planned |
+| Trip schema/migrations/CRUD | IN_PROGRESS | User with Codex assistance; reviewer pending | [Trip API](trip-api.md), [ADR 0009](adr/0009-trip-crud-api.md), models/migrations and PostgreSQL HTTP tests | Create/list/detail verified on feat/trip-crud-api; Milestone 1 review, PATCH/version checks and protected DELETE remain |
 | PostgreSQL foundation / PR #7 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | [Settings](../backend/app/core/config.py), [sessions](../backend/app/db/session.py), [ADR 0001](adr/0001-database-foundation.md), [CI](../.github/workflows/backend-ci.yml), evidence below | Milestone 3 review, hosted Backend checks success, and teammate schema walkthrough before merge |
 | Google OIDC/session/CSRF | IN_PROGRESS | User with Codex assistance; Milestone 6 review pending | ADRs 0006–0007, backend/PostgreSQL and frontend synthetic tests | Shared flow state, throttling, retention, live Google/HTTPS and deployment verification |
 | Provider-neutral Places/Routes | PLANNED | Unassigned | None | Fake + live opt-in normalization/failure proof |
