@@ -8,6 +8,66 @@
 
 ### Verified facts
 
+- 2026-11-20 merge reconciliation, owner: user with Codex assistance. Git shows
+  Trip CRUD merged into main as `82e53f6` (PR #9), including commits `ac3d905`,
+  `24ea8af` and `86ce503`. Navbar work is committed as `8491e11` on
+  `feat/navbar-overhaul`. The user started a no-commit merge of origin/main
+  into that branch; only this file conflicted. Both complete evidence blocks
+  below are retained. Earlier uncommitted/unmerged statements describe their
+  recording time and are superseded by these Git facts; hosted verification
+  and teammate approval are not inferred from merge history. This merge is
+  pending and uncommitted; frontend trip saving and deployment remain planned.
+  The current date header and CRUD status row supersede stale planned/unmerged
+  status; historical evidence blocks are preserved verbatim.
+- Combined-state verification (2026-11-20): all 48 tracked frontend files match
+  navbar commit `8491e11` byte-for-byte; all 82 tracked backend files match main
+  merge `82e53f6`. Both original evidence blocks remain verbatim, and both
+  branches' substantive documentation additions survive. All 347 local Markdown
+  links resolve; no conflict markers remain. Frozen all-group sync, lock check,
+  Ruff format (77 files)/lint, strict mypy app (40 files), frontend lint/types,
+  production build and 210 frontend tests passed. Backend default tests passed
+  434 with 136 opt-in skips; full PostgreSQL-enabled suite passed 570 in 28.38s.
+  The existing Starlette/HTTPX warning remains. Docker Desktop was started after
+  the initial unavailable-daemon check; subsequent tests used only a disposable
+  PostgreSQL 18.7 container and fixture-owned scratch databases. Those resources
+  were removed; existing development state/mounts and volume inventory were
+  unchanged before/after. No application code, credentials, runtime dependencies
+  or development data changed during reconciliation. This records local checks,
+  not hosted CI, live Google sign-in, or production verification.
+
+- 2026-11-19 navbar overhaul, owner: user with Codex assistance, on
+  `feat/navbar-overhaul`. Replaced the stacked account block with a compact
+  sticky header: three section links, active weight/rust underline, a single
+  sign-in action, and named Avenir Next/Trebuchet MS navigation typography.
+  The serif home wordmark remains. Mobile Menu opens a native modal side drawer
+  below 56rem; Close/Escape restore trigger focus, section navigation focuses the
+  destination, and a non-sticky top anchor preserves home/back-to-top behavior.
+- The earlier planned manual "Check session" removal is now implemented.
+  Bootstrap/focus/visibility/reconnect checks and error-state retry remain;
+  provider/session APIs and local trip state are unchanged. Signed-out notices
+  remain screen-reader live announcements. Draft-loss help stays attached to
+  sign-in, appears on desktop hover/focus, and is inline in the mobile drawer.
+  Browser testing caught Escape failing for a mouse-opened hint while focus was
+  elsewhere; the window-level dismissal handler fixed that reproduced case.
+- Verification: lint, TypeScript, production build, and **210 tests in 12 files**
+  passed. Four new header tests cover current anchors, native-dialog controls,
+  section focus, and resize dismissal. The refresh regression now exercises
+  automatic focus-based checking. Editor diagnostics and diff whitespace pass.
+  Independent headless Chrome used synthetic signed-out/long-name/error fixtures:
+  all 18 combinations at 320/390/768/896/1024/1440px had no horizontal overflow
+  and an 81px header. Mobile links/actions measured 48–56px. Keyboard skip-link,
+  modal background inertness, Escape focus restoration, section focus/clearance,
+  home navigation, CTA darkening and the hint-Escape regression passed. The trip
+  anchor landed at about 104px below an 81px header. Desktop/mobile captures
+  were visually inspected. New normal-state label/background contrast pairs
+  measured 5.53:1–10.71:1; this is not a full WCAG certification.
+- Verification tools ran in disposable directories/browser contexts and were
+  removed. No project dependency, downloaded font, backend, environment file,
+  credential, database, API, or session-policy change. No live Google/login/logout
+  action was used for UI verification. Changes are uncommitted; hosted CI and
+  teammate review remain pending. The dated older navbar/planned-cleanup notes
+  below are superseded by this implementation.
+
 - 2026-11-20 Trip CRUD Milestone 3, owner: user with Codex assistance, on
   `feat/trip-crud-api`. Started clean at developer-committed Milestone 2
   `24ea8af`. Added DELETE `/api/v1/trips/{trip_id}` using existing verified
@@ -875,7 +935,7 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 | Frontend foundation / historical PR #2 | IMPLEMENTED | Frontend contributor; reviewer not recorded | Local `main` merge `2281737`; [tests](../frontend/src/App.test.tsx); historical verification below | CI and reviewer evidence not recorded |
 | Local PostgreSQL / historical PR #5 | IMPLEMENTED | User with Codex assistance; reviewer not recorded | Local `main` merge `2e4fa6f`; `f715de3`, `6bb7bea`, `7cf6e1f`; [runbook](runbooks/local-postgres.md) | Production hardening remains planned; reviewer evidence not recorded |
 | Frontend/backend health integration / PR #6 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | `d66391a`, `ab6e482`; [client](../frontend/src/api/health.ts), [UI](../frontend/src/features/connection/ConnectionStatus.tsx), live verification below | Documentation review, teammate review, and merge evidence |
-| Trip schema/migrations/CRUD | IN_PROGRESS | User with Codex assistance; reviewer pending | [Trip API](trip-api.md), [ADR 0009](adr/0009-trip-crud-api.md), models/migrations and PostgreSQL HTTP tests | All five CRUD operations verified on feat/trip-crud-api; Milestone 3 review/commit, hosted CI and teammate review remain; frontend saving is planned |
+| Trip schema/migrations/CRUD | IN_PROGRESS | User with Codex assistance; review evidence not reverified | [Trip API](trip-api.md), [ADR 0009](adr/0009-trip-crud-api.md), models/migrations and PostgreSQL HTTP tests | CRUD merged into main at 82e53f6; frontend saving and deployment remain planned; hosted verification not rechecked |
 | PostgreSQL foundation / PR #7 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | [Settings](../backend/app/core/config.py), [sessions](../backend/app/db/session.py), [ADR 0001](adr/0001-database-foundation.md), [CI](../.github/workflows/backend-ci.yml), evidence below | Milestone 3 review, hosted Backend checks success, and teammate schema walkthrough before merge |
 | Google OIDC/session/CSRF | IN_PROGRESS | User with Codex assistance; Milestone 6 review pending | ADRs 0006–0007, backend/PostgreSQL and frontend synthetic tests | Shared flow state, throttling, retention, live Google/HTTPS and deployment verification |
 | Provider-neutral Places/Routes | PLANNED | Unassigned | None | Fake + live opt-in normalization/failure proof |

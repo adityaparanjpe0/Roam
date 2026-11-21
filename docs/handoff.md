@@ -1,13 +1,13 @@
 # Roam MVP handoff
 
-> Status: local main includes the frontend/form, PostgreSQL/ORM/migrations and OAuth/session foundations at ff53069. Trip CRUD Milestones 1–3 implement create/list/detail/PATCH/protected DELETE on feat/trip-crud-api; they are not claimed merged. Deployment remains planned. See [memory.md](memory.md) for evidence.
+> Status: local main includes the frontend/form, PostgreSQL/ORM/migrations, OAuth/sessions and Trip CRUD through merge 82e53f6. Navbar improvements are committed on feat/navbar-overhaul; its merge of main is pending. Deployment remains planned. See [memory.md](memory.md) for evidence.
 
 PR #7 Milestones 1–3 add a connection/session foundation, four
 ORM models, and an initial Alembic migration on `feat/database-foundation`.
 See [ADR 0001](adr/0001-database-foundation.md) for the deliberately partial
 schema. Backend CI now configures disposable PostgreSQL/migration tests;
 hosted verification and teammate schema review remain required. That foundation
-did not expose business APIs; the current CRUD branch is described below.
+did not expose business APIs; the merged CRUD implementation is described below.
 This does not change the MVP scope or claim production deployment.
 
 PR #8 Milestone 5 adds client-only trip validation and normalized local drafts.
@@ -215,13 +215,15 @@ reused; no new migration or provider feature is added.
 
 ### Phase 2 — Authentication and authorization
 
-**Planned UX cleanup — not yet implemented**
+**Navbar UX cleanup — implemented on `feat/navbar-overhaul`**
 
-- [ ] Remove the manual "Check session" navbar button; session verification is
+- [x] Remove the manual "Check session" navbar button; session verification is
   automatic and should not be a routine user task (human decision, 2026-11-19).
   Retain automatic bootstrap/focus/visibility/reconnect checks, backend session
-  enforcement and recoverable error-state retry. Update UI/accessibility tests
-  and manual instructions with the eventual removal. No PR assignment is implied.
+  enforcement and recoverable error-state retry. The compact sticky header now
+  has section tracking, a sign-in action, and a native mobile menu drawer;
+  UI/accessibility tests and manual instructions are updated. Teammate review
+  and hosted verification remain required.
 
 PR #9 Milestone 3 now provides login initiation only at `/auth/google/start`,
 typed auth settings, and bounded Google discovery/PKCE generation. Callback,
