@@ -5,6 +5,20 @@
 
 ## 1. Working agreement
 
+Trip CRUD Milestones 1–3 add authenticated create/list/detail, version-checked
+PATCH and protected DELETE under `/api/v1/trips`; frontend saving remains planned.
+PATCH requires CSRF plus `base_version`; omitted fields stay unchanged, null only
+clears constraints, and trips with day records allow title-only updates. Keep
+owner/version checks and the write within one transaction/owned-row lock.
+DELETE requires one quoted positive version in `If-Match`, rejects locked
+activities, and returns empty 204 only after commit. Future activity/lock writers
+must acquire the parent trip lock and enforce its version before mutation.
+Follow the [trip API guide](trip-api.md) for strict input rules, ownership/CSRF,
+cursor pagination, and safe testing. Use the existing opt-in PostgreSQL scratch
+fixtures, never the development database, for destructive/rollback tests. The
+existing backend CI discovers these tests without workflow changes. Preserve
+auth error responses while using the shared envelope for business errors.
+
 For local auth, keep actual values in an ignored environment file and explicitly
 pass that file to uv --env-file. /health 200 does not prove settings loaded:
 AUTH_NOT_CONFIGURED requires checking required names privately and restarting

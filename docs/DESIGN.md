@@ -256,8 +256,9 @@ The initial schema stores only `user_entered` activities, with `user`/`unknown`
 cost confidence. `place_reference_id`, `provider_grounded`, and provider/model
 confidence values below are target additions for the provider milestone;
 there is no provider-reference table or unsupported foreign key in revision 0001.
-The `locked` and `version` fields store state only; mutation enforcement remains
-future service work. No business write API is exposed yet.
+Trip CRUD now enforces trip versions and prevents trip deletion if any activity
+is locked. Activity edit/lock endpoints and their detailed invariants remain
+future service work; no activity write API is exposed yet.
 
 | Column | Type | Rules |
 |---|---|---|
@@ -371,6 +372,45 @@ This refines the original separate-path proposal without claiming dependency
 readiness. Revisit the separate paths when database readiness is implemented.
 
 ### Trips and activities
+
+Trip CRUD Milestones 1–3 (2026-11-20), on `feat/trip-crud-api`, implement
+POST `/api/v1/trips`, collection/detail GET, version-checked PATCH and protected
+DELETE. The table below remains the broader target; itinerary loading and provider
+operations are not implemented by these milestones. See [the exact metadata contract](trip-api.md)
+and [ADR 0009](adr/0009-trip-crud-api.md). Authentication reuses the existing
+session dependency, including CSRF for POST/PATCH/DELETE. Queries filter owner ID, creation
+never accepts owner ID, and missing/other-owner details return the same 404.
+Services own short transactions and return DTOs only after successful commit.
+
+PATCH locks the owned trip row, checks `base_version`, validates the merged
+metadata, and increments version exactly once before commit. Omission preserves
+stored values; only constraints can be cleared with null. An untouched legacy
+null budget remains unknown. Stale writes return 409 VERSION_CONFLICT; missing/
+other-owner IDs return 404 before version disclosure. If day records exist,
+only title may be supplied: other metadata returns 409 TRIP_HAS_ITINERARY until
+itinerary revalidation is implemented. No locked activity/day fields are changed.
+Failed validation or commit rolls back the complete update. Future itinerary
+writers must coordinate on the same parent-trip/version boundary.
+
+DELETE requires a single quoted positive version in `If-Match` (maximum
+2,147,483,647); missing/malformed/duplicate headers return 422. The owned-row
+lock covers version checking, locked-activity checking and deletion. Missing/
+other-owner IDs return 404 before version disclosure; stale versions return 409
+VERSION_CONFLICT. Any locked activity blocks deletion with 409 LOCKED_ACTIVITY.
+Otherwise existing foreign-key cascades remove only the trip's days/activities.
+Return empty 204/no-store after commit; SQL failures roll back the full cascade.
+There is no force-delete or unlock endpoint, and no general ETag negotiation.
+
+The API adopts the frontend's positive integer-cent USD budget and eight
+interest IDs. The explicit IANA timezone is required; omitted/null title gets a
+bounded destination-based default. This closes HTTP validation gaps without
+changing storage constraints or guessing a destination timezone. Pagination uses
+the existing `(owner_id, updated_at DESC, id)` index, with a bounded timestamp/
+UUID cursor and no relationship loading. Concurrent changes are not a snapshot.
+Existing auth error model names remain; shared details now permit safe integer
+values for version conflicts. Business validation errors do not echo raw
+input. TypeScript generation stays with the later frontend API integration;
+no generator/client exists yet.
 
 | Method | Path | Key contract |
 |---|---|---|

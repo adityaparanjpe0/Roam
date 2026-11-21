@@ -1,13 +1,13 @@
 # Roam MVP handoff
 
-> Status: frontend/backend and local PostgreSQL foundations are present in local `main`. PR #6 health integration is verified on `feat/front-back-int`; application database integration and deployment remain planned. See [memory.md](memory.md) for evidence.
+> Status: local main includes the frontend/form, PostgreSQL/ORM/migrations, OAuth/sessions and Trip CRUD through merge 82e53f6. Navbar improvements are committed on feat/navbar-overhaul; its merge of main is pending. Deployment remains planned. See [memory.md](memory.md) for evidence.
 
 PR #7 Milestones 1–3 add a connection/session foundation, four
 ORM models, and an initial Alembic migration on `feat/database-foundation`.
 See [ADR 0001](adr/0001-database-foundation.md) for the deliberately partial
 schema. Backend CI now configures disposable PostgreSQL/migration tests;
-hosted verification and teammate schema review remain required. Business APIs
-remain future work.
+hosted verification and teammate schema review remain required. That foundation
+did not expose business APIs; the merged CRUD implementation is described below.
 This does not change the MVP scope or claim production deployment.
 
 PR #8 Milestone 5 adds client-only trip validation and normalized local drafts.
@@ -191,6 +191,14 @@ unverified, and Milestone 6 has not begun.
 - `memory.md` names both developers and records the first ownership split.
 
 ### Phase 1 — Data model, migrations, and trip CRUD
+
+Trip CRUD Milestones 1–3 add authenticated create/list/detail/PATCH/DELETE endpoints with
+owner-scoped SQL, existing CSRF/session validation, strict request schemas,
+bounded pagination and safe transaction errors. See [the contract](trip-api.md).
+PATCH now enforces versions, merged validation and title-only edits when days
+exist. DELETE checks If-Match and locked activities under the same parent lock;
+the local frontend form is not wired to persistence. Existing schema 0002 is
+reused; no new migration or provider feature is added.
 
 **Deliverables**
 
