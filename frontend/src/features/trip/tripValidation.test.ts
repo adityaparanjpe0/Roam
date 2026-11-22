@@ -8,6 +8,7 @@ function validValues(): TripFormValues {
   return {
     ...createInitialTripFormValues(),
     destination: 'Lisbon',
+    timezone: 'Europe/Lisbon',
     startDate: '2027-03-27',
     endDate: '2027-03-30',
     travelerCount: '2',
@@ -21,7 +22,7 @@ test('returns every missing required field and no draft', () => {
   expect(result.valid).toBe(false)
   expect(result).not.toHaveProperty('draft')
   if (!result.valid) {
-    expect(Object.keys(result.errors)).toEqual(['destination', 'startDate', 'endDate', 'travelerCount', 'budgetUsd', 'interests'])
+    expect(Object.keys(result.errors)).toEqual(['destination', 'timezone', 'startDate', 'endDate', 'travelerCount', 'budgetUsd', 'interests'])
   }
 })
 
@@ -33,6 +34,7 @@ test('normalizes a valid draft without changing or sharing editable values', () 
     valid: true,
     draft: {
       destinationLabel: 'Lisbon',
+      timezone: 'Europe/Lisbon',
       startDate: '2027-03-27', endDate: '2027-03-30', travelerCount: 2,
       budgetPerPersonMinor: 75050, currency: 'USD', interests: ['food'],
       freeTextConstraints: 'Step-free access\nVegetarian meals',
@@ -148,10 +150,31 @@ test('normalizes complete data with every supported interest and multiline prefe
   })).toEqual({
     valid: true,
     draft: {
-      destinationLabel: 'Kyoto', startDate: '2027-03-27', endDate: '2027-03-30',
+      destinationLabel: 'Kyoto', timezone: 'Europe/Lisbon', startDate: '2027-03-27', endDate: '2027-03-30',
       travelerCount: 4, budgetPerPersonMinor: 120025, currency: 'USD',
       interests: ['food', 'sightseeing', 'outdoors', 'nightlife', 'shopping', 'culture', 'adventure', 'relaxation'],
       freeTextConstraints: 'Quiet mornings\nVegetarian meals',
     },
   })
+})
+
+test.each(['', '   ', 'Mars/Olympus', '+02:00', 'Europe/Lisbon\x00', 'x'.repeat(65)])('rejects invalid explicit time zone: %j', (timezone) => {
+  const result = validateTripForm({ ...validValues(), timezone })
+  expect(result.valid).toBe(false)
+  if (!result.valid) expect(result.errors.timezone).toBeTruthy()
+})
+
+test.each(['Europe/Lisbon', 'America/New_York', 'Asia/Tokyo', 'UTC'])('accepts explicit time zones, including DST regions: %s', (timezone) => {
+  const result = validateTripForm({ ...validValues(), timezone: ` ${timezone} ` })
+  expect(result.valid).toBe(true)
+  if (result.valid) expect(result.draft.timezone).toBe(timezone)
+})
+
+test.each(['destination', 'constraints'] as const)('rejects NUL and lone surrogates in %s before PostgreSQL', (field) => {
+  for (const value of ['hello\x00world', 'hello\ud800world', 'hello\udfffworld']) {
+    const result = validateTripForm({ ...validValues(), [field]: value })
+    expect(result.valid).toBe(false)
+    if (!result.valid) expect(result.errors[field]).toBeTruthy()
+  }
+  expect(validateTripForm({ ...validValues(), [field]: 'Lisbon 🌴' }).valid).toBe(true)
 })

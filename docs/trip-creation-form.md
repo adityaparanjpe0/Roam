@@ -1,9 +1,13 @@
-# Trip creation form — PR #8
+# Trip creation form — PR #8 foundation and PR #11 integration
 
-Status: implemented locally through Milestone 8 on `feat/trip-creation-form`.
-This is a frontend-only form and review flow, not a saved-trip feature or release.
-Refresh clears all values. No API, auth, storage, provider, or AI call is made by
-the form. The independent development `/health` diagnostic is unchanged.
+Status: PR #11 Milestones 1–2 connect the existing form/review to authenticated
+POST `/api/v1/trips` on `feat/trip-creation-integration`. Review is local; only
+explicit Save sends a request. A validated 201 shows canonical saved data.
+Refresh clears in-memory editing/confirmation; it does not delete a saved record.
+Milestone 3 verified real HTTP/persistence with synthetic session identities;
+the [runbook](runbooks/trip-creation-integration.md) retains a separate human
+Google smoke check. No dashboard, provider or AI
+call is implemented. The independent development `/health` diagnostic is unchanged.
 
 ## Fields and meanings
 
@@ -12,6 +16,7 @@ All values start blank; interests start as an independent empty array.
 | Visible field | Editable state | Meaning and validation |
 |---|---|---|
 | Destination | `destination: string` | City/region entered as text, not a resolved place. Trimmed nonempty label, at most 200 UTF-16 code units. |
+| Destination time zone | `timezone: string` | Explicit IANA name, initially blank, trimmed and bounded to 64 characters. Browser support supplies feedback; backend validation is authoritative. Never inferred from the browser. |
 | Start date | `startDate: string` | Exact valid `YYYY-MM-DD` calendar date, years 0001–9999. Past dates are permitted. |
 | End date | `endDate: string` | Same format; on/after start, with 1–14 inclusive days. Same-day trips are valid. |
 | Number of travelers | `travelerCount: string` | Decimal digits representing a whole number from 1–20, including everyone traveling. |
@@ -32,8 +37,9 @@ All values start blank; interests start as an independent empty array.
 
 The options and derived `Interest` type share one definition in
 [tripCreationModels.ts](../frontend/src/features/trip/tripCreationModels.ts).
-These are frontend tags, not the database activity-category enum or an established
-backend trip-interest contract.
+These match the backend trip-interest allowlist, not the separate database
+activity-category enum. Destination/constraints also reject NUL and lone Unicode
+surrogates before sending text that PostgreSQL cannot store.
 
 ## Normalized local draft contract
 
@@ -44,6 +50,7 @@ has field errors and no draft; a valid result has a complete `TripDraft`.
 ```ts
 interface TripDraft {
   destinationLabel: string
+  timezone: string
   startDate: string
   endDate: string
   travelerCount: number
@@ -61,6 +68,7 @@ Synthetic example:
 ```json
 {
   "destinationLabel": "Lisbon",
+  "timezone": "Europe/Lisbon",
   "startDate": "2027-03-27",
   "endDate": "2027-03-30",
   "travelerCount": 2,
@@ -73,8 +81,9 @@ Synthetic example:
 
 The budget is positive integer cents, so `75050` represents $750.50 per person
 for the entire trip. Dates have no instant or timezone conversion. No owner, trip
-ID, provider identity, title, or timezone is fabricated. This is a local contract;
-the eventual HTTP request type must come from the agreed API/OpenAPI contract.
+ID, provider identity or title is fabricated; timezone is explicitly entered.
+This local contract maps to the hand-maintained, runtime-validated API contract
+in [the trip client](../frontend/src/api/trips.ts), per [ADR 0010](adr/0010-trip-creation-integration.md).
 
 ## Validation and submission flow
 
@@ -102,34 +111,43 @@ the eventual HTTP request type must come from the agreed API/OpenAPI contract.
 7. Success calls the optional typed `onDraftSubmit(draft)` prop once per explicit
    submission and renders [TripReview](../frontend/src/features/trip/TripReview.tsx).
    The landing page supplies no callback. No render/effect makes this handoff.
-8. Review focuses its heading, which also describes the not-saved notice. It shows
+8. Review focuses its heading, which describes the server-confirmation notice. It shows
    canonical local draft values as text, preserves preference line breaks, and
    explicitly labels the budget per person for the entire trip. Edit clears the
    reviewed snapshot, restores original entries, and focuses Destination.
 
-All work is synchronous and local. There is no invented loading spinner or timer.
-The review action stays enabled so users can discover errors. Disabled button
-styling exists for consistent visual states; this flow does not disable controls
-as if a save were pending.
+Review validation stays synchronous/local and enabled so users can discover
+errors. Save is asynchronous: pending feedback and disabled Save/Edit reflect a
+real request, with a ten-second deadline. Focus changes for explicit navigation,
+server errors and confirmation run during layout, not a later passive effect.
 
 ## PR #11 backend connection
 
-Use the existing optional callback as the normalized-data boundary. A future
-parent/container can pass a handler to `TripCreation` without moving network code
-into inputs, the validator, or the review component.
+The optional callback remains a local-review notification, never a save result.
+The container's reviewed-trip controller sends the explicit Save through
+[the mapper](../frontend/src/features/trip/tripApiMapping.ts) and API client. It
+sends snake_case fields, integer cents and calendar dates, omits title for the
+backend default, and never sends owner/status/version. The backend independently
+validates session/CSRF, assigns ownership, validates data and commits PostgreSQL.
 
-Before sending data, PR #11 must establish request/response schemas, generate
-frontend API types, and add an explicit mapper from this local draft. Resolve the
-database-required title/timezone and destination/provider handling deliberately;
-do not assume the browser timezone is the destination timezone or invent an
-endpoint/schema from this example. Keep integer money units and local dates.
+Only a confirmed authenticated account enables Save. Unknown/loading/signed-out
+auth leaves editing/review available. A 401 refreshes the existing auth snapshot;
+CSRF failure offers Google sign-in with a warning that full navigation clears
+unsaved entries. There is no token/draft browser storage or OAuth redesign.
 
-The present callback is a synchronous handoff, not an async save protocol. PR #11
-must add real request pending/error handling, duplicate-submit prevention while
-pending, recoverable server field errors, and canonical server-confirmed success.
-Preserve entries on failure. Apply the actual endpoint's auth/CSRF and concurrency/
-idempotency requirements. Independently validate all data on the server because
-client JavaScript can be bypassed. Local review must never imply successful saving.
+Recognized 422 fields return to the form with the original raw values, server
+validation summary, inline errors and first-invalid focus. Editing clears only
+the edited field's server error. General errors keep review editable; raw server
+messages/SQL are never shown. Network, timeout and invalid-response errors warn
+that a trip may already be saved. No automatic POST retry occurs, and repeated
+manual retries may create duplicates because POST is not idempotent.
+
+Save's controller ref blocks a second click before the disabled state renders.
+Account changes/unmount abort and forget pending/saved state; late results cannot
+show the previous account's confirmation. Editable parent state remains mounted.
+Cancellation does not undo a server commit. The saved screen uses validated
+server values and offers only explicit Create another trip, not saved-trip
+editing or a link to an unimplemented dashboard. See [the API guide](trip-api.md).
 
 ## Responsive and accessibility review
 
@@ -151,7 +169,7 @@ Manual procedure (start `npm run dev` from `frontend/`):
 3. Submit empty fields, correct one, and check the changing error count and
    associated messages. With a screen reader, verify actual announcements rather
    than relying only on the presence of ARIA attributes.
-4. Review valid details and confirm the not-saved notice, per-person amount, and
+4. Review valid details and confirm the server-confirmation notice, per-person amount, and
    selected labels. Edit without losing values. Refresh to confirm the form resets.
 5. Use actual browser zoom at 200%, then separately enlarge text. Check at narrow
    widths, with OS high-contrast settings, and in other browsers/mobile devices.

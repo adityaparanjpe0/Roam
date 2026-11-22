@@ -1,12 +1,150 @@
 # Roam durable project memory
 
 > Purpose: preserve verified context across developers and AI sessions  
-> Last updated: 2026-11-20
+> Last updated: 2026-11-22
 > Rule: this file records decisions and evidence; it must not turn plans into facts
 
 ## 1. Current snapshot
 
 ### Verified facts
+
+- 2026-11-22 PR #11 Milestone 3 verification/documentation, owner: user with
+  Codex assistance, on clean `feat/trip-creation-integration` at human-committed
+  Milestone 2 `6810e0c` (Milestone 1 `7f2ed4c`). Added the
+  [integration runbook](runbooks/trip-creation-integration.md) with normal local
+  startup, pinned-runtime options, explicit environment/migration commands,
+  save/refresh/ownership/logout checks, troubleshooting and remaining live-Google
+  human steps. Uvicorn/Vite are documented as intentionally long-running servers;
+  PostgreSQL health/readiness is distinguished from dependency-free `/health`.
+- Verification: pinned Node **24.22.3**, **301 frontend tests in 15 files passed**
+  in **7.54 seconds**, ESLint, TypeScript and production build passed. Python
+  **3.12.16**, frozen all-group sync, lock check, Ruff format (**77 files**)/lint
+  and strict mypy app (**40 files**) passed. Default backend: **434 passed /
+  136 opt-in skipped**; full disposable PostgreSQL 18.7 backend suite:
+  **570 passed in 35.91 seconds**. Existing Starlette/HTTPX deprecation warning
+  remains. Existing migrations upgraded fresh scratch databases with no schema
+  drift; no dependency, migration, app or test source change was needed.
+- A separate browser check exercised actual React → existing Vite proxy → FastAPI
+  → PostgreSQL on independent loopback ports. Isolated headless Chrome contexts
+  used real Roam session cookies, CSRF/origin validation and owner-scoped routes;
+  no fetch mocks or authentication dependency overrides were used. Only initial
+  identity was substituted: a temporary external wrapper called existing
+  create_login_session/set_session_cookies for synthetic Alice/Bob identities.
+  The wrapper's fixture route/config were never added to project source. Vite's
+  normal proxy definitions/timeouts were reused with temporary target ports.
+- Browser outcomes: valid form POST **201**, canonical saved confirmation,
+  matching whole trip JSON after refresh via owned GET **200**, and exactly one
+  owned list item. Missing CSRF **403**, client owner-ID input **422** (no extra
+  records), other-owner detail **404**/empty list, guest detail **401**, logout
+  **204** followed by revoked access **401**, and original trip readable **200**
+  after a newly issued session. Refresh reset the local form while the database
+  record persisted. These are real HTTP/database results with synthetic identity
+  issuance, not proof of current Google account selection or deployed HTTPS.
+- Docker Desktop was initially stopped and was started for verification. One
+  independent generated-credential PostgreSQL container, registered test scratch
+  databases, temporary wrapper/config/log directory, test servers and isolated
+  browser contexts were removed. Existing development container state/mounts and
+  Docker volume inventory matched before/after. No development DB write, real
+  Google/provider call, credential/environment edit, application auth bypass,
+  project dependency/lockfile or CI change. The integrated browser tool returned
+  missing-page errors, so the real-HTTP check used an already cached Playwright
+  runtime with isolated Chrome profiles; no project package was added.
+- Updated current docs to distinguish observed PostgreSQL/session persistence
+  from the still-unreported live-Google human smoke check requested in this
+  session. No claim is made for that external check, production TLS, hosted CI
+  or teammate approval. Milestone 3 changes are documentation only and remain
+  uncommitted for review; no commit, push, merge or PR creation by Codex. Older
+  Milestone 2 planned/uncommitted statements are historical and superseded here.
+
+- 2026-11-22 PR #11 Milestone 2 completion, owner: user with Codex assistance,
+  on `feat/trip-creation-integration`. Human committed Milestone 1 as `7f2ed4c`;
+  implementation began clean at that commit on 2026-11-21. Added explicit blank
+  destination IANA timezone, frontend validation, draft/API mapping, and local
+  review → authenticated Save → canonical server-confirmed success. The backend
+  still supplies the default title. Dates remain calendar strings, money remains
+  exact integer cents, and no owner/status/version is sent. NUL/lone-surrogate
+  text and unsupported/offset timezone inputs are rejected before POST; backend
+  validation remains authoritative when timezone databases differ.
+- A small reviewed-trip controller holds idle/saving/error/saved state and is
+  keyed by account availability/user ID. Logout/account changes/unmount abort
+  pending work and discard canonical confirmation; editable parent form state
+  remains. Ref/abort checks prevent late responses from displaying old-account
+  data. Save uses an immediate in-flight guard and disables Save/Edit while
+  pending; it never runs from an effect or automatically retries. Cancellation
+  does not undo a server commit, and uncertain errors do not claim otherwise.
+- Recognized server fields return to the original form with safe inline errors,
+  server-validation summary and first-invalid focus. Editing clears only the
+  edited field's server error. General/network/timeout failures keep review
+  editable. Missing/unknown auth blocks Save; a 401 refreshes the existing auth
+  snapshot, while CSRF failure offers existing Google navigation with an explicit
+  draft-loss warning. Validated 201 alone renders canonical saved data; explicit
+  Create another trip resets local values. No new dashboard, route or saved-trip
+  editing is implemented. [ADR 0010](adr/0010-trip-creation-integration.md) and
+  [the form guide](trip-creation-form.md) document the implemented behavior.
+- Initial async error coverage reproduced an alert appearing before passive
+  focus moved. Review/error/success/first-invalid focus now uses layout effects,
+  following existing account-control conventions. Background account updates do
+  not request review focus. Original form/auth/navbar behavior remains covered.
+- Verification on pinned Node **24.22.3**: **301 tests in 15 files passed** in
+  **11.17 seconds**, plus full ESLint, TypeScript check and production build.
+  Includes 20 save-flow HTTP/component cases, 12 new timezone/text validation
+  cases, and two mapping cases (34 more tests than Milestone 1). Coverage includes
+  exact payload/CSRF, deferred success, repeated clicks, 401/403/422/500/502/503,
+  network/invalid responses/timeouts, raw-input preservation, focus, signed-out/
+  loading/unknown auth, logout/account-change races, unmount and new-trip reset.
+  Changed-code editor diagnostics and diff checks passed. No backend tests were
+  rerun because backend application/test/migration code is unchanged; full
+  backend regression and real persistence checks remain Milestone 3.
+- Browser checks used the built frontend on a temporary loopback preview with
+  page-only synthetic fetch/CSRF fixtures. Form, review, saved and server-error
+  states had no horizontal page overflow at **320/390/768/1440px** (16 cases).
+  Save/Edit tap heights were about **52.4px**. Keyboard Enter review/save/reset,
+  heading/error/reset focus, canonical returned title, one successful POST, and
+  422 preservation of raw spaced inputs were observed. Initial tool-level route
+  mocking did not establish auth; successful checks used page-local fixtures.
+  This is not real Google sign-in, database persistence, screen-reader or full
+  accessibility certification. Temporary preview was stopped after checks.
+- Updated design, API/form/auth guides, contributor/handoff guidance and relevant
+  README statements for the actual save flow; older dated client-only notes are
+  superseded. No backend behavior, auth implementation, navbar, proxy, project
+  dependency/lockfile, environment/credential, migration, CI or development data
+  changed. Milestone 2 remains uncommitted for human review. No commit, push,
+  merge, PR creation or Milestone 3 live verification by Codex.
+
+- 2026-11-21 PR #11 Milestone 1, owner: user with Codex assistance, on clean
+  `feat/trip-creation-integration` at `de15c3b`. Git confirms CRUD merged as PR #9
+  at `82e53f6` and navbar as PR #10 at `de15c3b`; this supersedes older pending
+  navbar merge notes below. Added the typed [trip client](../frontend/src/api/trips.ts)
+  for POST `/api/v1/trips`, exposing auth's existing CSRF reader for reuse without
+  changing logout/session/OAuth behavior. [ADR 0010](adr/0010-trip-creation-integration.md)
+  records the human-approved native-fetch scope and pending UI milestones.
+- The client sends same-origin cookies, a session-bound CSRF header and an
+  allowlisted JSON payload; it rejects redirects, requires 201/JSON, validates
+  runtime response fields, and copies only documented data. Known error status/
+  codes and allowlisted validation fields become safe frontend messages; raw
+  server messages, SQL, arbitrary detail keys and invalid request IDs are not
+  exposed. Response money remains nullable per the backend DTO. No owner ID,
+  bearer reading/storage, automatic retry, or generic request framework added.
+- A ten-second timer bounds fetch/body reading; cancellation remains AbortError,
+  timers/listeners are cleaned up, and uncertain outcomes do not claim a server
+  commit was undone. One invocation sends at most one POST, not an exactly-once
+  guarantee across user retries. The UI still performs only local review: no
+  timezone field, Save action, success screen or live trip persistence through
+  the form yet. Those remain Milestones 2–3; no database/Google calls were made.
+- Verification: **267 tests in 13 files passed** on pinned Node **24.22.3** in
+  **5.32 seconds**, including 56 new trip-client cases and one new HTTPS CSRF
+  case. Full ESLint, TypeScript check and production build passed. Initial gates
+  also passed on installed Node 24.6.0/npm 11.5.1, but that Node is below the
+  declared project minimum; final gates used the README's npm-exec pinned-runtime
+  workflow without changing project dependencies. Changed-file editor diagnostics
+  were clear. Tests use mocked fetch only; existing auth/form/navbar regressions
+  passed. They do not prove live persistence, browser Google login or hosted CI.
+- Corrected the stale frontend README proxy claim and current handoff merge
+  status; design/instructions document the client-only milestone and native-fetch
+  exception. Backend, form, styling, navbar, proxy, credentials/environment,
+  package manifests/lockfile, migrations, database and CI were not changed.
+  Milestone 1 is uncommitted; human review/commit and hosted CI remain pending.
+  No commit, push, merge, PR creation or Milestone 2 implementation by Codex.
 
 - 2026-11-20 merge reconciliation, owner: user with Codex assistance. Git shows
   Trip CRUD merged into main as `82e53f6` (PR #9), including commits `ac3d905`,
@@ -935,7 +1073,7 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 | Frontend foundation / historical PR #2 | IMPLEMENTED | Frontend contributor; reviewer not recorded | Local `main` merge `2281737`; [tests](../frontend/src/App.test.tsx); historical verification below | CI and reviewer evidence not recorded |
 | Local PostgreSQL / historical PR #5 | IMPLEMENTED | User with Codex assistance; reviewer not recorded | Local `main` merge `2e4fa6f`; `f715de3`, `6bb7bea`, `7cf6e1f`; [runbook](runbooks/local-postgres.md) | Production hardening remains planned; reviewer evidence not recorded |
 | Frontend/backend health integration / PR #6 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | `d66391a`, `ab6e482`; [client](../frontend/src/api/health.ts), [UI](../frontend/src/features/connection/ConnectionStatus.tsx), live verification below | Documentation review, teammate review, and merge evidence |
-| Trip schema/migrations/CRUD | IN_PROGRESS | User with Codex assistance; review evidence not reverified | [Trip API](trip-api.md), [ADR 0009](adr/0009-trip-crud-api.md), models/migrations and PostgreSQL HTTP tests | CRUD merged into main at 82e53f6; frontend saving and deployment remain planned; hosted verification not rechecked |
+| Trip schema/migrations/CRUD | IN_PROGRESS | User with Codex assistance; reviewer pending | [Trip API](trip-api.md), [integration runbook](runbooks/trip-creation-integration.md), [ADR 0010](adr/0010-trip-creation-integration.md), models/migrations and PostgreSQL tests | CRUD merged at 82e53f6; PR #11 frontend save/refresh/ownership verified over real HTTP/PostgreSQL on its feature branch with synthetic identities; Google human smoke check, hosted CI and review remain |
 | PostgreSQL foundation / PR #7 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | [Settings](../backend/app/core/config.py), [sessions](../backend/app/db/session.py), [ADR 0001](adr/0001-database-foundation.md), [CI](../.github/workflows/backend-ci.yml), evidence below | Milestone 3 review, hosted Backend checks success, and teammate schema walkthrough before merge |
 | Google OIDC/session/CSRF | IN_PROGRESS | User with Codex assistance; Milestone 6 review pending | ADRs 0006–0007, backend/PostgreSQL and frontend synthetic tests | Shared flow state, throttling, retention, live Google/HTTPS and deployment verification |
 | Provider-neutral Places/Routes | PLANNED | Unassigned | None | Fake + live opt-in normalization/failure proof |

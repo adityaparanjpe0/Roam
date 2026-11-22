@@ -188,6 +188,30 @@
   cursor: not-allowed;
 }
 
+.trip-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.trip-actions .trip-action-button {
+  margin-top: 0;
+}
+
+.trip-action-secondary {
+  background: var(--color-paper);
+  color: var(--color-accent);
+}
+
+.trip-action-secondary:hover:not(:disabled), .trip-action-secondary:active:not(:disabled) {
+  color: var(--color-paper);
+}
+
+.trip-save-feedback:not(:empty) {
+  margin-top: var(--space-3);
+}
+
 .trip-review-notice {
   padding: var(--space-2);
   border-left: 3px solid var(--color-accent);

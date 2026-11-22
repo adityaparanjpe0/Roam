@@ -89,7 +89,7 @@ test('reviews and edits a trip without additional requests or browser storage wr
   render(<App />)
   const authRequests = vi.mocked(fetch).mock.calls.length
   for (const [label, value] of [
-    ['Destination (required)', 'Lisbon'], ['Start date (required)', '2027-03-27'],
+    ['Destination (required)', 'Lisbon'], ['Destination time zone (required)', 'Europe/Lisbon'], ['Start date (required)', '2027-03-27'],
     ['End date (required)', '2027-03-30'], ['Number of travelers (required)', '2'],
     ['Budget per person (USD, required)', '750.50'],
   ]) fireEvent.change(screen.getByLabelText(label), { target: { value } })

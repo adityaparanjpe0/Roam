@@ -3,6 +3,7 @@ import type { TripDraft, TripFormValues } from './tripCreationModels'
 
 export const TRIP_FORM_LIMITS = {
   destinationLength: 200,
+  timezoneLength: 64,
   constraintsLength: 4000,
   tripDays: 14,
   travelers: 20,
@@ -42,13 +43,24 @@ function budgetMinor(value: string): number | null {
   return minor
 }
 
-/** Client feedback only: future APIs must independently validate every field. */
+/** Client feedback only: the backend independently validates every field. */
 export function validateTripForm(values: TripFormValues): TripValidationResult {
   const errors: TripFormErrors = {}
   const destination = values.destination.trim()
   if (!destination) errors.destination = 'Enter a destination.'
   else if (destination.length > TRIP_FORM_LIMITS.destinationLength) {
     errors.destination = 'Keep the destination to 200 characters or fewer.'
+  }
+
+  const timezone = values.timezone.trim()
+  try {
+    if (!timezone || timezone.length > TRIP_FORM_LIMITS.timezoneLength
+      || Array.from(timezone).some((character) => character.charCodeAt(0) <= 32)
+      || /^[+-]/.test(timezone)) throw new RangeError()
+    // Browser and server timezone databases can differ; server validation wins.
+    new Intl.DateTimeFormat('en-US', { timeZone: timezone })
+  } catch {
+    errors.timezone = 'Enter a destination IANA time zone, such as Europe/Lisbon.'
   }
 
   const start = calendarDay(values.startDate)
@@ -83,12 +95,24 @@ export function validateTripForm(values: TripFormValues): TripValidationResult {
     errors.constraints = 'Keep additional preferences to 4,000 characters or fewer.'
   }
 
+  for (const field of ['destination', 'constraints'] as const) {
+    // Array.from keeps valid surrogate pairs together, leaving lone surrogates.
+    const invalidUnicode = Array.from(values[field]).some((character) => {
+      const code = character.charCodeAt(0)
+      return character.length === 1 && code >= 0xd800 && code <= 0xdfff
+    })
+    if (values[field].includes('\x00') || invalidUnicode) {
+      errors[field] = 'Remove unsupported characters from this text.'
+    }
+  }
+
   if (Object.keys(errors).length > 0 || minor === null) return { valid: false, errors }
 
   return {
     valid: true,
     draft: {
       destinationLabel: destination,
+      timezone,
       startDate: values.startDate,
       endDate: values.endDate,
       travelerCount: travelers,

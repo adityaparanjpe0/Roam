@@ -58,6 +58,40 @@ the local draft contract, manual checks, and measured accessibility limitations.
 The draft is not an API contract; PR #11 must establish request mapping and
 title/timezone handling. The form makes no requests and persists no data.
 
+PR #11 Milestone 1 (2026-11-21), on `feat/trip-creation-integration`, adds a
+typed native-fetch POST client for the existing `/api/v1/trips` contract,
+reusing the current HTTP/HTTPS CSRF reader and same-origin proxy. Runtime JSON
+validation, allowlisted input/output fields, safe error mapping, cancellation,
+and a ten-second timeout are covered by mocked HTTP tests. There is no automatic
+POST retry; an uncertain response can follow a committed insert. This is a
+narrow approved native-fetch exception for one explicit mutation, not a query
+cache; TanStack Query remains the direction for future saved-trip server state.
+See [ADR 0010](adr/0010-trip-creation-integration.md). The mounted form still
+only reviews local data: timezone entry, Save action and server-confirmed UI
+remain Milestone 2 work; end-to-end persistence verification remains Milestone 3.
+
+PR #11 Milestone 2 (2026-11-21) supersedes that client-only status: the form now
+collects an explicit destination IANA timezone and maps validated calendar dates,
+integer-cent budget, travelers, interests and constraints to the existing POST.
+Review remains local until an authenticated Save action. Loading/disabled actions,
+server field/general errors, session/CSRF recovery and canonical saved confirmation
+are implemented without a new route or dashboard. Editable values survive errors
+and auth changes; account-keyed request state aborts/ignores obsolete results.
+This does not cancel a backend commit. Explicit navigation/result focus uses
+layout effects; background account checks do not request review focus. A refresh
+clears the local confirmation, not the saved record. Live persistence and
+cross-owner browser verification remain Milestone 3, not inferred from mocks.
+
+PR #11 Milestone 3 (2026-11-22) verifies the real React/Vite/FastAPI/PostgreSQL
+flow in isolated browser contexts and a disposable database: create 201,
+canonical saved confirmation, owned GET after refresh, cross-owner 404/empty
+list, guest 401, CSRF rejection, forbidden owner input and logout revocation.
+Only initial identity issuance used a temporary external synthetic-login wrapper;
+application auth dependencies and business endpoints were not mocked or changed.
+All verification resources were removed without changing development data. The
+[integration runbook](runbooks/trip-creation-integration.md) separates those results
+from the remaining human live-Google check, hosted CI and production verification.
+
 Roam creates realistic travel itineraries from user preferences. It combines uncertain external data and probabilistic model output with persistent user data, so its core design problem is not “call an LLM.” It is maintaining a trustworthy boundary:
 
 - real providers supply place identity, available place facts, and route estimates;

@@ -1,4 +1,4 @@
-// Frontend vocabulary only; the future API must validate its own allowlist.
+// Frontend vocabulary; the backend independently validates its allowlist.
 // Keep stable values separate from visible labels.
 export const INTEREST_OPTIONS = [
   { value: 'food', label: 'Food' },
@@ -16,6 +16,7 @@ export type Interest = typeof INTEREST_OPTIONS[number]['value']
 /** Editable values can be blank or incomplete and are not submission data. */
 export interface TripFormValues {
   destination: string
+  timezone: string
   startDate: string
   endDate: string
   // Keep numeric inputs as text: an empty input is not zero or NaN.
@@ -27,12 +28,12 @@ export interface TripFormValues {
 }
 
 /**
- * Target shape after validation and normalization, not an API contract.
- * PR #11 will map this to the generated request type once one exists.
- * Required backend title/timezone handling remains a future integration decision.
+ * Validated local snapshot, kept separate from the snake_case API contract.
+ * Timezone is explicitly supplied; the backend supplies the default trip title.
  */
 export interface TripDraft {
   destinationLabel: string
+  timezone: string
   // Validated calendar dates in YYYY-MM-DD format, without a time or timezone.
   startDate: string
   endDate: string
@@ -45,13 +46,14 @@ export interface TripDraft {
   freeTextConstraints: string | null
 }
 
-/** A normalized-draft handoff; the future parent owns API/pending/error behavior. */
+/** Local review callback; it does not mean the trip has been saved. */
 export type TripDraftSubmitHandler = (draft: TripDraft) => void
 
 /** Each mounted form gets its own values and interest array. */
 export function createInitialTripFormValues(): TripFormValues {
   return {
     destination: '',
+    timezone: '',
     startDate: '',
     endDate: '',
     travelerCount: '',
