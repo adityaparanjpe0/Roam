@@ -135,7 +135,9 @@ explicit fields and validates the result under an owned-row lock; stale writes
 return 409. Trips with day records allow title-only updates. DELETE requires a
 quoted version in `If-Match`, blocks locked activities, and commits cascaded
 child deletion before an empty 204. PR #11 Milestone 2 wires frontend creation;
-live end-to-end verification remains pending.
+Milestone 3 verifies the real HTTP/PostgreSQL path with synthetic session
+identities. The [integration runbook](../docs/runbooks/trip-creation-integration.md)
+separates that evidence from the remaining human Google smoke check.
 No schema migration or new environment
 variable is introduced.
 

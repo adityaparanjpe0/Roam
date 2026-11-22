@@ -13,12 +13,15 @@ network/timeout/response failures: POST is not idempotent. Types do not validate
 JSON at runtime; keep response parsing and safe error mapping covered by tests.
 Keep save state account-scoped, block repeated clicks, preserve editable values
 on failure, and distinguish local validation from server-confirmed persistence.
-The narrow native-fetch decision and remaining manual verification are documented in
-[ADR 0010](adr/0010-trip-creation-integration.md).
+The narrow native-fetch decision is documented in [ADR 0010](adr/0010-trip-creation-integration.md).
+Milestone 3 verified real HTTP/PostgreSQL with synthetic identity issuance and
+real session/CSRF checks. Follow the [runbook](runbooks/trip-creation-integration.md)
+for normal startup and the remaining human Google smoke check. Do not claim
+Google/production verification from synthetic identities or mocked unit tests.
 
 Trip CRUD Milestones 1–3 add authenticated create/list/detail, version-checked
 PATCH and protected DELETE under `/api/v1/trips`; frontend creation is now wired,
-with live end-to-end verification still pending Milestone 3.
+with local HTTP/persistence verified independently of the pending Google smoke check.
 PATCH requires CSRF plus `base_version`; omitted fields stay unchanged, null only
 clears constraints, and trips with day records allow title-only updates. Keep
 owner/version checks and the write within one transaction/owned-row lock.

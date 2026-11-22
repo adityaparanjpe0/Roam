@@ -1,8 +1,8 @@
 # ADR 0010: Authenticated trip creation from the existing review flow
 
 - Date: 2026-11-21
-- Status: accepted through human plan approval; Milestones 1–2 implemented,
-  manual persistence verification remains Milestone 3
+- Status: accepted; Milestones 1–2 implemented and Milestone 3 local PostgreSQL/
+  HTTP verification completed; live-Google human smoke check not yet recorded
 - Owner: user with Codex assistance; teammate review pending
 
 ## Decision and current boundary
@@ -101,12 +101,22 @@ preserved. Client validation rejects NUL/lone-surrogate text and explicit offset
 zones; browser IANA support is feedback only, and the server's timezone database
 remains authoritative. No browser timezone inference is performed.
 
-## Remaining Milestone 3
+## Milestone 3 verification
 
-Run existing backend regressions and manual local create → refresh → authenticated
-GET plus cross-owner 404 verification. Mocked HTTP/UI tests do not prove live
-Google login or database persistence. Final runbook/evidence and human review
-remain required before claiming that end-to-end flow is verified.
+On 2026-11-22, full frontend/backend gates passed and isolated Chrome exercised
+the real React → Vite → FastAPI → PostgreSQL path: 201 saved confirmation,
+identical owned GET after refresh, cross-owner 404/empty list, guest 401, CSRF
+403, forbidden owner input 422, logout revocation and retrieval after a new
+session. Unlike the unit suite, those HTTP/database requests were not mocked.
+
+The sole identity substitute was an external temporary test wrapper issuing
+synthetic sessions through the existing service and cookie setter. It did not
+override authentication dependencies or change application routes/source; the
+temporary fixture route/servers/config and disposable database were removed.
+This proves the authenticated persistence boundary, not Google's current account
+selection or production TLS. The [runbook](../runbooks/trip-creation-integration.md)
+contains repeatable setup/check commands and a remaining human Google smoke check.
+Hosted CI, teammate review and deployment verification remain separate.
 
 ## Alternatives and evidence
 
@@ -118,5 +128,5 @@ the established auth behavior and keep each boundary explainable.
 Automated tests cover exact wire data, extra-field filtering, HTTP/HTTPS CSRF,
 status/error parsing, privacy, runtime response rejection, cancellation and
 timeouts without live requests. Actual commands/results are recorded in
-[memory](../memory.md). Tests do not claim browser login or database persistence
-through the UI until those boundaries are implemented and manually verified.
+[memory](../memory.md). Mocked unit tests do not claim browser/database behavior;
+the separately recorded real-HTTP verification above provides that evidence.

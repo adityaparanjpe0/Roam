@@ -4,7 +4,9 @@ Status: PR #11 Milestones 1–2 connect the existing form/review to authenticate
 POST `/api/v1/trips` on `feat/trip-creation-integration`. Review is local; only
 explicit Save sends a request. A validated 201 shows canonical saved data.
 Refresh clears in-memory editing/confirmation; it does not delete a saved record.
-Live persistence verification remains Milestone 3. No dashboard, provider or AI
+Milestone 3 verified real HTTP/persistence with synthetic session identities;
+the [runbook](runbooks/trip-creation-integration.md) retains a separate human
+Google smoke check. No dashboard, provider or AI
 call is implemented. The independent development `/health` diagnostic is unchanged.
 
 ## Fields and meanings

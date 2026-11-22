@@ -6,7 +6,8 @@ The development build includes a backend connection check using FastAPI `/health
 PR #9 Milestone 6 adds cookie-based account controls, current-user checks,
 backend-managed Google login navigation, and CSRF-protected logout. PR #11 adds
 authenticated trip creation; AI planning, maps, dashboard and PDF export remain
-unimplemented. Live create/persistence verification remains Milestone 3. The health check
+unimplemented. Milestone 3 verified real HTTP/PostgreSQL using synthetic session
+identities; the live-Google human smoke check remains. The health check
 still needs no database/credentials; actual authentication requires the migrated
 backend and locally configured Google credentials. An unavailable backend shows
 a recoverable auth error while the local trip form remains usable.
@@ -20,8 +21,10 @@ may follow a committed insert; aborting does not undo server work.
 Milestone 2 adds explicit destination timezone, local review → authenticated Save,
 pending/error states and canonical server-confirmed success. Form values remain
 editable after failures; account changes cancel/forget old save state. Refresh
-clears the local confirmation, not a saved database record. Manual persistence
-verification remains Milestone 3. See [ADR 0010](../docs/adr/0010-trip-creation-integration.md).
+clears the local confirmation, not a saved database record. Milestone 3's real
+HTTP/PostgreSQL check passed. Use the [integration runbook](../docs/runbooks/trip-creation-integration.md)
+for local startup, final Google-account smoke checks and troubleshooting; see
+[ADR 0010](../docs/adr/0010-trip-creation-integration.md) for boundaries and evidence.
 
 Focused client/auth regression tests, from this directory:
 

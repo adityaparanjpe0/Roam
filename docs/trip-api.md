@@ -2,7 +2,8 @@
 
 Implemented on `feat/trip-crud-api`: create, list, retrieve, partially update,
 and safely delete an owned trip. PR #11 Milestone 2 wires frontend creation;
-live end-to-end verification remains pending. Itinerary endpoints remain planned.
+Milestone 3 verifies real HTTP/PostgreSQL with synthetic session identities.
+The separate live-Google smoke check remains human work. Itinerary endpoints remain planned.
 See [ADR 0009](adr/0009-trip-crud-api.md) for decisions and rollback/security limits.
 
 ## Prerequisites and data flow
@@ -226,6 +227,10 @@ messages/allowlisted field names, not submitted values or SQL. Correlate safe
 code/status/request-ID logs without enabling body/cookie/SQL-parameter logging.
 
 ## Verification
+
+For complete local startup, UI save/refresh/ownership checks and troubleshooting,
+use the [trip integration runbook](runbooks/trip-creation-integration.md). Its
+evidence distinguishes real PostgreSQL/session verification from Google login.
 
 From `backend/`, run focused tests:
 

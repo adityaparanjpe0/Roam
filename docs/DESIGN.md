@@ -82,6 +82,16 @@ layout effects; background account checks do not request review focus. A refresh
 clears the local confirmation, not the saved record. Live persistence and
 cross-owner browser verification remain Milestone 3, not inferred from mocks.
 
+PR #11 Milestone 3 (2026-11-22) verifies the real React/Vite/FastAPI/PostgreSQL
+flow in isolated browser contexts and a disposable database: create 201,
+canonical saved confirmation, owned GET after refresh, cross-owner 404/empty
+list, guest 401, CSRF rejection, forbidden owner input and logout revocation.
+Only initial identity issuance used a temporary external synthetic-login wrapper;
+application auth dependencies and business endpoints were not mocked or changed.
+All verification resources were removed without changing development data. The
+[integration runbook](runbooks/trip-creation-integration.md) separates those results
+from the remaining human live-Google check, hosted CI and production verification.
+
 Roam creates realistic travel itineraries from user preferences. It combines uncertain external data and probabilistic model output with persistent user data, so its core design problem is not “call an LLM.” It is maintaining a trustworthy boundary:
 
 - real providers supply place identity, available place facts, and route estimates;

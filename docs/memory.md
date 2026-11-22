@@ -8,6 +8,54 @@
 
 ### Verified facts
 
+- 2026-11-22 PR #11 Milestone 3 verification/documentation, owner: user with
+  Codex assistance, on clean `feat/trip-creation-integration` at human-committed
+  Milestone 2 `6810e0c` (Milestone 1 `7f2ed4c`). Added the
+  [integration runbook](runbooks/trip-creation-integration.md) with normal local
+  startup, pinned-runtime options, explicit environment/migration commands,
+  save/refresh/ownership/logout checks, troubleshooting and remaining live-Google
+  human steps. Uvicorn/Vite are documented as intentionally long-running servers;
+  PostgreSQL health/readiness is distinguished from dependency-free `/health`.
+- Verification: pinned Node **24.22.3**, **301 frontend tests in 15 files passed**
+  in **7.54 seconds**, ESLint, TypeScript and production build passed. Python
+  **3.12.16**, frozen all-group sync, lock check, Ruff format (**77 files**)/lint
+  and strict mypy app (**40 files**) passed. Default backend: **434 passed /
+  136 opt-in skipped**; full disposable PostgreSQL 18.7 backend suite:
+  **570 passed in 35.91 seconds**. Existing Starlette/HTTPX deprecation warning
+  remains. Existing migrations upgraded fresh scratch databases with no schema
+  drift; no dependency, migration, app or test source change was needed.
+- A separate browser check exercised actual React → existing Vite proxy → FastAPI
+  → PostgreSQL on independent loopback ports. Isolated headless Chrome contexts
+  used real Roam session cookies, CSRF/origin validation and owner-scoped routes;
+  no fetch mocks or authentication dependency overrides were used. Only initial
+  identity was substituted: a temporary external wrapper called existing
+  create_login_session/set_session_cookies for synthetic Alice/Bob identities.
+  The wrapper's fixture route/config were never added to project source. Vite's
+  normal proxy definitions/timeouts were reused with temporary target ports.
+- Browser outcomes: valid form POST **201**, canonical saved confirmation,
+  matching whole trip JSON after refresh via owned GET **200**, and exactly one
+  owned list item. Missing CSRF **403**, client owner-ID input **422** (no extra
+  records), other-owner detail **404**/empty list, guest detail **401**, logout
+  **204** followed by revoked access **401**, and original trip readable **200**
+  after a newly issued session. Refresh reset the local form while the database
+  record persisted. These are real HTTP/database results with synthetic identity
+  issuance, not proof of current Google account selection or deployed HTTPS.
+- Docker Desktop was initially stopped and was started for verification. One
+  independent generated-credential PostgreSQL container, registered test scratch
+  databases, temporary wrapper/config/log directory, test servers and isolated
+  browser contexts were removed. Existing development container state/mounts and
+  Docker volume inventory matched before/after. No development DB write, real
+  Google/provider call, credential/environment edit, application auth bypass,
+  project dependency/lockfile or CI change. The integrated browser tool returned
+  missing-page errors, so the real-HTTP check used an already cached Playwright
+  runtime with isolated Chrome profiles; no project package was added.
+- Updated current docs to distinguish observed PostgreSQL/session persistence
+  from the still-unreported live-Google human smoke check requested in this
+  session. No claim is made for that external check, production TLS, hosted CI
+  or teammate approval. Milestone 3 changes are documentation only and remain
+  uncommitted for review; no commit, push, merge or PR creation by Codex. Older
+  Milestone 2 planned/uncommitted statements are historical and superseded here.
+
 - 2026-11-22 PR #11 Milestone 2 completion, owner: user with Codex assistance,
   on `feat/trip-creation-integration`. Human committed Milestone 1 as `7f2ed4c`;
   implementation began clean at that commit on 2026-11-21. Added explicit blank
@@ -1025,7 +1073,7 @@ Update the evidence column with PR/commit/test/deployment links before changing 
 | Frontend foundation / historical PR #2 | IMPLEMENTED | Frontend contributor; reviewer not recorded | Local `main` merge `2281737`; [tests](../frontend/src/App.test.tsx); historical verification below | CI and reviewer evidence not recorded |
 | Local PostgreSQL / historical PR #5 | IMPLEMENTED | User with Codex assistance; reviewer not recorded | Local `main` merge `2e4fa6f`; `f715de3`, `6bb7bea`, `7cf6e1f`; [runbook](runbooks/local-postgres.md) | Production hardening remains planned; reviewer evidence not recorded |
 | Frontend/backend health integration / PR #6 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | `d66391a`, `ab6e482`; [client](../frontend/src/api/health.ts), [UI](../frontend/src/features/connection/ConnectionStatus.tsx), live verification below | Documentation review, teammate review, and merge evidence |
-| Trip schema/migrations/CRUD | IN_PROGRESS | User with Codex assistance; review evidence not reverified | [Trip API](trip-api.md), [ADR 0009](adr/0009-trip-crud-api.md), models/migrations and PostgreSQL HTTP tests | CRUD merged into main at 82e53f6; frontend saving and deployment remain planned; hosted verification not rechecked |
+| Trip schema/migrations/CRUD | IN_PROGRESS | User with Codex assistance; reviewer pending | [Trip API](trip-api.md), [integration runbook](runbooks/trip-creation-integration.md), [ADR 0010](adr/0010-trip-creation-integration.md), models/migrations and PostgreSQL tests | CRUD merged at 82e53f6; PR #11 frontend save/refresh/ownership verified over real HTTP/PostgreSQL on its feature branch with synthetic identities; Google human smoke check, hosted CI and review remain |
 | PostgreSQL foundation / PR #7 | IN_PROGRESS | User with Codex assistance; reviewer not recorded | [Settings](../backend/app/core/config.py), [sessions](../backend/app/db/session.py), [ADR 0001](adr/0001-database-foundation.md), [CI](../.github/workflows/backend-ci.yml), evidence below | Milestone 3 review, hosted Backend checks success, and teammate schema walkthrough before merge |
 | Google OIDC/session/CSRF | IN_PROGRESS | User with Codex assistance; Milestone 6 review pending | ADRs 0006–0007, backend/PostgreSQL and frontend synthetic tests | Shared flow state, throttling, retention, live Google/HTTPS and deployment verification |
 | Provider-neutral Places/Routes | PLANNED | Unassigned | None | Fake + live opt-in normalization/failure proof |
