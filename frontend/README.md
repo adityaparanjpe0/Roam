@@ -4,8 +4,9 @@ React + TypeScript + Vite frontend for Roam. The current page introduces the pla
 
 The development build includes a backend connection check using FastAPI `/health`.
 PR #9 Milestone 6 adds cookie-based account controls, current-user checks,
-backend-managed Google login navigation, and CSRF-protected logout. AI planning,
-maps, trip persistence, and PDF export remain unimplemented. The health check
+backend-managed Google login navigation, and CSRF-protected logout. PR #11 adds
+authenticated trip creation; AI planning, maps, dashboard and PDF export remain
+unimplemented. Live create/persistence verification remains Milestone 3. The health check
 still needs no database/credentials; actual authentication requires the migrated
 backend and locally configured Google credentials. An unavailable backend shows
 a recoverable auth error while the local trip form remains usable.
@@ -16,14 +17,17 @@ cookies, validates response JSON at runtime, and maps errors without exposing
 raw server messages or private data. A ten-second timeout/caller cancellation
 bounds requests, and POST is never retried automatically. An uncertain response
 may follow a committed insert; aborting does not undo server work.
-The form still performs local review only. Timezone entry, Save action and
-server-confirmed success UI remain Milestone 2; manual persistence verification
-remains Milestone 3. See [ADR 0010](../docs/adr/0010-trip-creation-integration.md).
+Milestone 2 adds explicit destination timezone, local review → authenticated Save,
+pending/error states and canonical server-confirmed success. Form values remain
+editable after failures; account changes cancel/forget old save state. Refresh
+clears the local confirmation, not a saved database record. Manual persistence
+verification remains Milestone 3. See [ADR 0010](../docs/adr/0010-trip-creation-integration.md).
 
 Focused client/auth regression tests, from this directory:
 
 ```bash
 npm run test -- --run src/api/trips.test.ts src/api/auth.test.ts src/api/auth.https.test.ts
+npm run test -- --run src/features/trip src/App.test.tsx
 ```
 
 These tests mock fetch; they do not contact Google, FastAPI or PostgreSQL.
@@ -280,7 +284,9 @@ normalized `TripDraft` contract/example, validation decisions, PR #11 integratio
 boundary, and the detailed accessibility review. Milestone 8 checks passed **142
 tests in 5 files**, lint, strict typecheck, and production build using existing
 Node 24.11.1/npm 11.6.2; pinned Node 24.22.3 verification remains outstanding.
-There is no network operation or loading state in the form/review flow.
+Those PR #8 observations describe local review before API integration; current
+PR #11 Save has real pending/error/success states. Current results are recorded
+in [project memory](../docs/memory.md).
 
 Browser checks covered five standard widths, keyboard traversal/Space/Enter,
 focus transitions, a 4,000-character review note, and selected text contrast
@@ -294,12 +300,13 @@ full accessibility conformance.
 
 Run `npm run dev` from `frontend/` with the pinned Node version, then open
 `http://127.0.0.1:5173/#create-trip`, or follow **Enter trip details** on the
-landing page. FastAPI is not required for the form; the independent development
-health diagnostic may report an error if it is stopped.
+landing page. Editing and local review work without FastAPI; authenticated Save
+requires FastAPI, PostgreSQL and the existing login setup. The independent
+development health diagnostic may report an error if the backend is stopped.
 
 The [form](src/features/trip/TripCreationForm.tsx) receives editable values and
 an update callback from [local React state](src/features/trip/TripCreation.tsx).
-Destination, start/end dates, travelers, and total per-person USD budget are
+Destination, explicit destination timezone, dates, travelers, and total per-person USD budget are
 controlled and start blank. Numeric editing values stay strings. Eight interest
 checkboxes support independent selection/deselection, and an optional multiline
 preferences/constraints field starts empty. The
@@ -307,12 +314,13 @@ preferences/constraints field starts empty. The
 [client validation](src/features/trip/tripValidation.ts). Successful submission
 opens [local review](src/features/trip/TripReview.tsx); invalid input stays on the
 form with field errors. The container exposes an optional typed
-`onDraftSubmit(draft)` callback for a future parent. No callback is supplied by
-the landing page, and no draft is sent to a backend.
+`onDraftSubmit(draft)` callback for local review only. The mounted review's
+separate Save action now maps the draft to the authenticated backend API.
 
 Manual checks:
 
-1. Enter and clear all five fields; editing one must preserve the others.
+1. Enter and clear all six core fields, including destination timezone; editing
+   one must preserve the others. Timezone starts blank and is never inferred.
 2. Enter zero and a decimal budget. Checking zero must show a budget error; a
    positive amount with up to two decimal places is allowed. The budget is for
    the entire trip per person, not per day or for the group. Placeholder examples
@@ -331,21 +339,22 @@ Manual checks:
 8. Click **Review trip details** on an empty form: expect field errors, an alert,
    and focus on Destination. Correct it and check again: focus should reach the
    first remaining invalid input. After the first check, errors update as you edit.
-9. Review a valid example: Lisbon, March 27–30 2027, 2 travelers, $750.50, Food.
-   Expect a summary of every field and an explicit **Your trip has not been saved**
-   notice. The heading should receive focus. The validator's draft has
+9. Review a valid example: Lisbon, Europe/Lisbon, March 27–30 2027, 2 travelers,
+   $750.50, Food. Expect a summary and a notice that saving requires server
+   confirmation. The heading should receive focus. The validator's draft has
    `budgetPerPersonMinor: 75050`; review displays $750.50 for the entire trip.
 10. Choose **Edit details**: expect focus on Destination and every original input
     restored, including surrounding spaces and multiline preferences. Change the
     destination and review again: the summary must update. Change budget to zero
     or reverse the dates and submit: errors must keep you on the form.
 11. Review with no preferences: expect **No additional preferences provided.**
-    Refreshing either screen must return to an empty form; there is no storage.
+    Refreshing returns to an empty form; there is no draft browser storage.
+    A previously saved backend record remains saved.
 
-Review and editing use local React state only; backend integration remains
-planned. The callback is a synchronous normalized-data handoff, not a save result.
-PR #11 must add request mapping, pending/error behavior, and canonical server
-results, including unresolved title/timezone handling. Dates must be real calendar
+Review and editing use local React state; only explicit Save calls the backend.
+The callback is a synchronous normalized-data handoff, not a save result. The
+backend supplies a default title, and users enter the destination timezone.
+The saved screen appears only after validated 201. Dates must be real calendar
 dates and span 1–14 inclusive days; travelers
 must be whole numbers from 1–20. Budget must be positive, at most $1,000,000 and
 have no more than two decimal places. Exponents, hex, nonfinite numbers, trailing

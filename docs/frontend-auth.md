@@ -7,9 +7,10 @@ Full identity text remains accessible. Desktop sign-in help appears on hover/
 focus and can be dismissed with Escape; mobile help stays visible inside the
 native modal drawer. Error messages and retry remain available. This presentation
 change does not alter authentication.
-Only backend current-user data establishes sign-in. The PR #8 form, validation,
-review, and edit screens stay local/unsaved. Auth alone never saves trips or
-authorizes a resource. No trip CRUD or roles are added.
+Only backend current-user data establishes sign-in. PR #11 now adds an explicit
+Save action after the form's local review, reusing the authenticated session and
+CSRF reader. Auth alone never saves trips or authorizes a resource. No OAuth or
+role implementation is changed by that integration.
 
 ## Structure and contract
 
@@ -39,6 +40,14 @@ React state/context is the human-requested exception for this small auth snapsho
 future trip server queries still default to TanStack Query. No client generator
 exists yet; types match current OpenAPI and are guarded at runtime. No backend
 endpoint/schema changes are introduced here.
+
+PR #11's single create mutation uses the narrow native-fetch exception in
+[ADR 0010](adr/0010-trip-creation-integration.md). Save requires a confirmed user
+and is unavailable while signing out. A trip 401 refreshes the auth snapshot;
+CSRF failure offers existing Google navigation with an unsaved-data warning.
+Account changes discard pending/saved confirmation state and abort/ignore late
+results, preserving parent form values. Cancellation does not undo a server
+commit. No token is put in storage or request JSON, and no owner ID is accepted.
 
 ## Lifecycle and accessibility
 

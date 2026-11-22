@@ -1,9 +1,16 @@
 import { StrictMode } from 'react'
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import type { ReactNode } from 'react'
+import { fireEvent, render as renderComponent, screen, within } from '@testing-library/react'
 import { expect, test, vi } from 'vitest'
 import TripCreation from './TripCreation'
 import TripCreationForm from './TripCreationForm'
 import { createInitialTripFormValues } from './tripCreationModels'
+import { AuthContext } from '../auth/authContext'
+
+// Local form/review tests are deliberately signed out; save HTTP is tested separately.
+function render(ui: ReactNode) {
+  return renderComponent(<AuthContext value={{ state: { status: 'unauthenticated' }, signingOut: false, retry: vi.fn(), signOut: vi.fn() }}>{ui}</AuthContext>)
+}
 
 test('keeps numeric defaults empty and does not share interest selections', () => {
   const first = createInitialTripFormValues()
@@ -65,7 +72,7 @@ test('prevents native submission and provides a local validation action', () => 
 
   expect(fireEvent.submit(form)).toBe(false)
   expect(within(form).getByRole('button', { name: 'Review trip details' })).toBeInTheDocument()
-  expect(form).toHaveAccessibleDescription('Your details stay on this page and are not saved. Itinerary planning is coming later.')
+  expect(form).toHaveAccessibleDescription('Review your details, then choose Save trip to save them to your account. Itinerary planning is coming later.')
 })
 
 test('shows associated field errors after submit and focuses the first invalid input', () => {
@@ -84,7 +91,7 @@ test('shows associated field errors after submit and focuses the first invalid i
   expect(destination).not.toHaveAttribute('aria-invalid')
   expect(screen.queryByText('Enter a destination.')).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Review trip details' }))
-  expect(screen.getByLabelText('Start date (required)')).toHaveFocus()
+  expect(screen.getByLabelText('Destination time zone (required)')).toHaveFocus()
   expect(destination).toHaveValue('Lisbon')
 })
 
@@ -92,6 +99,7 @@ test('reviews normalized details and returns to all original editable values', (
   render(<TripCreation />)
   for (const [label, value] of [
     ['Destination (required)', ' Lisbon '],
+    ['Destination time zone (required)', 'Europe/Lisbon'],
     ['Start date (required)', '2027-03-27'],
     ['End date (required)', '2027-03-30'],
     ['Number of travelers (required)', '2'],
@@ -107,9 +115,9 @@ test('reviews normalized details and returns to all original editable values', (
   const review = screen.getByRole('region', { name: 'Review your trip' })
   expect(within(review).getByRole('heading', { name: 'Review your trip' })).toHaveFocus()
   expect(within(review).getByRole('heading', { name: 'Review your trip' })).toHaveAccessibleDescription(
-    'This is a local review. Your trip has not been saved. Refreshing this page clears your details.',
+    'Review these details before saving. Saving is confirmed only after the server responds. Refreshing clears unsaved details.',
   )
-  expect(review).toHaveAccessibleDescription('This is a local review. Your trip has not been saved. Refreshing this page clears your details.')
+  expect(review).toHaveAccessibleDescription('Review these details before saving. Saving is confirmed only after the server responds. Refreshing clears unsaved details.')
   expect(within(review).getByText('Lisbon', { exact: true })).toBeInTheDocument()
   expect(within(review).getByText('2027-03-27')).toHaveAttribute('datetime', '2027-03-27')
   expect(within(review).getByText('2027-03-30')).toHaveAttribute('datetime', '2027-03-30')
@@ -145,7 +153,7 @@ test('hands only valid normalized drafts to the callback once per explicit revie
   expect(screen.queryByRole('region', { name: 'Review your trip' })).not.toBeInTheDocument()
 
   for (const [label, value] of [
-    ['Destination (required)', ' Lisbon '], ['Start date (required)', '2027-03-27'],
+    ['Destination (required)', ' Lisbon '], ['Destination time zone (required)', 'Europe/Lisbon'], ['Start date (required)', '2027-03-27'],
     ['End date (required)', '2027-03-30'], ['Number of travelers (required)', '2'],
     ['Budget per person (USD, required)', '0.29'],
   ]) fireEvent.change(screen.getByLabelText(label), { target: { value } })
@@ -153,7 +161,7 @@ test('hands only valid normalized drafts to the callback once per explicit revie
   fireEvent.click(screen.getByRole('button', { name: 'Review trip details' }))
   expect(onDraftSubmit).toHaveBeenCalledTimes(1)
   expect(onDraftSubmit).toHaveBeenLastCalledWith({
-    destinationLabel: 'Lisbon', startDate: '2027-03-27', endDate: '2027-03-30',
+    destinationLabel: 'Lisbon', timezone: 'Europe/Lisbon', startDate: '2027-03-27', endDate: '2027-03-30',
     travelerCount: 2, budgetPerPersonMinor: 29, currency: 'USD', interests: ['food'],
     freeTextConstraints: null,
   })
@@ -171,7 +179,7 @@ test('hands only valid normalized drafts to the callback once per explicit revie
 test('renders review text literally without treating preferences or destination as markup', () => {
   const { container } = render(<TripCreation />)
   for (const [label, value] of [
-    ['Destination (required)', '<b>Lisbon</b>'], ['Start date (required)', '2027-03-27'],
+    ['Destination (required)', '<b>Lisbon</b>'], ['Destination time zone (required)', 'Europe/Lisbon'], ['Start date (required)', '2027-03-27'],
     ['End date (required)', '2027-03-30'], ['Number of travelers (required)', '2'],
     ['Budget per person (USD, required)', '10'],
     ['Additional preferences or constraints (optional)', '<img src=x onerror=alert(1)>\nQuiet mornings'],
@@ -187,7 +195,7 @@ test('renders review text literally without treating preferences or destination 
 test('rechecks dependent dates and focuses the interest group when it is the only error', () => {
   render(<TripCreation />)
   for (const [label, value] of [
-    ['Destination (required)', 'Lisbon'], ['Start date (required)', '2027-03-27'],
+    ['Destination (required)', 'Lisbon'], ['Destination time zone (required)', 'Europe/Lisbon'], ['Start date (required)', '2027-03-27'],
     ['End date (required)', '2027-03-26'], ['Number of travelers (required)', '2'],
     ['Budget per person (USD, required)', '10'],
   ]) fireEvent.change(screen.getByLabelText(label), { target: { value } })
@@ -202,11 +210,12 @@ test('rechecks dependent dates and focuses the interest group when it is the onl
   expect(screen.queryByText('Select at least one interest.')).not.toBeInTheDocument()
 })
 
-test('all five core inputs start blank and have visible required labels', () => {
+test('all six core inputs start blank and have visible required labels', () => {
   render(<TripCreation />)
 
   for (const label of [
     'Destination (required)',
+    'Destination time zone (required)',
     'Start date (required)',
     'End date (required)',
     'Number of travelers (required)',
@@ -328,7 +337,7 @@ test('interest updates use stable values without mutating the previous selection
 
 function enterValidCoreFields() {
   for (const [label, value] of [
-    ['Destination (required)', 'Kyoto'], ['Start date (required)', '2027-03-27'],
+    ['Destination (required)', 'Kyoto'], ['Destination time zone (required)', 'Asia/Tokyo'], ['Start date (required)', '2027-03-27'],
     ['End date (required)', '2027-03-30'], ['Number of travelers (required)', '4'],
     ['Budget per person (USD, required)', '1200.25'],
   ]) fireEvent.change(screen.getByLabelText(label), { target: { value } })
@@ -386,7 +395,7 @@ test('blocks an otherwise valid form with no interests, then recovers without lo
   fireEvent.click(screen.getByRole('button', { name: 'Review trip details' }))
   expect(onDraftSubmit).toHaveBeenCalledTimes(1)
   expect(onDraftSubmit).toHaveBeenLastCalledWith({
-    destinationLabel: 'Kyoto', startDate: '2027-03-27', endDate: '2027-03-30',
+    destinationLabel: 'Kyoto', timezone: 'Asia/Tokyo', startDate: '2027-03-27', endDate: '2027-03-30',
     travelerCount: 4, budgetPerPersonMinor: 120025, currency: 'USD',
     interests: ['outdoors'], freeTextConstraints: null,
   })
@@ -403,7 +412,7 @@ test('submits a complete typed draft and reviews all interest labels and multili
   fireEvent.click(screen.getByRole('button', { name: 'Review trip details' }))
   expect(onDraftSubmit).toHaveBeenCalledTimes(1)
   expect(onDraftSubmit).toHaveBeenCalledWith({
-    destinationLabel: 'Kyoto', startDate: '2027-03-27', endDate: '2027-03-30',
+    destinationLabel: 'Kyoto', timezone: 'Asia/Tokyo', startDate: '2027-03-27', endDate: '2027-03-30',
     travelerCount: 4, budgetPerPersonMinor: 120025, currency: 'USD',
     interests: ['food', 'sightseeing', 'outdoors', 'nightlife', 'shopping', 'culture', 'adventure', 'relaxation'],
     freeTextConstraints: 'Quiet mornings\nVegetarian meals',
@@ -414,7 +423,7 @@ test('submits a complete typed draft and reviews all interest labels and multili
   for (const name of names) expect(within(list).getByText(name, { exact: true })).toBeInTheDocument()
   expect(within(review).getByText('$1,200.25 for the entire trip')).toBeInTheDocument()
   expect(within(review).getByText(/Quiet mornings/).textContent).toBe('Quiet mornings\nVegetarian meals')
-  expect(review).toHaveAccessibleDescription(expect.stringContaining('Your trip has not been saved.'))
+  expect(review).toHaveAccessibleDescription(expect.stringContaining('Saving is confirmed only after the server responds.'))
 
   fireEvent.click(within(review).getByRole('button', { name: 'Edit details' }))
   for (const name of names) expect(screen.getByRole('checkbox', { name })).toBeChecked()
@@ -428,8 +437,8 @@ test('announces the current error count atomically and stays quiet before submis
   expect(announcement).toHaveAttribute('aria-atomic', 'true')
   expect(announcement).toBeEmptyDOMElement()
   fireEvent.click(screen.getByRole('button', { name: 'Review trip details' }))
-  expect(announcement).toHaveTextContent('6 fields need attention.')
+  expect(announcement).toHaveTextContent('7 fields need attention.')
   fireEvent.change(screen.getByLabelText('Destination (required)'), { target: { value: 'Lisbon' } })
-  expect(announcement).toHaveTextContent('5 fields need attention.')
+  expect(announcement).toHaveTextContent('6 fields need attention.')
   expect(screen.getByRole('button', { name: 'Review trip details' })).toBeEnabled()
 })

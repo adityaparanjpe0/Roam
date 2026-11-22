@@ -1,8 +1,8 @@
 # ADR 0010: Authenticated trip creation from the existing review flow
 
 - Date: 2026-11-21
-- Status: accepted through human plan approval; Milestone 1 client implemented,
-  UI integration and manual persistence verification remain planned
+- Status: accepted through human plan approval; Milestones 1–2 implemented,
+  manual persistence verification remains Milestone 3
 - Owner: user with Codex assistance; teammate review pending
 
 ## Decision and current boundary
@@ -10,9 +10,9 @@
 Connect the existing form/review to POST `/api/v1/trips` without changing OAuth,
 the database schema, backend CRUD, or the navbar. Milestone 1 adds only the typed
 [trip client](../../frontend/src/api/trips.ts), shared CSRF reader, and mocked HTTP
-tests. The mounted form still makes no save request. Its timezone field, explicit
-Save action and server-confirmed screen belong to Milestone 2; full manual
-verification and final instructions belong to Milestone 3.
+tests. Milestone 2 connects the mounted form/review with explicit timezone entry,
+Save action and server-confirmed screen; full manual verification and final
+instructions belong to Milestone 3.
 
 Use native fetch for this one explicit mutation. This is a narrow, human-approved
 exception to AGENTS' default TanStack Query direction for future trip server
@@ -64,7 +64,7 @@ Messages must not claim those failures prove nothing was saved. Disabling a
 button in Milestone 2 prevents repeated clicks, not duplicates across retries,
 tabs or a lost response. Aborting a request does not roll back a server commit.
 
-## Approved next milestones (not implemented here)
+## Milestone 2: implemented form and save flow
 
 - Keep form → review, then add an explicit authenticated Save trip action.
 - Collect a destination IANA timezone explicitly, initially blank; do not guess
@@ -76,8 +76,37 @@ tabs or a lost response. Aborting a request does not roll back a server commit.
 - Show canonical saved response data without inventing a trip page/dashboard.
   A refresh can clear the confirmation while the database record remains.
 - Retain the warning that full-page Google sign-in clears unsaved in-memory data.
-- Validate with mocked frontend HTTP, existing backend regressions and manual
-  local create → refresh → authenticated GET plus cross-owner 404 verification.
+
+The editable values stay in TripCreation. A small reviewed-trip controller is
+keyed by authenticated user ID (or no-account); auth changes discard its saved/
+pending state and abort its request, while the parent preserves editable values.
+Abort/identity guards ignore late responses. This does not revoke an already
+authorized backend request or undo its commit. Missing/unknown auth blocks Save;
+401 refreshes the existing auth snapshot. CSRF failure offers the existing Google
+navigation with a draft-loss warning, without changing the OAuth implementation.
+
+An immediate controller ref blocks a second POST before the disabled button
+renders. Save and Edit are disabled during a request. Recognized server field
+errors return to the original form and focus the first rejected control; editing
+one field clears only that field's server error. General failures keep review
+editable. Canonical saved data replaces review only after validated 201. Creating
+another trip is explicit and clears local values; saved-record editing remains
+outside this PR. No dashboard/link to an unimplemented page is created.
+
+Explicit review/error/success focus uses layout effects, following account-control
+conventions. A reproduced asynchronous error assertion observed the alert before
+passive focus moved; layout timing prevents that gap. Parent review focus depends
+on draft navigation, not background auth changes, so logout focus recovery is
+preserved. Client validation rejects NUL/lone-surrogate text and explicit offset
+zones; browser IANA support is feedback only, and the server's timezone database
+remains authoritative. No browser timezone inference is performed.
+
+## Remaining Milestone 3
+
+Run existing backend regressions and manual local create → refresh → authenticated
+GET plus cross-owner 404 verification. Mocked HTTP/UI tests do not prove live
+Google login or database persistence. Final runbook/evidence and human review
+remain required before claiming that end-to-end flow is verified.
 
 ## Alternatives and evidence
 

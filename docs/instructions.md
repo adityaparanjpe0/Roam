@@ -5,16 +5,20 @@
 
 ## 1. Working agreement
 
-PR #11 Milestone 1 adds a tested trip POST client; the form is not connected yet.
+PR #11 Milestones 1–2 add a tested trip POST client and authenticated review/save
+flow. Explicit destination timezone is required; never infer the browser zone.
 Reuse the shared CSRF reader and existing relative `/api` proxy. Never send an
 owner ID, log trip/token values, or automatically retry creation after uncertain
 network/timeout/response failures: POST is not idempotent. Types do not validate
 JSON at runtime; keep response parsing and safe error mapping covered by tests.
-The narrow native-fetch decision and pending UI milestones are documented in
+Keep save state account-scoped, block repeated clicks, preserve editable values
+on failure, and distinguish local validation from server-confirmed persistence.
+The narrow native-fetch decision and remaining manual verification are documented in
 [ADR 0010](adr/0010-trip-creation-integration.md).
 
 Trip CRUD Milestones 1–3 add authenticated create/list/detail, version-checked
-PATCH and protected DELETE under `/api/v1/trips`; frontend saving remains planned.
+PATCH and protected DELETE under `/api/v1/trips`; frontend creation is now wired,
+with live end-to-end verification still pending Milestone 3.
 PATCH requires CSRF plus `base_version`; omitted fields stay unchanged, null only
 clears constraints, and trips with day records allow title-only updates. Keep
 owner/version checks and the write within one transaction/owned-row lock.

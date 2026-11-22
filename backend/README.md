@@ -134,13 +134,14 @@ bounded cursor pagination. PATCH reuses CSRF, requires `base_version`, merges
 explicit fields and validates the result under an owned-row lock; stale writes
 return 409. Trips with day records allow title-only updates. DELETE requires a
 quoted version in `If-Match`, blocks locked activities, and commits cascaded
-child deletion before an empty 204. Frontend save integration remains planned.
+child deletion before an empty 204. PR #11 Milestone 2 wires frontend creation;
+live end-to-end verification remains pending.
 No schema migration or new environment
 variable is introduced.
 
 See the [trip contract and safe manual/test workflow](../docs/trip-api.md) and
 [ADR 0009](../docs/adr/0009-trip-crud-api.md). The API requires destination
-timezone, although the current frontend draft does not supply one yet. It stores
+timezone, now explicitly collected by the frontend. It stores
 metadata only and makes no Google/provider calls. Existing schema revision 0002
 and a valid Roam session are required. Successful writes return only after commit.
 

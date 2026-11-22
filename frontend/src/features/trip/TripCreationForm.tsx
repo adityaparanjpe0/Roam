@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
 import { INTEREST_OPTIONS } from './tripCreationModels'
 import type { Interest, TripFormValues } from './tripCreationModels'
 import { TRIP_FORM_LIMITS } from './tripValidation'
@@ -11,16 +11,18 @@ interface TripCreationFormProps {
   onSubmit?: () => void
   errors?: TripFormErrors
   focusOnMount?: boolean
+  serverMessage?: string | null
 }
 
 /** Controlled trip details; the container validates and handles submission. */
-function TripCreationForm({ values, onChange, onSubmit, errors = {}, focusOnMount = false }: TripCreationFormProps) {
+function TripCreationForm({ values, onChange, onSubmit, errors = {}, focusOnMount = false, serverMessage }: TripCreationFormProps) {
   const formRef = useRef<HTMLFormElement>(null)
   const [submitAttempt, setSubmitAttempt] = useState(0)
   const id = useId()
   const headingId = `${id}-heading`
   const helpId = `${id}-help`
   const destinationId = `${id}-destination`
+  const timezoneId = `${id}-timezone`
   const startDateId = `${id}-start-date`
   const endDateId = `${id}-end-date`
   const travelerCountId = `${id}-travelers`
@@ -29,11 +31,15 @@ function TripCreationForm({ values, onChange, onSubmit, errors = {}, focusOnMoun
   const constraintsId = `${id}-constraints`
   const errorCount = Object.keys(errors).length
 
-  useEffect(() => {
-    if (focusOnMount) formRef.current?.querySelector<HTMLInputElement>('input[name="destination"]')?.focus()
+  useLayoutEffect(() => {
+    if (focusOnMount) {
+      const target = formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"] input, input[aria-invalid="true"], textarea[aria-invalid="true"]')
+        ?? formRef.current?.querySelector<HTMLInputElement>('input[name="destination"]')
+      target?.focus()
+    }
   }, [focusOnMount])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (submitAttempt > 0) {
       formRef.current?.querySelector<HTMLElement>('input[aria-invalid="true"], textarea[aria-invalid="true"]')?.focus()
     }
@@ -65,10 +71,12 @@ function TripCreationForm({ values, onChange, onSubmit, errors = {}, focusOnMoun
       setSubmitAttempt((previous) => previous + 1)
     }}>
       <h2 id={headingId}>Trip details</h2>
-      <p className="trip-form-help" id={helpId}>Your details stay on this page and are not saved. Itinerary planning is coming later.</p>
+      <p className="trip-form-help" id={helpId}>Review your details, then choose Save trip to save them to your account. Itinerary planning is coming later.</p>
+      <p className="trip-form-help">Sign in using the account controls before saving. Signing in leaves this page and clears unsaved details.</p>
       <p className="trip-form-help">Required fields are marked. Additional preferences are optional.</p>
       <p className="trip-form-help">The review ignores surrounding spaces; your entered text stays unchanged when you return to edit.</p>
       <p className="trip-error-summary" role="alert" aria-atomic="true">
+        {serverMessage && <span>Server validation: {serverMessage} </span>}
         {errorCount > 0 && `${errorCount} ${errorCount === 1 ? 'field needs' : 'fields need'} attention. Check the highlighted fields before continuing.`}
       </p>
       <div className="trip-form-fields">
@@ -87,6 +95,17 @@ function TripCreationForm({ values, onChange, onSubmit, errors = {}, focusOnMoun
           />
           <p id={`${destinationId}-help`}>Enter a city or region you’d like to explore.</p>
           {fieldError('destination')}
+        </div>
+        <div className="trip-form-field trip-form-field-wide">
+          <label htmlFor={timezoneId}>Destination time zone (required)</label>
+          <input id={timezoneId} name="timezone" type="text" required
+            maxLength={TRIP_FORM_LIMITS.timezoneLength} placeholder="e.g. Europe/Lisbon"
+            autoCapitalize="none" spellCheck={false}
+            {...fieldAttributes('timezone', `${timezoneId}-help`)} value={values.timezone}
+            onChange={(event) => onChange({ ...values, timezone: event.currentTarget.value })}
+          />
+          <p id={`${timezoneId}-help`}>Use the destination’s IANA time zone, such as Europe/Lisbon or America/New_York. We do not infer it from your browser.</p>
+          {fieldError('timezone')}
         </div>
         <div className="trip-form-field">
           <label htmlFor={startDateId}>Start date (required)</label>

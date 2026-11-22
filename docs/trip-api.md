@@ -1,7 +1,8 @@
 # Trip metadata API — Milestones 1–3
 
 Implemented on `feat/trip-crud-api`: create, list, retrieve, partially update,
-and safely delete an owned trip. Itinerary endpoints and frontend saving remain planned.
+and safely delete an owned trip. PR #11 Milestone 2 wires frontend creation;
+live end-to-end verification remains pending. Itinerary endpoints remain planned.
 See [ADR 0009](adr/0009-trip-crud-api.md) for decisions and rollback/security limits.
 
 ## Prerequisites and data flow
@@ -9,7 +10,8 @@ See [ADR 0009](adr/0009-trip-crud-api.md) for decisions and rollback/security li
 Follow [backend setup](../backend/README.md) and [authentication setup](AUTH.md).
 PostgreSQL must be reachable at the configured runtime `DATABASE_URL` and have
 migration `0002`. This milestone adds no schema migration and does not run
-migrations automatically. The local trip form still reviews unsaved data only.
+migrations automatically. The form collects an explicit timezone and offers
+authenticated Save after review; see [the form flow](trip-creation-form.md).
 
 Request → existing verified session/CSRF dependency → synchronous trip service
 transaction → owner-scoped SQLAlchemy query → PostgreSQL → Pydantic response.

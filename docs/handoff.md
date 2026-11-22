@@ -1,11 +1,11 @@
 # Roam MVP handoff
 
-> Status: local main includes the frontend/form, PostgreSQL/ORM/migrations, OAuth/sessions, Trip CRUD and navbar through merge de15c3b. PR #11 Milestone 1 adds a trip POST client on feat/trip-creation-integration; form saving is not connected yet. Deployment remains planned. See [memory.md](memory.md) for evidence.
+> Status: local main includes the frontend/form, PostgreSQL/ORM/migrations, OAuth/sessions, Trip CRUD and navbar through merge de15c3b. PR #11 Milestones 1–2 add the trip client and authenticated creation UI on feat/trip-creation-integration; live verification remains pending. Deployment remains planned. See [memory.md](memory.md) for evidence.
 
 PR #11 follows [ADR 0010](adr/0010-trip-creation-integration.md). The client and
-mocked transport/security tests are implemented; explicit destination timezone,
-review/save/error/success UI, and manual persistence verification remain the next
-milestones. No dashboard, backend rewrite, new dependency or schema migration.
+mocked transport/security tests, explicit destination timezone and
+review/save/error/success UI are implemented. Manual persistence verification
+remains Milestone 3. No dashboard, backend rewrite, new dependency or migration.
 
 PR #7 Milestones 1–3 add a connection/session foundation, four
 ORM models, and an initial Alembic migration on `feat/database-foundation`.
@@ -202,7 +202,7 @@ owner-scoped SQL, existing CSRF/session validation, strict request schemas,
 bounded pagination and safe transaction errors. See [the contract](trip-api.md).
 PATCH now enforces versions, merged validation and title-only edits when days
 exist. DELETE checks If-Match and locked activities under the same parent lock;
-the local frontend form is not wired to persistence. Existing schema 0002 is
+PR #11 wires frontend creation, with live verification pending. Existing schema 0002 is
 reused; no new migration or provider feature is added.
 
 **Deliverables**

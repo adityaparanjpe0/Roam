@@ -70,6 +70,18 @@ See [ADR 0010](adr/0010-trip-creation-integration.md). The mounted form still
 only reviews local data: timezone entry, Save action and server-confirmed UI
 remain Milestone 2 work; end-to-end persistence verification remains Milestone 3.
 
+PR #11 Milestone 2 (2026-11-21) supersedes that client-only status: the form now
+collects an explicit destination IANA timezone and maps validated calendar dates,
+integer-cent budget, travelers, interests and constraints to the existing POST.
+Review remains local until an authenticated Save action. Loading/disabled actions,
+server field/general errors, session/CSRF recovery and canonical saved confirmation
+are implemented without a new route or dashboard. Editable values survive errors
+and auth changes; account-keyed request state aborts/ignores obsolete results.
+This does not cancel a backend commit. Explicit navigation/result focus uses
+layout effects; background account checks do not request review focus. A refresh
+clears the local confirmation, not the saved record. Live persistence and
+cross-owner browser verification remain Milestone 3, not inferred from mocks.
+
 Roam creates realistic travel itineraries from user preferences. It combines uncertain external data and probabilistic model output with persistent user data, so its core design problem is not “call an LLM.” It is maintaining a trustworthy boundary:
 
 - real providers supply place identity, available place facts, and route estimates;

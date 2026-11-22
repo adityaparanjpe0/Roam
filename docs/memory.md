@@ -1,12 +1,67 @@
 # Roam durable project memory
 
 > Purpose: preserve verified context across developers and AI sessions  
-> Last updated: 2026-11-21
+> Last updated: 2026-11-22
 > Rule: this file records decisions and evidence; it must not turn plans into facts
 
 ## 1. Current snapshot
 
 ### Verified facts
+
+- 2026-11-22 PR #11 Milestone 2 completion, owner: user with Codex assistance,
+  on `feat/trip-creation-integration`. Human committed Milestone 1 as `7f2ed4c`;
+  implementation began clean at that commit on 2026-11-21. Added explicit blank
+  destination IANA timezone, frontend validation, draft/API mapping, and local
+  review → authenticated Save → canonical server-confirmed success. The backend
+  still supplies the default title. Dates remain calendar strings, money remains
+  exact integer cents, and no owner/status/version is sent. NUL/lone-surrogate
+  text and unsupported/offset timezone inputs are rejected before POST; backend
+  validation remains authoritative when timezone databases differ.
+- A small reviewed-trip controller holds idle/saving/error/saved state and is
+  keyed by account availability/user ID. Logout/account changes/unmount abort
+  pending work and discard canonical confirmation; editable parent form state
+  remains. Ref/abort checks prevent late responses from displaying old-account
+  data. Save uses an immediate in-flight guard and disables Save/Edit while
+  pending; it never runs from an effect or automatically retries. Cancellation
+  does not undo a server commit, and uncertain errors do not claim otherwise.
+- Recognized server fields return to the original form with safe inline errors,
+  server-validation summary and first-invalid focus. Editing clears only the
+  edited field's server error. General/network/timeout failures keep review
+  editable. Missing/unknown auth blocks Save; a 401 refreshes the existing auth
+  snapshot, while CSRF failure offers existing Google navigation with an explicit
+  draft-loss warning. Validated 201 alone renders canonical saved data; explicit
+  Create another trip resets local values. No new dashboard, route or saved-trip
+  editing is implemented. [ADR 0010](adr/0010-trip-creation-integration.md) and
+  [the form guide](trip-creation-form.md) document the implemented behavior.
+- Initial async error coverage reproduced an alert appearing before passive
+  focus moved. Review/error/success/first-invalid focus now uses layout effects,
+  following existing account-control conventions. Background account updates do
+  not request review focus. Original form/auth/navbar behavior remains covered.
+- Verification on pinned Node **24.22.3**: **301 tests in 15 files passed** in
+  **11.17 seconds**, plus full ESLint, TypeScript check and production build.
+  Includes 20 save-flow HTTP/component cases, 12 new timezone/text validation
+  cases, and two mapping cases (34 more tests than Milestone 1). Coverage includes
+  exact payload/CSRF, deferred success, repeated clicks, 401/403/422/500/502/503,
+  network/invalid responses/timeouts, raw-input preservation, focus, signed-out/
+  loading/unknown auth, logout/account-change races, unmount and new-trip reset.
+  Changed-code editor diagnostics and diff checks passed. No backend tests were
+  rerun because backend application/test/migration code is unchanged; full
+  backend regression and real persistence checks remain Milestone 3.
+- Browser checks used the built frontend on a temporary loopback preview with
+  page-only synthetic fetch/CSRF fixtures. Form, review, saved and server-error
+  states had no horizontal page overflow at **320/390/768/1440px** (16 cases).
+  Save/Edit tap heights were about **52.4px**. Keyboard Enter review/save/reset,
+  heading/error/reset focus, canonical returned title, one successful POST, and
+  422 preservation of raw spaced inputs were observed. Initial tool-level route
+  mocking did not establish auth; successful checks used page-local fixtures.
+  This is not real Google sign-in, database persistence, screen-reader or full
+  accessibility certification. Temporary preview was stopped after checks.
+- Updated design, API/form/auth guides, contributor/handoff guidance and relevant
+  README statements for the actual save flow; older dated client-only notes are
+  superseded. No backend behavior, auth implementation, navbar, proxy, project
+  dependency/lockfile, environment/credential, migration, CI or development data
+  changed. Milestone 2 remains uncommitted for human review. No commit, push,
+  merge, PR creation or Milestone 3 live verification by Codex.
 
 - 2026-11-21 PR #11 Milestone 1, owner: user with Codex assistance, on clean
   `feat/trip-creation-integration` at `de15c3b`. Git confirms CRUD merged as PR #9
