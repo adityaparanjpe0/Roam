@@ -85,7 +85,8 @@ export function getCurrentUser(signal?: AbortSignal): Promise<AuthUser | null> {
   }, signal)
 }
 
-function csrfCookie(): string {
+/** Read only the CSRF delivery cookie, never the HttpOnly session bearer. */
+export function csrfCookie(): string {
   const name = window.location.protocol === 'https:' ? '__Host-roam_csrf' : 'roam_csrf'
   const matches = document.cookie.split(';').map((part) => part.trim()).filter((part) => part.startsWith(name + '='))
   if (matches.length !== 1) throw new AuthError('CSRF_FAILED')

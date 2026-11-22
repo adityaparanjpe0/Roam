@@ -1,6 +1,11 @@
 # Roam MVP handoff
 
-> Status: local main includes the frontend/form, PostgreSQL/ORM/migrations, OAuth/sessions and Trip CRUD through merge 82e53f6. Navbar improvements are committed on feat/navbar-overhaul; its merge of main is pending. Deployment remains planned. See [memory.md](memory.md) for evidence.
+> Status: local main includes the frontend/form, PostgreSQL/ORM/migrations, OAuth/sessions, Trip CRUD and navbar through merge de15c3b. PR #11 Milestone 1 adds a trip POST client on feat/trip-creation-integration; form saving is not connected yet. Deployment remains planned. See [memory.md](memory.md) for evidence.
+
+PR #11 follows [ADR 0010](adr/0010-trip-creation-integration.md). The client and
+mocked transport/security tests are implemented; explicit destination timezone,
+review/save/error/success UI, and manual persistence verification remain the next
+milestones. No dashboard, backend rewrite, new dependency or schema migration.
 
 PR #7 Milestones 1–3 add a connection/session foundation, four
 ORM models, and an initial Alembic migration on `feat/database-foundation`.

@@ -10,6 +10,24 @@ still needs no database/credentials; actual authentication requires the migrated
 backend and locally configured Google credentials. An unavailable backend shows
 a recoverable auth error while the local trip form remains usable.
 
+PR #11 Milestone 1 adds a [typed trip-creation client](src/api/trips.ts) for the
+existing POST `/api/v1/trips`. It reuses the auth CSRF reader, sends same-origin
+cookies, validates response JSON at runtime, and maps errors without exposing
+raw server messages or private data. A ten-second timeout/caller cancellation
+bounds requests, and POST is never retried automatically. An uncertain response
+may follow a committed insert; aborting does not undo server work.
+The form still performs local review only. Timezone entry, Save action and
+server-confirmed success UI remain Milestone 2; manual persistence verification
+remains Milestone 3. See [ADR 0010](../docs/adr/0010-trip-creation-integration.md).
+
+Focused client/auth regression tests, from this directory:
+
+```bash
+npm run test -- --run src/api/trips.test.ts src/api/auth.test.ts src/api/auth.https.test.ts
+```
+
+These tests mock fetch; they do not contact Google, FastAPI or PostgreSQL.
+
 ## Prerequisites
 
 - Node **24.22.3**, pinned in [`.nvmrc`](../.nvmrc).
@@ -355,10 +373,13 @@ No browser automation package is installed in the project. Earlier Chrome layout
 
 The dependency audit on 2026-11-12 reported **10 moderate findings** associated with `minimatch` in the development lint toolchain. `npm audit --omit=dev` reported **0 vulnerabilities**. These results are dated observations, not guarantees; rerun the audit when dependencies change. No forced major override or lint-stack downgrade was applied.
 
-React Router and TanStack Query are deferred until there are multiple routes and
-server-state features to support. Native fetch is intentionally sufficient for
-this one diagnostic GET. Only `/health` is currently proxied; `/api` and `/auth`
-are not configured yet. Production backend serving configuration remains planned
-in the [technical design](../docs/DESIGN.md).
+React Router remains deferred until there are multiple routes. Native fetch
+supports the health check, small auth snapshot and PR #11's single create
+mutation; [ADR 0010](../docs/adr/0010-trip-creation-integration.md) records the
+narrow trip-client exception. Reconsider TanStack Query for PR #12's saved-trip
+queries/cache. Vite already proxies `/health`, `/api` and `/auth`, preserving
+Origin/cookies. There is no frontend API URL environment variable or CORS change
+for this same-origin setup. Production serving remains planned in the
+[technical design](../docs/DESIGN.md).
 
 See [project memory](../docs/memory.md) for branch evidence, verification limits, and merge/review status.

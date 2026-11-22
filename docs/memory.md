@@ -1,12 +1,47 @@
 # Roam durable project memory
 
 > Purpose: preserve verified context across developers and AI sessions  
-> Last updated: 2026-11-20
+> Last updated: 2026-11-21
 > Rule: this file records decisions and evidence; it must not turn plans into facts
 
 ## 1. Current snapshot
 
 ### Verified facts
+
+- 2026-11-21 PR #11 Milestone 1, owner: user with Codex assistance, on clean
+  `feat/trip-creation-integration` at `de15c3b`. Git confirms CRUD merged as PR #9
+  at `82e53f6` and navbar as PR #10 at `de15c3b`; this supersedes older pending
+  navbar merge notes below. Added the typed [trip client](../frontend/src/api/trips.ts)
+  for POST `/api/v1/trips`, exposing auth's existing CSRF reader for reuse without
+  changing logout/session/OAuth behavior. [ADR 0010](adr/0010-trip-creation-integration.md)
+  records the human-approved native-fetch scope and pending UI milestones.
+- The client sends same-origin cookies, a session-bound CSRF header and an
+  allowlisted JSON payload; it rejects redirects, requires 201/JSON, validates
+  runtime response fields, and copies only documented data. Known error status/
+  codes and allowlisted validation fields become safe frontend messages; raw
+  server messages, SQL, arbitrary detail keys and invalid request IDs are not
+  exposed. Response money remains nullable per the backend DTO. No owner ID,
+  bearer reading/storage, automatic retry, or generic request framework added.
+- A ten-second timer bounds fetch/body reading; cancellation remains AbortError,
+  timers/listeners are cleaned up, and uncertain outcomes do not claim a server
+  commit was undone. One invocation sends at most one POST, not an exactly-once
+  guarantee across user retries. The UI still performs only local review: no
+  timezone field, Save action, success screen or live trip persistence through
+  the form yet. Those remain Milestones 2–3; no database/Google calls were made.
+- Verification: **267 tests in 13 files passed** on pinned Node **24.22.3** in
+  **5.32 seconds**, including 56 new trip-client cases and one new HTTPS CSRF
+  case. Full ESLint, TypeScript check and production build passed. Initial gates
+  also passed on installed Node 24.6.0/npm 11.5.1, but that Node is below the
+  declared project minimum; final gates used the README's npm-exec pinned-runtime
+  workflow without changing project dependencies. Changed-file editor diagnostics
+  were clear. Tests use mocked fetch only; existing auth/form/navbar regressions
+  passed. They do not prove live persistence, browser Google login or hosted CI.
+- Corrected the stale frontend README proxy claim and current handoff merge
+  status; design/instructions document the client-only milestone and native-fetch
+  exception. Backend, form, styling, navbar, proxy, credentials/environment,
+  package manifests/lockfile, migrations, database and CI were not changed.
+  Milestone 1 is uncommitted; human review/commit and hosted CI remain pending.
+  No commit, push, merge, PR creation or Milestone 2 implementation by Codex.
 
 - 2026-11-20 merge reconciliation, owner: user with Codex assistance. Git shows
   Trip CRUD merged into main as `82e53f6` (PR #9), including commits `ac3d905`,
