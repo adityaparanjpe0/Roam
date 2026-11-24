@@ -1,7 +1,7 @@
 # ADR 0012: Account-scoped React state for the first My Trips view
 
 - Date: 2026-11-24
-- Status: implemented locally for PR #12 Milestone 3; uncommitted, review pending
+- Status: PR #12 Milestone 3 human-reviewed and committed as f04b9a0; not merged
 - Owner: user with Codex assistance
 
 ## Decision and scope
@@ -19,6 +19,10 @@ desktop/mobile anchor. Loading begins on page entry once authentication resolves
 No router, detail page or styled card system is added. Preserve the mounted
 creation form and account controls. The presentation-only SavedTripList receives
 summaries through props and never authenticates or fetches.
+
+Milestone 4 subsequently adds cards, standalone routes and a navigation shell;
+see [ADR 0013](0013-saved-trip-cards-and-navigation.md). The account-keyed fetch
+lifecycle remains unchanged.
 
 ## Authentication and request lifecycle
 

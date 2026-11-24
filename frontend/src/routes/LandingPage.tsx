@@ -1,5 +1,4 @@
 import TripCreation from '../features/trip/TripCreation'
-import SavedTripsDashboard from '../features/trip/SavedTripsDashboard'
 import './LandingPage.css'
 
 const plannedFeatures = [
@@ -51,8 +50,6 @@ function LandingPage() {
       <section className="trip-creation page-width" id="create-trip" tabIndex={-1} aria-label="Create a trip">
         <TripCreation />
       </section>
-
-      <SavedTripsDashboard />
 
       <section className="idea-section page-width" id="the-idea" tabIndex={-1} aria-labelledby="idea-heading">
         <div className="section-intro">

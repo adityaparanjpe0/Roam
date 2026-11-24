@@ -31,7 +31,7 @@ test('keeps navigation focused and exposes the current anchor', () => {
   renderHeader()
   const navigation = screen.getByRole('navigation', { name: 'Main navigation' })
   expect(within(navigation).getAllByRole('link')).toHaveLength(4)
-  expect(within(navigation).getByRole('link', { name: 'My Trips' })).toHaveAttribute('href', '#my-trips')
+  expect(within(navigation).getByRole('link', { name: 'My Trips' })).toHaveAttribute('href', '/trips')
   expect(within(navigation).getByRole('link', { name: 'Trip details' })).toHaveAttribute('aria-current', 'location')
   expect(screen.getByRole('link', { name: 'Roam home' })).toHaveAttribute('href', '#top')
   window.history.replaceState(null, '', '#about')

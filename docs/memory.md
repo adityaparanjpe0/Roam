@@ -8,6 +8,68 @@
 
 ### Verified facts
 
+- 2026-11-24 PR #12 Milestone 4, owner: user with Codex assistance, started on
+  `feat/saved-trips-dashboard` at `f04b9a0`. The human reported Milestone 3
+  complete/reviewed and committed it; this supersedes its older uncommitted
+  status below. Initial tracked tree was clean; untracked `.vscode/` preserved.
+- Added [SavedTripsPage](../frontend/src/routes/SavedTripsPage.tsx), a responsive
+  [TripCard](../frontend/src/features/trip/TripCard.tsx) grid and current-page
+  count. Existing typed summaries flow through the unchanged account-keyed hook
+  and dashboard/list props. Cards make no requests and retain stable UUID keys.
+  They omit travelers/budget/interests absent from the collection DTO. Loading,
+  empty and error surfaces reuse existing recovery/state behavior and Roam CSS
+  tokens; no images, Maps integration or paid service is introduced.
+- [Shared formatting](../frontend/src/features/trip/tripFormatting.ts) renders
+  calendar dates in UTC with original time attributes, calculates inclusive days,
+  and centralizes traveler/currency display for existing review/saved views.
+  Budgets remain per person for the entire trip, with explicit currency codes
+  and null distinct from zero. Unit cases cover local timezone differences,
+  one-day/leap/DST/year boundaries, USD/EUR and currency fraction digits.
+- Added pinned React Router **8.5.3** for `/`, `/trips`, `/trips/:tripId` and
+  frontend not-found composition; old `/#my-trips` redirects. Registry engine/
+  peer metadata matched pinned Node **24.22.3** and React/DOM **19.3.1**. The
+  lockfile adds the router plus two dependencies and npm optional-peer metadata;
+  existing package versions are unchanged. Native anchors preserve browser
+  navigation. The detail URL is only an honest shell: no canonical detail fetch,
+  existence/ownership claim or Milestone 5 implementation. Existing auth, API,
+  proxies, backend contracts and migrations are unchanged. [ADR 0013](adr/0013-saved-trip-cards-and-navigation.md)
+  records decisions and production history-fallback limits.
+- Frontend gates on Windows, existing Node **24.22.3** / npm **11.19.1**:
+  `npm run test -- --run` **422 passed in 20 files** (13.91s), including **30 new
+  formatting/card/route cases**. `npm run lint`, `npm run typecheck`, production
+  build and `npm ls --depth=0` exited 0. Existing review assertions were updated
+  for the intended currency-code/date/traveler presentation. API payloads and
+  save/auth production logic were not changed. No commit, push or merge by Codex.
+- Isolated headless Chrome verified the built UI with synthetic intercepted
+  HTTP in an America/Los_Angeles context. **15 layout/state cases** had no
+  horizontal overflow: populated at **320/390/768/1024/1440px**, long names at
+  **320/768/1440px**, empty/error/loading at **320/1440px**, and doubled text at
+  **768px**. Observed grid columns were **1/1/2/3/3** at the populated widths.
+  Desktop/mobile and empty/error screenshots were visually inspected; card
+  metadata/footer alignment and wrapping were reviewed. No page errors occurred.
+- Keyboard Tab/Enter reached the creation CTA and first card link, View Trip
+  reached the shell and returned to My Trips, and mobile Menu/Escape restored
+  trigger focus. Browser checking found a real cross-page fragment bug: the
+  creation form stayed offscreen at top **1316.91px**, scrollY 0, after mounting.
+  A home-fragment layout effect now focuses Destination and scrolls the mounted
+  target. Final observed form top **103.91px**, destination focus true; a route
+  regression test covers this. Full detail behavior remains Milestone 5.
+- The integrated browser could not reliably emulate requested viewport widths;
+  final evidence uses isolated headless Chrome. A temporary Playwright **1.65.1**
+  runtime (two packages) was installed only under ignored scratch tooling, not
+  project dependencies. Browser fixtures/scripts/screenshots are outside shipped
+  source. Live Google, real owner data/PostgreSQL browser integration, backend
+  suite, screen-reader/cross-browser, hosted CI and deployment were not verified.
+  The [manual checklist](runbooks/saved-trips-dashboard.md#milestone-4-visual-checks)
+  distinguishes fixture observations from remaining human/live checks.
+  This milestone is locally implemented and uncommitted for review; Milestone 5
+  has not begun.
+- Final editor diagnostics, diff whitespace and changed-document local-link
+  checks passed. Card titles use second-level headings below the page's primary
+  heading. The temporary preview was stopped and a connection check returned
+  ECONNREFUSED; isolated headless browser sessions were closed. Scratch visual
+  tooling/evidence remains ignored and is not a product dependency or dataset.
+
 - 2026-11-24 PR #12 Milestone 3, owner: user with Codex assistance, started on
   `feat/saved-trips-dashboard` at human-committed `f535be9`. The human reported
   Milestone 2 complete/reviewed; that supersedes its older uncommitted/review

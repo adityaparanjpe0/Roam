@@ -9,8 +9,10 @@ const links = [
   { id: 'about', label: 'About' },
 ]
 
-function SiteHeader() {
-  const [active, setActive] = useState(() => window.location.hash.slice(1) || 'top')
+function SiteHeader({ home = true }: { home?: boolean }) {
+  const tripsPage = window.location.pathname === '/trips'
+  const inTrips = tripsPage || window.location.pathname.startsWith('/trips/')
+  const [active, setActive] = useState(() => home ? window.location.hash.slice(1) || 'top' : 'my-trips')
   const [menuOpen, setMenuOpen] = useState(false)
   const header = useRef<HTMLElement>(null)
   const drawer = useRef<HTMLDialogElement>(null)
@@ -65,6 +67,7 @@ function SiteHeader() {
   useEffect(() => {
     let frame = 0
     const updatePosition = () => {
+      if (!home) return
       const offset = (header.current?.getBoundingClientRect().height ?? 80) + 24
       let current = 'top'
       for (const { id } of links) {
@@ -77,7 +80,7 @@ function SiteHeader() {
       cancelAnimationFrame(frame)
       frame = requestAnimationFrame(updatePosition)
     }
-    const onHashChange = () => setActive(window.location.hash.slice(1) || 'top')
+    const onHashChange = () => setActive(home ? window.location.hash.slice(1) || 'top' : 'my-trips')
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('hashchange', onHashChange)
     return () => {
@@ -85,13 +88,13 @@ function SiteHeader() {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('hashchange', onHashChange)
     }
-  }, [])
+  }, [home])
 
   function navigation(mobile = false) {
     return (
       <nav aria-label={mobile ? 'Mobile navigation' : 'Main navigation'}>
         {links.map(({ id, label }) => (
-          <a key={id} href={`#${id}`} aria-current={active === id ? 'location' : undefined} onClick={() => chooseSection(id, mobile)}>
+          <a key={id} href={id === 'my-trips' ? '/trips' : `${home ? '' : '/'}#${id}`} aria-current={!home && id === 'my-trips' && inTrips ? tripsPage ? 'page' : 'location' : home && active === id ? 'location' : undefined} onClick={() => chooseSection(id, mobile)}>
             {label}<span aria-hidden="true" className="nav-arrow">↗</span>
           </a>
         ))}
@@ -104,7 +107,7 @@ function SiteHeader() {
     <div id="top" aria-hidden="true" />
     <header ref={header} className="site-header">
       <div className="site-header-inner page-width">
-      <a className="wordmark" href="#top" aria-label="Roam home" aria-current={active === 'top' ? 'page' : undefined} onClick={() => setActive('top')}>
+      <a className="wordmark" href={home ? '#top' : '/#top'} aria-label="Roam home" aria-current={home && active === 'top' ? 'page' : undefined} onClick={() => setActive('top')}>
         <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
           <path d="m5 25 9-19 4 12 9-11-8 19-5-12Z" fill="currentColor" />
         </svg>

@@ -2,12 +2,22 @@
 
 React + TypeScript + Vite frontend for Roam. The current page introduces the planned travel planner; its itinerary preview is a static concept, not a generated or interactive itinerary.
 
-PR #12 Milestone 3 adds a minimal **My Trips** section at `/#my-trips` with a
+PR #12 Milestone 4 adds **My Trips** at `/trips`, a responsive card grid, page
+count and Plan a New Trip link to the existing form. Cards use the real list
+response without extra requests; absent travelers/budget/interests are omitted.
+View Trip opens a navigation shell; canonical detail loading remains Milestone 5.
+Calendar dates/duration and existing review/saved money/traveler displays share
+tested formatters. React Router 8.5.3 supplies page routing; production FastAPI
+static serving/history fallback remains planned. See
+[ADR 0013](../docs/adr/0013-saved-trip-cards-and-navigation.md) and the
+[visual checklist](../docs/runbooks/saved-trips-dashboard.md#milestone-4-visual-checks).
+
+PR #12 Milestone 3 added the original **My Trips** section with a
 [React hook](src/features/trip/useSavedTrips.ts), explicit request states,
 refresh and cursor pagination. Only confirmed authentication mounts the
 account-keyed fetcher; logout/account changes discard its data and cancel work.
-There is no polling, persistence, query dependency or detail page. Styled cards
-remain Milestone 4. See [ADR 0012](../docs/adr/0012-saved-trips-dashboard-state.md)
+There is no polling, persistence or query dependency. Milestone 4 now supplies
+cards and routes; `/#my-trips` bookmarks redirect to `/trips`. See [ADR 0012](../docs/adr/0012-saved-trips-dashboard-state.md)
 and the [manual verification checklist](../docs/runbooks/saved-trips-dashboard.md).
 
 PR #12 Milestone 2 extends the [trip client](src/api/trips.ts) with typed,
@@ -400,7 +410,8 @@ No browser automation package is installed in the project. Earlier Chrome layout
 
 The dependency audit on 2026-11-12 reported **10 moderate findings** associated with `minimatch` in the development lint toolchain. `npm audit --omit=dev` reported **0 vulnerabilities**. These results are dated observations, not guarantees; rerun the audit when dependencies change. No forced major override or lint-stack downgrade was applied.
 
-React Router remains deferred until there are multiple routes. Native fetch
+React Router now maps frontend pages; production static/history serving remains
+planned and must preserve reserved backend paths. Native fetch
 supports the health check, small auth snapshot and existing trip client.
 [ADR 0010](../docs/adr/0010-trip-creation-integration.md) records the create
 exception; [ADR 0012](../docs/adr/0012-saved-trips-dashboard-state.md) scopes local

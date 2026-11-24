@@ -33,7 +33,7 @@ function dashboard(state: AuthState, signingOut = false, retry = vi.fn()) {
 
 function region() { return within(screen.getByRole('region', { name: 'My Trips' })) }
 
-afterEach(() => { vi.restoreAllMocks(); vi.useRealTimers(); vi.unstubAllEnvs() })
+afterEach(() => { vi.restoreAllMocks(); vi.useRealTimers(); vi.unstubAllEnvs(); window.history.replaceState(null, '', '/') })
 
 test.each<AuthState>([
   { status: 'loading' }, { status: 'unauthenticated' }, { status: 'error', message: 'Could not check account.' },
@@ -57,10 +57,10 @@ test('waits for authentication, shows request loading, then displays only return
   await act(async () => { pending.resolve(page) })
   expect(region().getByRole('heading', { name: trip.title })).toBeInTheDocument()
   expect(region().getByText('Lisbon')).toBeInTheDocument()
-  expect(region().getByText('2027-03-27')).toHaveAttribute('datetime', '2027-03-27')
+  expect(region().getByText('Mar 27, 2027')).toHaveAttribute('datetime', '2027-03-27')
   expect(region().getByRole('status')).toHaveTextContent('1 saved trip on this page.')
   expect(region().queryByText(/activity|budget/i)).not.toBeInTheDocument()
-  expect(region().getByRole('link', { name: 'Create a trip' })).toHaveAttribute('href', '#create-trip')
+  expect(region().getByRole('link', { name: 'Plan a New Trip' })).toHaveAttribute('href', '/#create-trip')
 })
 
 test('a successful empty page is distinct from loading, auth failure and request failure', async () => {
@@ -267,7 +267,9 @@ test('the real auth lifecycle refreshes the same profile without trip refetches,
   expect(region().queryByRole('heading', { name: trip.title })).not.toBeInTheDocument()
 })
 
-test('the full app waits for /me, uses the real typed client and preserves editable form state', async () => {
+test('the dashboard page waits for /me and uses the real typed client', async () => {
+  // The dashboard now has its own page. Form preservation is covered by App/auth tests.
+  window.history.replaceState(null, '', '/trips')
   vi.stubEnv('DEV', false)
   const me = deferred<Response>()
   const fetch = vi.fn((path: string) => {
@@ -277,11 +279,9 @@ test('the full app waits for /me, uses the real typed client and preserves edita
   })
   vi.stubGlobal('fetch', fetch)
   render(<App />)
-  fireEvent.change(screen.getByLabelText('Destination (required)'), { target: { value: 'Kyoto' } })
   expect(fetch).toHaveBeenCalledTimes(1)
   await act(async () => { me.resolve(Response.json({ user: alice })) })
   expect(region().getByRole('heading', { name: trip.title })).toBeInTheDocument()
-  expect(screen.getByLabelText('Destination (required)')).toHaveValue('Kyoto')
   expect(fetch).toHaveBeenCalledTimes(2)
   expect(fetch).toHaveBeenLastCalledWith('/api/v1/trips?limit=20', expect.objectContaining({
     credentials: 'same-origin', method: 'GET', signal: expect.any(AbortSignal),

@@ -230,8 +230,10 @@ code/status/request-ID logs without enabling body/cookie/SQL-parameter logging.
 
 PR #12 Milestone 2 extends the [existing client](../frontend/src/api/trips.ts)
 from PR #11 without changing the backend contract. Milestone 3 now consumes list
-reads in a minimal [My Trips section](../frontend/src/features/trip/SavedTripsDashboard.tsx);
-see [its lifecycle decision](adr/0012-saved-trips-dashboard-state.md).
+reads in [My Trips](../frontend/src/features/trip/SavedTripsDashboard.tsx), now
+presented as a card page in Milestone 4. Cards use summaries only; they do not
+fetch details or invent unavailable fields. See [the lifecycle decision](adr/0012-saved-trips-dashboard-state.md)
+and [presentation/routing scope](adr/0013-saved-trip-cards-and-navigation.md).
 
 ```ts
 import { getTrip, listTrips } from './api/trips'

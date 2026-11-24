@@ -74,9 +74,8 @@ test('real logout sends the CSRF header, waits for 204, then preserves the trip 
   fireEvent.click(button); fireEvent.click(button)
   expect(account().getByRole('button', { name: 'Signing out…' })).toBeDisabled()
   expect(account().getByRole('status')).toHaveTextContent('Signed in as Student')
-  expect(fetch).toHaveBeenCalledTimes(3)
-  // The dashboard effect can start its GET in this commit; logout need not be
-  // the last request across unrelated features. Still require exactly one POST.
+  expect(fetch).toHaveBeenCalledTimes(2)
+  // The creation page does not load dashboard data; still require one logout POST.
   expect(fetch.mock.calls.filter(([path]) => path === '/api/auth/logout')).toHaveLength(1)
   expect(fetch).toHaveBeenCalledWith('/api/auth/logout', expect.objectContaining({
     method: 'POST', credentials: 'same-origin', cache: 'no-store',

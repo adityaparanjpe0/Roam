@@ -5,6 +5,16 @@
 
 ## 1. Working agreement
 
+PR #12 Milestone 4 adds a standalone `/trips` page and presentational TripCard.
+Pass typed summaries through props; do not fetch additional fields inside cards
+or assume collection totals. Use shared tripFormatting helpers for calendar
+dates, inclusive duration, traveler labels and minor-unit currency display.
+Omit fields missing from the actual summary contract. Plan a New Trip returns to
+`/#create-trip`; the trip URL currently renders a navigation shell, not canonical
+detail data. Keep backend auth/CSRF/proxies intact. See
+[ADR 0013](adr/0013-saved-trip-cards-and-navigation.md) and the
+[visual checklist](runbooks/saved-trips-dashboard.md#milestone-4-visual-checks).
+
 PR #12 Milestone 3's single My Trips consumer uses the scoped React-hook decision
 in [ADR 0012](adr/0012-saved-trips-dashboard-state.md). Mount the fetching child
 only inside confirmed auth and key it by stable user ID. Keep the effect's

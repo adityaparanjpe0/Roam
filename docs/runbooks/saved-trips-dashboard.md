@@ -1,14 +1,15 @@
 # My Trips foundation: manual verification
 
-PR #12 Milestone 3 adds a minimal My Trips section at `/#my-trips`. Full visual
-cards, detail routing and automatic post-save invalidation remain later work.
+PR #12 Milestone 4 presents My Trips at `/trips` with responsive cards and a
+navigation shell for View Trip. Old `/#my-trips` bookmarks redirect there.
+Canonical detail loading and automatic post-save invalidation remain later work.
 Use the existing [local startup instructions](trip-creation-integration.md#start-locally)
 and [auth setup](../AUTH.md). No new environment variable, dependency, migration
 or backend endpoint is required. This checklist is not evidence of a completed
 live-Google or database/browser run for this milestone.
 
 1. Start the existing local PostgreSQL/FastAPI/Vite stack with pinned runtimes.
-   Open `http://127.0.0.1:5173/#my-trips`. Without a confirmed account, My Trips
+   Open `http://127.0.0.1:5173/trips`. Without a confirmed account, My Trips
    must show checking, signed-out or recoverable account-error state and must
    not issue a trip GET. The form remains usable.
 2. Sign in through the existing account controls. Google returns to the app
@@ -20,8 +21,10 @@ live-Google or database/browser run for this milestone.
    must be no ongoing loop or polling.
 3. With an account that has no saved trips, expect the honest empty state and
    Create a trip link. With saved trips, compare the title, destination and
-   calendar dates against your synthetic saved data. There are no generated
-   activities, invented budget/status fields or detail links in this milestone.
+   calendar dates against your synthetic saved data. Duration is inclusive;
+   one-day trips show 1 day. Travelers/budget/interests are omitted from cards
+   because the list API does not return them. View Trip opens a navigation
+   shell, with no canonical detail fetch or generated activity data yet.
 4. Create/save a synthetic trip through the existing form, then choose My Trips
    and Refresh trips. The new server record should appear. Refresh requests the
    first page and resets previous-page history. Browser reload also reloads from
@@ -44,8 +47,35 @@ live-Google or database/browser run for this milestone.
    account clears the list; a trip 401 offers Recheck sign-in without a loop.
 9. Confirm trip-form inputs survive logout/account checks, the header/mobile
    drawer still works, anchors reach unique targets, buttons work by keyboard,
-   and long titles/dates remain readable on a narrow viewport. Visual design
-   verification belongs to Milestone 4.
+   and long titles/dates remain readable on a narrow viewport.
+
+## Milestone 4 visual checks
+
+1. Check populated, empty, loading and error views at 320, 390, 768, 1024 and
+   1440px. Expect a single column below 42rem, two from 42rem and three from
+   64rem. Look for horizontal scrolling, clipped names, uneven card footers,
+   overlapping controls and illegible dates. Check enlarged text/reflow too.
+2. Confirm the count says how many saved trips are on the current page, without
+   implying a total across all pages. Longer names should wrap and remain fully
+   available to assistive technology. Card links have distinct accessible names.
+3. Use Tab from the My Trips heading: Plan a New Trip precedes View Trip actions.
+   Interactive focus must remain visible. Use Enter on View Trip, verify the
+   shell's honest unavailable notice, then Back to My Trips. Full trip details
+   are intentionally deferred to Milestone 5.
+4. Choose Plan a New Trip from desktop and mobile. Verify `/#create-trip`, the
+   form visible below the sticky header, and focus in Destination. The root home
+   page remains the existing creation flow; it makes no dashboard list request.
+5. On mobile, open Menu, use its route links, and check Escape/Close focus return.
+   From the dashboard, home/feature/about links must reach the root page sections.
+6. Compare calendar dates in browsers with different local timezones; dates must
+   not shift. Check one-day, leap-day and daylight-saving date ranges. Review and
+   saved views use currency-code amounts, traveler labels and the same date
+   presentation. Budget is per person for the entire trip; null is unspecified.
+
+Automated browser fixture checks use a temporary local preview and isolated
+synthetic HTTP responses. Those checks can establish rendering/navigation, not
+Google login, real owner data or PostgreSQL behavior. Production deep-link
+serving also remains unverified until FastAPI static/history serving is built.
 
 Automated commands from `frontend/` with pinned Node 24.22.3:
 
