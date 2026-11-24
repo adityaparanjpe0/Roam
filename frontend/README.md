@@ -2,6 +2,13 @@
 
 React + TypeScript + Vite frontend for Roam. The current page introduces the planned travel planner; its itinerary preview is a static concept, not a generated or interactive itinerary.
 
+PR #12 Milestone 2 extends the [trip client](src/api/trips.ts) with typed,
+runtime-validated `listTrips(options?, signal?)` and `getTrip(id, signal?)` reads.
+They use existing relative URLs and same-origin session cookies, support bounded
+cursor pagination/cancellation, and expose safe load-specific errors. Dashboard,
+query-state and routing work remain planned. See [read-client usage](../docs/trip-api.md#typescript-read-client)
+and [ADR 0011](../docs/adr/0011-saved-trip-read-client.md).
+
 The development build includes a backend connection check using FastAPI `/health`.
 PR #9 Milestone 6 adds cookie-based account controls, current-user checks,
 backend-managed Google login navigation, and CSRF-protected logout. PR #11 adds

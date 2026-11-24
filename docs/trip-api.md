@@ -226,6 +226,62 @@ A repeated DELETE returns 404; it does not recreate the resource or repeat work.
 messages/allowlisted field names, not submitted values or SQL. Correlate safe
 code/status/request-ID logs without enabling body/cookie/SQL-parameter logging.
 
+## TypeScript read client
+
+PR #12 Milestone 2 extends the [existing client](../frontend/src/api/trips.ts)
+from PR #11; it does not mount a dashboard or change the backend contract.
+
+```ts
+import { getTrip, listTrips } from './api/trips'
+
+const controller = new AbortController()
+const page = await listTrips({ limit: 20 }, controller.signal)
+// Follow page.next_cursor with listTrips({ limit: 20, cursor: page.next_cursor }, signal).
+// A detail link supplies its stable UUID; no user/owner ID is accepted.
+if (page.items[0]) {
+  const trip = await getTrip(page.items[0].id, controller.signal)
+  // Render canonical trip metadata; a null budget is unknown, never zero.
+}
+// Cancel outstanding work during cleanup with controller.abort().
+```
+
+The optional list options are `limit` (1–100; omission uses server default 20)
+and `cursor` (omitted/null means first page). Follow a cursor only when non-null;
+pass it unchanged. The client bounds syntax/length without decoding it. Queries
+allowlist those two fields. Detail IDs must be UUID strings. Invalid client
+arguments reject with VALIDATION_FAILED before fetch; the server remains
+authoritative.
+
+TripSummary contains only the seven documented list fields. TripResponse adds
+the metadata shown above; all its fields are present, but budget and constraints
+may be null. A missing nullable key is malformed, not equivalent to null.
+Calendar dates/audit timestamps remain strings and budgets remain integer cents.
+TripFormValues are editable strings and TripDraft is a local validated snapshot;
+neither represents a persisted record. A saved response additionally has its
+server-assigned ID, title, status, version and timestamps. Itinerary fields are
+not part of either read response.
+
+GET uses relative URLs and `credentials: 'same-origin'`, with JSON Accept,
+no-store and redirect rejection. Browser-managed session cookies authenticate
+the request. Reads do not access the CSRF cookie, store tokens or send owner IDs;
+FastAPI's session dependency and owner-filtered query enforce access.
+
+Both functions require 200 and validate JSON at runtime before copying documented
+fields. They share the existing trip client's ten-second fetch/body deadline and
+accept AbortSignal; cancellation rejects with AbortError. No automatic retry is
+performed. TripApiError retains safe code/status/validated request ID and fixed
+load-specific messages. A read 404 means RESOURCE_NOT_FOUND for both missing and
+other-owner resources. Read failures do not imply a write occurred. Existing
+create errors and their uncertain-save wording remain unchanged.
+
+Focused mocked-fetch regression command from `frontend/`:
+
+```sh
+npm run test -- --run src/api/trips.test.ts src/api/trips.read.test.ts
+```
+
+See [ADR 0011](adr/0011-saved-trip-read-client.md) for tradeoffs and limits.
+
 ## Verification
 
 For complete local startup, UI save/refresh/ownership checks and troubleshooting,
@@ -277,7 +333,8 @@ do not print `csrf`, and do not run it merely to inspect schemas. Browser-suppli
 Origin and the HttpOnly session cookie accompany the request. The example is
 local HTTP only; production HTTPS cookie names differ. Repeat detail/list reads
 using the returned ID; another account must receive 404 for that ID and never
-see it in its list. The frontend form itself still does not save trips.
+see it in its list. PR #11's frontend review now offers authenticated Save;
+a dashboard remains planned after PR #12's read-client milestone.
 
 To manually update a synthetic owned development trip from Roam's 5173 origin,
 use the same cookie/header approach with `method: 'PATCH'`, the returned trip ID,

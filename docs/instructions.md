@@ -5,6 +5,16 @@
 
 ## 1. Working agreement
 
+PR #12 Milestone 2 adds `listTrips(options?, signal?)` and `getTrip(id, signal?)`
+to the existing trip client. Use those functions for saved metadata reads;
+do not construct a second client or supply an owner ID. Keep required-nullable
+DTO fields distinct from optional request fields, and retain runtime validation.
+GETs use the existing same-origin session and do not require a CSRF header.
+Read errors use load-specific safe messages; preserve POST's uncertain-save
+messages/no-retry behavior. Query state, routing and dashboard UI are later
+milestones. See [client usage](trip-api.md#typescript-read-client) and
+[ADR 0011](adr/0011-saved-trip-read-client.md).
+
 PR #11 Milestones 1–2 add a tested trip POST client and authenticated review/save
 flow. Explicit destination timezone is required; never infer the browser zone.
 Reuse the shared CSRF reader and existing relative `/api` proxy. Never send an

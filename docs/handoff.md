@@ -2,6 +2,13 @@
 
 > Status: local main includes the frontend/form, PostgreSQL/ORM/migrations, OAuth/sessions, Trip CRUD and navbar through merge de15c3b. PR #11 implements authenticated creation on feat/trip-creation-integration; Milestone 3 real HTTP/PostgreSQL verification passed with synthetic session identities. Human Google smoke check, hosted CI and review remain outstanding. Deployment remains planned. See [memory.md](memory.md) for evidence.
 
+PR #12 Milestone 2 on `feat/saved-trips-dashboard` adds authenticated metadata
+list/detail functions and runtime-validated DTOs to the existing trip client.
+This is locally implemented, uncommitted transport work; dashboard/cards/routes,
+query state and browser integration remain planned. No backend contract,
+authentication behavior, dependency or migration changes. See
+[ADR 0011](adr/0011-saved-trip-read-client.md) and [memory](memory.md) for evidence.
+
 PR #11 follows [ADR 0010](adr/0010-trip-creation-integration.md). The client and
 mocked transport/security tests, explicit destination timezone and
 review/save/error/success UI are implemented. Milestone 3 verifies browser

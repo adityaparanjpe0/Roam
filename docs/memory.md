@@ -1,12 +1,50 @@
 # Roam durable project memory
 
 > Purpose: preserve verified context across developers and AI sessions  
-> Last updated: 2026-11-22
+> Last updated: 2026-11-24
 > Rule: this file records decisions and evidence; it must not turn plans into facts
 
 ## 1. Current snapshot
 
 ### Verified facts
+
+- 2026-11-24 PR #12 Milestone 2, owner: user with Codex assistance, on
+  `feat/saved-trips-dashboard` at `15fda2e`. The human updated the branch after
+  the earlier PR #7 baseline blocker; local Git now includes the PR #11 merge.
+  Before implementation there were no tracked edits, only untracked `.vscode/`,
+  which was preserved. This supersedes the earlier branch-baseline blocker only.
+- Extended the [existing trip client](../frontend/src/api/trips.ts), retaining
+  PR #11's create request/response and auth conventions. Added TripSummary,
+  TripListResponse and TripListOptions; TripResponse extends the summary.
+  `listTrips(options?, signal?)` and `getTrip(id, signal?)` require 200/JSON and
+  runtime-validate/copy documented metadata. UUIDs, calendar dates, audit strings,
+  safe integer money/version, required-nullable fields and cursor syntax are
+  checked. Unknown budgets stay null. No itinerary/owner fields are synthesized.
+- Reads use the existing relative `/api/v1/trips` path and same-origin cookies,
+  without reading CSRF/bearer cookies, supplying owner IDs or storing tokens.
+  A private helper shares the prior create fetch/body deadline, cancellation
+  and cleanup. TripApiError now has safe load-specific messages and read 404
+  RESOURCE_NOT_FOUND; create CSRF, validation and uncertain-save messages remain
+  covered by the unchanged creation tests. No automatic retry is introduced.
+- Windows, pinned Node **24.22.3**, existing installed dependencies: focused
+  Vitest **123 passed in 2 files** (2.48s); full `npm run test -- --run`
+  **368 passed in 16 files** (14.80s), including **67 new read-client cases**.
+  ESLint (`node node_modules/eslint/bin/eslint.js .`) and strict TypeScript
+  (`node node_modules/typescript/bin/tsc -b --noEmit`) exited 0; `npm run build`
+  passed TypeScript build and Vite production build. The node commands used the
+  existing portable pinned runtime by absolute path, with no installation or
+  persistent PATH change. Editor diagnostics and `git diff --check` passed;
+  changed documentation had no broken local file links.
+- The initial focused run passed 122 tests and failed one pagination fixture
+  because it returned the same consumed Response twice. Returning a fresh mock
+  response fixed the fixture; the focused and full runs above then passed.
+  Tests use mocked fetch and do not establish live PostgreSQL/Google behavior.
+  Backend tests, browser UI, hosted CI and deployment were not run for this
+  client-only milestone. Backend contracts, authentication, UI, proxy, migrations,
+  dependencies/lockfile and credentials are unchanged. [ADR 0011](adr/0011-saved-trip-read-client.md)
+  and the [API guide](trip-api.md#typescript-read-client) record the boundary.
+  Work remains uncommitted for review; no commit, push or merge by Codex.
+  Dashboard, routing, query-state and Milestone 3 work have not begun.
 
 - 2026-11-22 PR #11 Milestone 3 verification/documentation, owner: user with
   Codex assistance, on clean `feat/trip-creation-integration` at human-committed

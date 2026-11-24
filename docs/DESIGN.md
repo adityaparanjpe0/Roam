@@ -407,6 +407,15 @@ readiness. Revisit the separate paths when database readiness is implemented.
 
 ### Trips and activities
 
+PR #12 Milestone 2 (2026-11-24), on `feat/saved-trips-dashboard`, extends the
+existing frontend trip client with authenticated list/detail GET functions and
+runtime-validated summary/list models. Reads reuse same-origin cookies, bounded
+native fetch, cancellation and safe TripApiError mapping; create behavior remains
+unchanged. This is transport only: no dashboard, query cache, router or dependency
+is added. Responses contain metadata only, with nullable budget/constraints and
+an opaque nullable next cursor; they do not prove itinerary presence. See
+[ADR 0011](adr/0011-saved-trip-read-client.md) and [client usage](trip-api.md#typescript-read-client).
+
 Trip CRUD Milestones 1–3 (2026-11-20), on `feat/trip-crud-api`, implement
 POST `/api/v1/trips`, collection/detail GET, version-checked PATCH and protected
 DELETE. The table below remains the broader target; itinerary loading and provider
