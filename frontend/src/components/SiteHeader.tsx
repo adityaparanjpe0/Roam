@@ -4,6 +4,7 @@ import './SiteHeader.css'
 
 const links = [
   { id: 'create-trip', label: 'Trip details' },
+  { id: 'my-trips', label: 'My Trips' },
   { id: 'the-idea', label: 'Planned features' },
   { id: 'about', label: 'About' },
 ]

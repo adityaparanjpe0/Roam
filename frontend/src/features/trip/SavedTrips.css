@@ -1,0 +1,45 @@
+.saved-trips {
+  padding-block: var(--space-5);
+  border-top: 1px solid var(--color-border);
+  overflow-wrap: anywhere;
+}
+
+.saved-trips h2 {
+  font-size: clamp(2rem, 3.6vw, 3rem);
+  margin-bottom: var(--space-2);
+}
+
+.saved-trips p + div, .saved-trips [role="alert"] {
+  margin-top: var(--space-2);
+}
+
+.saved-trip-list {
+  padding-left: var(--space-3);
+}
+
+.saved-trip-list li + li {
+  margin-top: var(--space-3);
+}
+
+.saved-trips-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.saved-trips button {
+  min-height: 3rem;
+  padding: var(--space-1) var(--space-2);
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-muted);
+  border-radius: var(--radius-small);
+  font: inherit;
+  cursor: pointer;
+}
+
+.saved-trips button:disabled {
+  cursor: default;
+  opacity: 0.65;
+}

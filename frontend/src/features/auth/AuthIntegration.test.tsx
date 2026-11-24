@@ -61,7 +61,12 @@ test('real logout sends the CSRF header, waits for 204, then preserves the trip 
   vi.stubEnv('DEV', false)
   document.cookie = `roam_csrf=${csrf}; Path=/`
   const pending = deferred<Response>()
-  const fetch = vi.fn().mockResolvedValueOnce(Response.json({ user })).mockReturnValueOnce(pending.promise)
+  const fetch = vi.fn((path: string) => {
+    if (path === '/api/auth/me') return Promise.resolve(Response.json({ user }))
+    if (path === '/api/v1/trips?limit=20') return Promise.resolve(Response.json({ items: [], next_cursor: null }))
+    if (path === '/api/auth/logout') return pending.promise
+    throw new Error('Unexpected fixture endpoint')
+  })
   vi.stubGlobal('fetch', fetch)
   render(<App />)
   fireEvent.change(screen.getByLabelText('Destination (required)'), { target: { value: 'Lisbon' } })
@@ -69,8 +74,11 @@ test('real logout sends the CSRF header, waits for 204, then preserves the trip 
   fireEvent.click(button); fireEvent.click(button)
   expect(account().getByRole('button', { name: 'Signing out…' })).toBeDisabled()
   expect(account().getByRole('status')).toHaveTextContent('Signed in as Student')
-  expect(fetch).toHaveBeenCalledTimes(2)
-  expect(fetch).toHaveBeenLastCalledWith('/api/auth/logout', expect.objectContaining({
+  expect(fetch).toHaveBeenCalledTimes(3)
+  // The dashboard effect can start its GET in this commit; logout need not be
+  // the last request across unrelated features. Still require exactly one POST.
+  expect(fetch.mock.calls.filter(([path]) => path === '/api/auth/logout')).toHaveLength(1)
+  expect(fetch).toHaveBeenCalledWith('/api/auth/logout', expect.objectContaining({
     method: 'POST', credentials: 'same-origin', cache: 'no-store',
     headers: { Accept: 'application/json', 'X-CSRF-Token': csrf },
   }))

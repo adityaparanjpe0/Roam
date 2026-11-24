@@ -8,6 +8,46 @@
 
 ### Verified facts
 
+- 2026-11-24 PR #12 Milestone 3, owner: user with Codex assistance, started on
+  `feat/saved-trips-dashboard` at human-committed `f535be9`. The human reported
+  Milestone 2 complete/reviewed; that supersedes its older uncommitted/review
+  status below. Initial tracked tree was clean; untracked `.vscode/` preserved.
+- Added a minimal [My Trips section](../frontend/src/features/trip/SavedTripsDashboard.tsx)
+  on the landing page with desktop/mobile `#my-trips` navigation. It reuses
+  useAuth and the typed list client. Confirmed auth mounts a user-ID-keyed
+  child; sign-out initiation, logout, unknown auth and account changes unmount
+  its data/request state while preserving the creation form. The user ID is
+  never sent to determine ownership. [The hook](../frontend/src/features/trip/useSavedTrips.ts)
+  separates requests from a presentation-only list, with loading, successful
+  empty/populated, safe error, explicit retry/refresh and bounded cursor pages.
+- Effect dependencies are primitive cursor/attempt values, not auth/profile
+  objects or callbacks. Cleanup aborts and marks each request inactive; late
+  successes/failures are ignored, including substituted requests ignoring abort.
+  Same-account auth refresh does not refetch trips. No polling, persistence,
+  shared cache, new dependency, API/backend/auth behavior change or detail route.
+  [ADR 0012](adr/0012-saved-trips-dashboard-state.md) records the scoped local-hook
+  decision superseding the earlier TanStack recommendation for this consumer.
+  Explicit Refresh trips is required after save or external data changes.
+- Windows, existing pinned Node **24.22.3** and installed dependencies: focused
+  dashboard/form/auth/header/app tests **67 passed in 5 files** (4.90s); full
+  `npm run test -- --run` **392 passed in 17 files** (9.62s), including **24 new
+  dashboard cases**. `npm run lint`, `npm run typecheck`, and `npm run build`
+  exited 0. Editor diagnostics and `git diff --check` passed; changed docs had
+  no broken local file links. No installation or persistent PATH change.
+- Checks exposed test synchronization assumptions: a new empty-page assertion
+  initially observed loading instead of completed status; logout assertions
+  assumed no concurrent trip GET; an existing save regression observed new
+  account text before passive cancellation cleanup. Tests now wait for the
+  relevant result/abort and assert exactly one correctly protected logout
+  independently of unrelated GET ordering. The late-save privacy assertion
+  remains; production save/auth code was unchanged. Final results are above.
+- Tests substitute HTTP or client promises; no live Google, browser/PostgreSQL
+  integration, responsive browser, screen-reader, backend suite, hosted CI or
+  deployment run was performed for this milestone. The [manual checklist](runbooks/saved-trips-dashboard.md)
+  is instructions, not claimed execution. Milestone 4 visual design and detailed
+  routing remain unimplemented. Changes remain uncommitted for human review;
+  no commit, push or merge by Codex.
+
 - 2026-11-24 PR #12 Milestone 2, owner: user with Codex assistance, on
   `feat/saved-trips-dashboard` at `15fda2e`. The human updated the branch after
   the earlier PR #7 baseline blocker; local Git now includes the PR #11 merge.

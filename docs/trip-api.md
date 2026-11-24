@@ -229,7 +229,9 @@ code/status/request-ID logs without enabling body/cookie/SQL-parameter logging.
 ## TypeScript read client
 
 PR #12 Milestone 2 extends the [existing client](../frontend/src/api/trips.ts)
-from PR #11; it does not mount a dashboard or change the backend contract.
+from PR #11 without changing the backend contract. Milestone 3 now consumes list
+reads in a minimal [My Trips section](../frontend/src/features/trip/SavedTripsDashboard.tsx);
+see [its lifecycle decision](adr/0012-saved-trips-dashboard-state.md).
 
 ```ts
 import { getTrip, listTrips } from './api/trips'
@@ -334,7 +336,7 @@ Origin and the HttpOnly session cookie accompany the request. The example is
 local HTTP only; production HTTPS cookie names differ. Repeat detail/list reads
 using the returned ID; another account must receive 404 for that ID and never
 see it in its list. PR #11's frontend review now offers authenticated Save;
-a dashboard remains planned after PR #12's read-client milestone.
+PR #12 Milestone 3 now displays saved summaries in My Trips with explicit refresh.
 
 To manually update a synthetic owned development trip from Roam's 5173 origin,
 use the same cookie/header approach with `method: 'PATCH'`, the returned trip ID,

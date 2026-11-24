@@ -407,6 +407,16 @@ readiness. Revisit the separate paths when database readiness is implemented.
 
 ### Trips and activities
 
+PR #12 Milestone 3 (2026-11-24) adds a minimal My Trips section through existing
+anchor navigation. An authenticated child keyed by user ID owns a small React
+list hook; changing/losing accounts or signing out discards results and aborts
+requests. Primitive cursor/attempt dependencies prevent profile rerenders from
+refetching; active/signal checks reject stale completions. Loading, empty/error,
+manual refresh and cursor pages use the typed client. This scoped hook decision
+supersedes the initial TanStack Query recommendation for one consumer; no shared
+cache, polling or dependency is introduced. Styled cards/detail routing remain
+planned. See [ADR 0012](adr/0012-saved-trips-dashboard-state.md).
+
 PR #12 Milestone 2 (2026-11-24), on `feat/saved-trips-dashboard`, extends the
 existing frontend trip client with authenticated list/detail GET functions and
 runtime-validated summary/list models. Reads reuse same-origin cookies, bounded

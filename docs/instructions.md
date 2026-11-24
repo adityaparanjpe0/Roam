@@ -5,14 +5,25 @@
 
 ## 1. Working agreement
 
+PR #12 Milestone 3's single My Trips consumer uses the scoped React-hook decision
+in [ADR 0012](adr/0012-saved-trips-dashboard-state.md). Mount the fetching child
+only inside confirmed auth and key it by stable user ID. Keep the effect's
+dependencies to cursor/explicit attempt; do not depend on whole auth/options
+objects or changing callbacks. Abort and ignore obsolete completions, discard
+state on account loss/sign-out, and keep presentation free of requests. Refresh
+is explicit; no polling/persistence or automatic POST retry. This exception does
+not replace TanStack Query's default for future shared server state. Follow the
+[manual checklist](runbooks/saved-trips-dashboard.md) without claiming it passed.
+
 PR #12 Milestone 2 adds `listTrips(options?, signal?)` and `getTrip(id, signal?)`
 to the existing trip client. Use those functions for saved metadata reads;
 do not construct a second client or supply an owner ID. Keep required-nullable
 DTO fields distinct from optional request fields, and retain runtime validation.
 GETs use the existing same-origin session and do not require a CSRF header.
 Read errors use load-specific safe messages; preserve POST's uncertain-save
-messages/no-retry behavior. Query state, routing and dashboard UI are later
-milestones. See [client usage](trip-api.md#typescript-read-client) and
+messages/no-retry behavior. Milestone 3 now adds local list state and minimal
+dashboard UI; detailed routing and styled cards remain later work. See
+[client usage](trip-api.md#typescript-read-client) and
 [ADR 0011](adr/0011-saved-trip-read-client.md).
 
 PR #11 Milestones 1–2 add a tested trip POST client and authenticated review/save

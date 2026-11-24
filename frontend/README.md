@@ -2,18 +2,26 @@
 
 React + TypeScript + Vite frontend for Roam. The current page introduces the planned travel planner; its itinerary preview is a static concept, not a generated or interactive itinerary.
 
+PR #12 Milestone 3 adds a minimal **My Trips** section at `/#my-trips` with a
+[React hook](src/features/trip/useSavedTrips.ts), explicit request states,
+refresh and cursor pagination. Only confirmed authentication mounts the
+account-keyed fetcher; logout/account changes discard its data and cancel work.
+There is no polling, persistence, query dependency or detail page. Styled cards
+remain Milestone 4. See [ADR 0012](../docs/adr/0012-saved-trips-dashboard-state.md)
+and the [manual verification checklist](../docs/runbooks/saved-trips-dashboard.md).
+
 PR #12 Milestone 2 extends the [trip client](src/api/trips.ts) with typed,
 runtime-validated `listTrips(options?, signal?)` and `getTrip(id, signal?)` reads.
 They use existing relative URLs and same-origin session cookies, support bounded
-cursor pagination/cancellation, and expose safe load-specific errors. Dashboard,
-query-state and routing work remain planned. See [read-client usage](../docs/trip-api.md#typescript-read-client)
+cursor pagination/cancellation, and expose safe load-specific errors. The minimal
+dashboard now consumes list reads; detailed routing remains planned. See [read-client usage](../docs/trip-api.md#typescript-read-client)
 and [ADR 0011](../docs/adr/0011-saved-trip-read-client.md).
 
 The development build includes a backend connection check using FastAPI `/health`.
 PR #9 Milestone 6 adds cookie-based account controls, current-user checks,
 backend-managed Google login navigation, and CSRF-protected logout. PR #11 adds
-authenticated trip creation; AI planning, maps, dashboard and PDF export remain
-unimplemented. Milestone 3 verified real HTTP/PostgreSQL using synthetic session
+authenticated trip creation; AI planning, maps and PDF export remain
+unimplemented. PR #11 Milestone 3 verified real HTTP/PostgreSQL using synthetic session
 identities; the live-Google human smoke check remains. The health check
 still needs no database/credentials; actual authentication requires the migrated
 backend and locally configured Google credentials. An unavailable backend shows
@@ -393,10 +401,11 @@ No browser automation package is installed in the project. Earlier Chrome layout
 The dependency audit on 2026-11-12 reported **10 moderate findings** associated with `minimatch` in the development lint toolchain. `npm audit --omit=dev` reported **0 vulnerabilities**. These results are dated observations, not guarantees; rerun the audit when dependencies change. No forced major override or lint-stack downgrade was applied.
 
 React Router remains deferred until there are multiple routes. Native fetch
-supports the health check, small auth snapshot and PR #11's single create
-mutation; [ADR 0010](../docs/adr/0010-trip-creation-integration.md) records the
-narrow trip-client exception. Reconsider TanStack Query for PR #12's saved-trip
-queries/cache. Vite already proxies `/health`, `/api` and `/auth`, preserving
+supports the health check, small auth snapshot and existing trip client.
+[ADR 0010](../docs/adr/0010-trip-creation-integration.md) records the create
+exception; [ADR 0012](../docs/adr/0012-saved-trips-dashboard-state.md) scopes local
+React state for the first list consumer. Reconsider TanStack Query for shared
+cache/invalidation needs. Vite already proxies `/health`, `/api` and `/auth`, preserving
 Origin/cookies. There is no frontend API URL environment variable or CORS change
 for this same-origin setup. Production serving remains planned in the
 [technical design](../docs/DESIGN.md).

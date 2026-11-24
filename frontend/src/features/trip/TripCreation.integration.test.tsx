@@ -217,7 +217,9 @@ test.each(['logout', 'account-change'])('%s cancels an in-flight save and a late
     fireEvent(window, new Event('focus'))
     await screen.findByText('Bob')
   }
-  expect(signal?.aborted).toBe(true)
+  // The account text commits before the old review's passive-effect cleanup.
+  // Wait for cancellation itself before resolving the deliberately late POST.
+  await waitFor(() => expect(signal?.aborted).toBe(true))
   await act(async () => { pending.resolve(Response.json(saved, { status: 201 })) })
   expect(screen.queryByRole('heading', { name: 'Trip saved' })).not.toBeInTheDocument()
   if (change === 'logout') {

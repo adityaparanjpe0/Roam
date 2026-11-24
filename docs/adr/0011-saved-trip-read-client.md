@@ -1,7 +1,7 @@
 # ADR 0011: Extend the trip client with authenticated metadata reads
 
 - Date: 2026-11-24
-- Status: implemented locally for PR #12 Milestone 2; uncommitted, review pending
+- Status: PR #12 Milestone 2 human-reviewed and committed as f535be9; not merged
 - Owner: user with Codex assistance
 
 ## Problem and decision
@@ -44,8 +44,9 @@ inside visual components would mix responsibilities. A generic app-wide HTTP
 framework or auth rewrite adds unnecessary scope. A private helper in the existing
 module shares only the lifecycle needed by the three current trip requests.
 
-TanStack Query remains the planned server-state layer for the dashboard; this
-milestone adds transport functions only, without cache, hooks, routing or UI.
+This milestone adds transport functions only, without cache, hooks, routing or UI.
+[ADR 0012](0012-saved-trips-dashboard-state.md) subsequently scopes a local hook
+for the first dashboard consumer; shared-state needs still default to TanStack Query.
 No itinerary, itinerary-presence flag or total count exists in the read DTOs.
 Concurrent changes can move trips between cursor pages; do not promise a snapshot.
 Hand-maintained DTOs/parsers must be reviewed with backend contract changes until

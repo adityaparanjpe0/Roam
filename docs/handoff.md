@@ -2,10 +2,18 @@
 
 > Status: local main includes the frontend/form, PostgreSQL/ORM/migrations, OAuth/sessions, Trip CRUD and navbar through merge de15c3b. PR #11 implements authenticated creation on feat/trip-creation-integration; Milestone 3 real HTTP/PostgreSQL verification passed with synthetic session identities. Human Google smoke check, hosted CI and review remain outstanding. Deployment remains planned. See [memory.md](memory.md) for evidence.
 
+PR #12 Milestone 3 adds a minimal My Trips section, account-scoped React hook,
+request states, explicit refresh and cursor pagination. Account changes/logout
+discard data and cancel requests; no query dependency, polling, persistence or
+backend change. This work is local/uncommitted; styled cards/detail routing and
+live browser verification remain later work. See [ADR 0012](adr/0012-saved-trips-dashboard-state.md)
+and the [manual checklist](runbooks/saved-trips-dashboard.md).
+
 PR #12 Milestone 2 on `feat/saved-trips-dashboard` adds authenticated metadata
 list/detail functions and runtime-validated DTOs to the existing trip client.
-This is locally implemented, uncommitted transport work; dashboard/cards/routes,
-query state and browser integration remain planned. No backend contract,
+The human reviewed/committed that transport work as `f535be9`; Milestone 3 now
+adds the minimal dashboard/list state. Full cards/routes and live browser
+integration remain planned. No backend contract,
 authentication behavior, dependency or migration changes. See
 [ADR 0011](adr/0011-saved-trip-read-client.md) and [memory](memory.md) for evidence.
 
