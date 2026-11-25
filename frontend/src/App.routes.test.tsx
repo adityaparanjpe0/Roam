@@ -14,7 +14,8 @@ function open(path: string, authenticated = true) {
   const fetch = vi.fn((url: string) => {
     if (url === '/api/auth/me') return Promise.resolve(authenticated ? Response.json({ user }) : new Response(null, { status: 401 }))
     if (url === '/api/v1/trips?limit=20') return Promise.resolve(Response.json({ items: [trip], next_cursor: null }))
-    throw new Error('Unexpected request; navigation shells must not fetch trip details')
+    if (url === `/api/v1/trips/${trip.id}`) return Promise.resolve(Response.json({ ...trip, timezone: 'Europe/Lisbon', traveler_count: 2, budget_per_person_minor: 75050, currency: 'USD', interests: ['food'], free_text_constraints: null, status: 'draft', created_at: trip.updated_at }))
+    throw new Error('Unexpected request')
   })
   vi.stubGlobal('fetch', fetch)
   render(<App />)
@@ -44,13 +45,12 @@ test('old My Trips anchor bookmarks redirect to the standalone page', async () =
   expect(window.location.hash).toBe('')
 })
 
-test('direct trip navigation reaches an honest shell without claiming a loaded or owned resource', async () => {
+test('direct trip navigation independently retrieves canonical saved details', async () => {
   const fetch = open(`/trips/${trip.id}`)
-  expect(await screen.findByText('The detailed trip view is not available yet. You can view your saved trip summaries in My Trips.')).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: trip.title })).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: 'Trip details', level: 1 })).toHaveFocus()
-  expect(screen.queryByText(trip.title)).not.toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Back to My Trips' })).toHaveAttribute('href', '/trips')
-  expect(fetch).toHaveBeenCalledExactlyOnceWith('/api/auth/me', expect.anything())
+  expect(fetch.mock.calls.map(([url]) => url)).toEqual(['/api/auth/me', `/api/v1/trips/${trip.id}`])
 })
 
 test('a guest dashboard sends no protected request and still links to the creation form', async () => {

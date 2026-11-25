@@ -1,5 +1,14 @@
 # Roam MVP handoff
 
+PR #12 Milestone 6 locally implements individual saved metadata at
+`/trips/:tripId`, including independent authenticated reads, canonical facts,
+account/HTTP recovery, invalid/unavailable IDs, back navigation and request-race
+protection. The human reviewed Milestone 5, committed as `a8d20da`; this
+supersedes its earlier uncommitted status and older future-detail forecasts
+below. Itinerary contents/presence are absent from the API and explicitly marked
+unavailable. No generation/edit/delete/export controls or backend changes.
+See [ADR 0015](adr/0015-saved-trip-details.md). Milestone 7 has not begun.
+
 > Status: local main includes the frontend/form, PostgreSQL/ORM/migrations, OAuth/sessions, Trip CRUD and navbar through merge de15c3b. PR #11 implements authenticated creation on feat/trip-creation-integration; Milestone 3 real HTTP/PostgreSQL verification passed with synthetic session identities. Human Google smoke check, hosted CI and review remain outstanding. Deployment remains planned. See [memory.md](memory.md) for evidence.
 
 PR #12 Milestone 5 hardens loading/empty/error/auth recovery with a visible

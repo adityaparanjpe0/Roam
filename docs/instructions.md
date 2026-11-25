@@ -5,6 +5,14 @@
 
 ## 1. Working agreement
 
+PR #12 Milestone 6 now loads canonical metadata at `/trips/:tripId`, replacing
+the previous shell described below. Reuse getTrip and key the authenticated
+consumer by account plus route UUID. No dashboard-state dependency, owner ID,
+query cache, automatic retry or itinerary inference. Direct URLs require the
+frontend history fallback; production serving remains planned. See
+[ADR 0015](adr/0015-saved-trip-details.md) and
+[manual details checks](runbooks/saved-trips-dashboard.md#milestone-6-details-checks).
+
 PR #12 Milestone 5 is dashboard state/recovery hardening, superseding older
 forecasts of a details milestone. Read 401/403 use explicit existing account
 recovery; 403 is frontend FORBIDDEN and must not imply logout or bypass. Create

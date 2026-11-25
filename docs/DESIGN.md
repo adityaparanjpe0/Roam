@@ -27,6 +27,14 @@ not database readiness, production serving, or a new business API. See the
 
 ## 1. Context and design goals
 
+PR #12 Milestone 6 (2026-11-24) replaces the trip route shell with authenticated
+canonical metadata retrieval at `/trips/:tripId`. It reuses getTrip, shared
+formatting and account-keyed local request state. Missing and inaccessible trips
+share a non-enumerating unavailable state. The API has no itinerary contents or
+presence flag, so the page explains that limit. See
+[ADR 0015](adr/0015-saved-trip-details.md). This supersedes older detail-shell
+forecasts; backend contracts/security and deployment remain unchanged.
+
 PR #8 Milestones 2–8 (2026-11-17) add a frontend form-state foundation under
 `frontend/src/features/trip/`: editable string values, a separate target normalized
 draft type, and local React state. Milestone 3 mounts five controlled core fields

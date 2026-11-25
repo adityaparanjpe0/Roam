@@ -1,5 +1,41 @@
 # My Trips foundation: manual verification
 
+## Milestone 6 details checks
+
+Milestone 6 replaces the older shell described below. These are manual steps,
+not a claim of live execution. Use synthetic owned trips and the existing local
+frontend/backend/PostgreSQL setup; never log or copy session secrets.
+
+1. Sign in, open My Trips, and use View Trip. Confirm the URL contains the saved
+   UUID and the detail GET retrieves that UUID without an owner parameter.
+2. Verify title, destination, timezone, calendar dates, inclusive duration,
+   travelers, full-trip per-person currency budget, interests and preferences
+   against the saved record. A null budget must say Not specified, not zero.
+3. Refresh the details URL and open it in a fresh tab. Both should check the
+   session and load details independently of a dashboard visit. Production
+   static/history routing is still planned; Vite checks do not prove deployment.
+4. Use Back to My Trips and browser history. Confirm the dashboard loads normally
+   and creation links still reach the existing form.
+5. Open `/trips/not-a-uuid`: expect Invalid trip link and no detail GET. Compare
+   nonexistent and another synthetic owner's UUID: both show the same unavailable
+   state from backend 404, without revealing whether the private resource exists.
+6. Check a guest/expired session: no protected read until auth resolves. Use the
+   existing header sign-in or explicit account recheck. A 403 must not imply
+   logout or trigger repeated requests. Test server/offline/timeout failures:
+   safe alert, explicit retry, loading and eventual outcome; no automatic loop.
+7. Throttle a detail response and sign out/change accounts or navigate to a
+   different UUID. Old content must disappear, pending work must abort and late
+   results must never replace the new account/trip.
+8. Check narrow mobile and desktop widths, long text, preference line breaks,
+   keyboard back/retry navigation, focus and status/error announcements. The
+   itinerary section explicitly explains missing API itinerary information;
+   there are no fictional activities or generation/edit/delete/export controls.
+
+Focused automated command from frontend: `npm run test -- --run
+src/routes/TripDetailsPage.test.tsx src/App.routes.test.tsx`. These tests use
+mocked HTTP; live Google/PostgreSQL ownership and screen-reader checks remain
+manual. See [ADR 0015](../adr/0015-saved-trip-details.md).
+
 PR #12 Milestone 4 presents My Trips at `/trips` with responsive cards and a
 navigation shell for View Trip. Old `/#my-trips` bookmarks redirect there.
 Canonical detail loading and automatic post-save invalidation remain later work.

@@ -1,0 +1,36 @@
+.trip-details-back {
+  display: inline-block;
+  margin-bottom: var(--space-4);
+}
+
+.trip-details-header h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.trip-details-header p, .trip-details-facts dt {
+  color: var(--color-muted);
+}
+
+.trip-details-facts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  margin-block: var(--space-4);
+}
+
+.trip-details-facts dd {
+  margin: var(--space-1) 0 0;
+}
+
+.trip-details-facts ul {
+  padding-left: var(--space-3);
+}
+
+.trip-details-preferences {
+  white-space: pre-wrap;
+}
+
+@media (min-width: 42rem) {
+  .trip-details-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .trip-details-wide { grid-column: 1 / -1; }
+}

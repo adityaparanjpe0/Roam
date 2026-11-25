@@ -1,5 +1,13 @@
 # Roam frontend
 
+PR #12 Milestone 6 replaces the detail shell with an independently loaded,
+authenticated `/trips/:tripId` page. It displays saved metadata and explicitly
+identifies the API's missing itinerary contents/presence information. Existing
+cards link to this route; no dashboard state is needed after refresh. See
+[the detail decision](../docs/adr/0015-saved-trip-details.md) and
+[manual verification](../docs/runbooks/saved-trips-dashboard.md#milestone-6-details-checks).
+This supersedes historical shell-only descriptions below.
+
 React + TypeScript + Vite frontend for Roam. The current page introduces the planned travel planner; its itinerary preview is a static concept, not a generated or interactive itinerary.
 
 PR #12 Milestone 5 improves dashboard loading, empty, error and authentication

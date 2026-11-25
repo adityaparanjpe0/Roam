@@ -8,6 +8,42 @@
 
 ### Verified facts
 
+- 2026-11-24 PR #12 Milestone 6, owner: user with Codex assistance, started on
+  `feat/saved-trips-dashboard` at `a8d20da`. The human reported Milestone 5
+  complete/reviewed; its older uncommitted status below is superseded. Initial
+  tracked tree clean, preexisting untracked `.vscode/` preserved.
+- Replaced the route shell with [TripDetailsPage](../frontend/src/routes/TripDetailsPage.tsx),
+  [useSavedTrip](../frontend/src/features/trip/useSavedTrip.ts) and presentation-only
+  [SavedTripDetails](../frontend/src/features/trip/SavedTripDetails.tsx). Existing
+  card UUID links and React Router remain; details load through existing getTrip
+  independently of dashboard state. Shared calendar/currency/traveler helpers,
+  nullable fields, interests and free-text preferences are rendered safely.
+- Confirmed auth gates reads. Account/trip keys discard old state; cleanup abort
+  and active checks reject late results. Invalid IDs, identical missing/private
+  404, explicit 401/403 account recovery, server/offline/timeout errors and retry
+  are handled. Auth provider, API client, backend ownership and dependencies are
+  unchanged. The response cannot establish itinerary presence: the page explains
+  unavailable itinerary information instead of claiming absence or inventing
+  activities. [ADR 0015](adr/0015-saved-trip-details.md) records the local-hook
+  extension and contract limit. No future generation/edit/export controls.
+- Actual frontend gates with existing Node 24.22.3: focused route/app tests
+  **23 passed in 2 files** (3.25s), then full suite **460 passed in 22 files**
+  (17.55s), including **19 new details cases**. Lint, typecheck and production
+  build exited 0; Vite built 128 modules in 340ms. Editor diagnostics had no
+  errors for the new hook/page/view/tests. Native client mocked-HTTP coverage
+  includes auth resolution, direct entry, fields/nulls, errors, explicit retry,
+  timeout, malformed responses, logout/account/route races and Strict Mode.
+- Live Google/PostgreSQL, backend integration suite, browser visuals,
+  screen-reader and hosted refresh were not reverified. Production history/static
+  serving remains planned. Manual steps are in the
+  [details checklist](runbooks/saved-trips-dashboard.md#milestone-6-details-checks).
+  PR #17–#20's individual assignments were not established by inspected local
+  documentation; stable ID/version/canonical read and itinerary section support
+  later feature work without asserting those contracts already exist.
+- No environment values read/changed, dependency installation, backend changes,
+  commits, pushes or merges by Codex. Work is local for review; Milestone 7 has
+  not begun.
+
 - 2026-11-24 PR #12 Milestone 5, owner: user with Codex assistance, started on
   `feat/saved-trips-dashboard` at human-committed `3bfc6c6`. The human reported
   Milestone 4 complete/reviewed, superseding its older uncommitted status below.

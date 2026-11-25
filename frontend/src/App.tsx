@@ -6,7 +6,7 @@ import LandingPage from './routes/LandingPage'
 import ConnectionStatus from './features/connection/ConnectionStatus'
 import AuthProvider from './features/auth/AuthProvider'
 import SavedTripsPage from './routes/SavedTripsPage'
-import TripPageShell from './routes/TripPageShell'
+import TripDetailsPage from './routes/TripDetailsPage'
 
 function HomePage() {
   const { hash } = useLocation()
@@ -30,7 +30,7 @@ function AppLayout() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/trips" element={<SavedTripsPage />} />
-      <Route path="/trips/:tripId" element={<TripPageShell />} />
+      <Route path="/trips/:tripId" element={<TripDetailsPage />} />
       <Route path="*" element={<main className="route-shell page-width" id="main-content" tabIndex={-1}>
         <h1>Page not found</h1><p>We couldn’t find that page.</p><a className="primary-link" href="/trips">Go to My Trips</a>
       </main>} />
