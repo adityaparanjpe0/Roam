@@ -1,5 +1,13 @@
 # Roam MVP handoff
 
+PR #12 Milestone 9 locally polishes detail fact grouping/wrapping, back-link
+target, card keyboard focus and atomic detail errors, and adds the current
+[Saved trips guide](SAVED_TRIPS.md). Milestone 8 is human-reviewed/committed as
+`9bc3892`. Frontend/backend database-free gates and browser fixture checks pass;
+real authenticated PostgreSQL verification remains blocked by local Docker/test
+URL setup. See [memory](memory.md) for exact evidence and guide for human steps.
+No production itinerary features or backend changes. Milestone 10 has not begun.
+
 PR #12 Milestone 8 adds frontend integration/race/security-rendering tests and
 an auditable [24-requirement coverage matrix](saved-trips-testing.md). Milestone
 7 is human-reviewed/committed as `ca9f072`, superseding its older uncommitted

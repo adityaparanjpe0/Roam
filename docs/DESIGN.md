@@ -27,6 +27,14 @@ not database readiness, production serving, or a new business API. See the
 
 ## 1. Context and design goals
 
+PR #12 Milestone 9 polishes existing detail fact grouping, long-text wrapping,
+back-link touch target, card keyboard outline and atomic detail error feedback.
+No API/schema/auth/dependency changes. The [Saved trips guide](SAVED_TRIPS.md)
+documents actual metadata contracts, frontend ownership gates versus backend
+authorization, refetch/cursor decisions, accessible states and the itinerary
+contract limitation. Browser fixture checks and blocked real-service verification
+are recorded separately in memory; they are not a deployed or live OAuth claim.
+
 PR #12 Milestone 7 (2026-11-24) retains fresh reads on dashboard entry and adds
 saved-confirmation navigation to My Trips/details. PR #11's merge `15fda2e` is
 already in this branch and the local origin/main ref. Persisted browser history

@@ -8,6 +8,65 @@
 
 ### Verified facts
 
+- 2026-11-24 PR #12 Milestone 9, owner: user with Codex assistance, started on
+  `feat/saved-trips-dashboard` at human-reviewed/committed Milestone 8 `9bc3892`.
+  Initial tracked tree clean; preexisting untracked `.vscode/` retained. This
+  supersedes the prior milestone's uncommitted status below.
+- Focused UX changes: existing-surface grouping of detail facts, min-width and
+  long-text wrapping, detail title spacing/line height, 44px back-link target at
+  default root font size, visible card keyboard outline inset inside its clipped
+  border, and atomic detail error alerts. Shared date/currency/duration helpers
+  and API/auth/state architecture unchanged. No provider imagery, new library,
+  backend/schema/security change or unrelated page redesign.
+- Added [Saved trips guide](SAVED_TRIPS.md): actual component responsibilities,
+  compact list/full metadata contracts, cookie auth versus backend ownership,
+  request lifecycle/cancellation, pagination/order/refetch, recovery and honest
+  itinerary limits, local launch and manual live-verification steps. Updated
+  root/frontend README, DESIGN and CHANGELOG to reflect implemented metadata
+  functionality instead of older planned-CRUD/shell-only descriptions.
+- Local Chrome **151.0.7922.174** with existing Playwright installation ran an
+  isolated HTTP-fixture smoke check against Vite on 127.0.0.1:5177. **23 layout
+  measurements** passed with zero horizontal overflow: empty/one/20 trips at
+  320, 390, 768, 1024 and 1440px; long details at all five widths; loading/error/
+  guest states. Details used 120-character title, 200-character destination and
+  approximately 4000-character multiline preferences. Screenshots of tablet
+  cards, mobile details and keyboard focus were visually inspected.
+- Browser fixture checks passed actual keyboard Tab/Enter to the UUID card URL,
+  independent details reload and back navigation/dashboard reload, date/currency
+  display, error → retry → empty/loading/success, and existing form review/save →
+  dashboard with one intercepted POST. Focus outline computed as 3px solid with
+  -3px offset. No browser page errors. These checks mock /me/trip/health HTTP in
+  a separate browser context and do not prove real Google/PostgreSQL/ownership.
+  Scratch runner, screenshots and metrics remain ignored local tmp evidence.
+- Frontend actual pinned Node 24.22.3 checks: **479 passed in 24 files** (23.71s),
+  lint/typecheck/build passed. Vite built 128 modules in 356ms. Editor diagnostics
+  and whitespace diff checks passed. Backend existing Python 3.12 database-free
+  pytest: **434 passed, 136 skipped**, one existing Starlette/httpx deprecation
+  warning (7.94s). Ruff format: **77 files already formatted**; lint passed;
+  mypy: **no issues in 40 source files**. No tests/assertions weakened.
+- Live-service verification remains blocked: Docker was not found on this
+  shell's PATH or the usual Docker Desktop CLI path, and no frontend/backend/DB
+  listeners were observed initially. Explicit current uv/env-file PR #10
+  PostgreSQL run again produced **14 setup errors** (0.75s), missing
+  TEST_DATABASE_ADMIN_URL; no ownership assertions executed. Existing pytest
+  cache-permission/deprecation warnings remain. No substitute development DB,
+  real sessions or provider requests were created. No environment values printed
+  or environment-file edits; the documented runner loads local configuration.
+- The VS Code task launcher returned no invocation context, so the temporary
+  verification Vite process was started directly. An initial root-directory
+  launch returned 404 and was corrected to the frontend directory; its generated
+  root cache was removed after verifying the exact workspace target. Initial
+  fixture routing also intercepted source-module URLs; restricting it to the
+  actual /api namespace fixed the fixture runner before the successful run above.
+  These were verification-harness issues, not product defects.
+- Remaining human checks are detailed in the guide: start Docker/PostgreSQL and
+  backend using local configuration, sign in through configured Google origin,
+  save/reload/direct details, test two isolated accounts and missing/private 404,
+  actual history cache, mobile menu/keyboard/screen reader and 200% zoom. Hosted
+  history/static fallback remains planned. No live authenticated end-to-end pass
+  or WCAG certification is claimed. No commits, pushes or merges by Codex;
+  Milestone 10 has not begun.
+
 - 2026-11-24 PR #12 Milestone 8, owner: user with Codex assistance, started on
   `feat/saved-trips-dashboard` at human-reviewed/committed Milestone 7 `ca9f072`.
   Initial tracked tree clean; preexisting `.vscode/` retained. This supersedes

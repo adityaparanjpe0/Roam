@@ -5,6 +5,12 @@
 
 ## 1. Working agreement
 
+Use [Saved trips](SAVED_TRIPS.md) for the current implemented dashboard/details
+architecture, local launch and end-to-end checklist. Keep real-service evidence
+separate from intercepted browser HTTP fixtures and database-free tests. Never
+claim unknown itinerary presence as confirmed empty or weaken ownership to smoke
+test the UI. Milestone 9's current evidence/blockers are in [memory](memory.md).
+
 PR #12 Milestone 8 coverage is mapped in [saved trips testing](saved-trips-testing.md).
 Reuse synthetic fixture factories and controlled deferred promises where useful;
 mock HTTP boundaries and keep backend ownership evidence separate. Existing

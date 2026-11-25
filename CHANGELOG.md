@@ -20,6 +20,13 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) co
   while keeping placeholder environment examples eligible for version control.
 
 ### Added
+- Authenticated My Trips dashboard, reusable saved trip cards and individual
+  metadata details with paginated owner-scoped reads, safe loading/error/empty
+  states, explicit recovery and navigation from server-confirmed creation.
+  Shared date/currency formatting, request cancellation and account isolation
+  have automated coverage. The Saved trips guide documents responsive/focus
+  polish and local verification limits; itinerary generation/maps/editing/PDF
+  controls remain future work.
 - PR #9 Google OIDC authorization-code authentication using Authlib/joserfc,
   state/nonce and PKCE, verified issuer/subject user persistence, hashed opaque
   PostgreSQL sessions, current-user lookup, CSRF-protected logout and React

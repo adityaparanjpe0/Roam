@@ -27,7 +27,7 @@ function OwnedTrip({ tripId, retryAuth }: { tripId: string; retryAuth: () => voi
   const feedback = savedTripsFeedback(state.error)
   return <section className="saved-trips-panel" aria-labelledby="trip-error-heading">
     <h2 id="trip-error-heading">{unavailable ? 'Trip not found or unavailable' : invalid ? 'Invalid trip link' : feedback.recovery === 'account' ? feedback.title : 'Trip details could not be loaded'}</h2>
-    <p ref={alert} tabIndex={-1} role="alert">{unavailable ? 'This trip could not be found or is not accessible to your account.' : invalid ? 'Check the trip URL or return to My Trips.' : state.error.message}</p>
+    <p ref={alert} tabIndex={-1} role="alert" aria-atomic="true">{unavailable ? 'This trip could not be found or is not accessible to your account.' : invalid ? 'Check the trip URL or return to My Trips.' : state.error.message}</p>
     {!unavailable && !invalid && <button type="button" onClick={feedback.recovery === 'account' ? retryAuth : () => { recoveryFocus.current = true; retry() }}>
       {feedback.recovery === 'account' ? feedback.action : 'Retry loading trip'}
     </button>}

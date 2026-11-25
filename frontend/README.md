@@ -1,5 +1,10 @@
 # Roam frontend
 
+The current [Saved trips guide](../docs/SAVED_TRIPS.md) describes dashboard/card/
+detail responsibilities, real API contracts, responsive/accessibility behavior,
+launch steps and the distinction between fixture browser checks and real-service
+verification. It supersedes historical shell-only descriptions below.
+
 PR #12 Milestone 8 adds HTTP-boundary App integration coverage and a stale-detail
 failure regression, reusing typed synthetic fixture/deferred helpers. Existing
 unit/component suites cover the remaining dashboard/client requirements. See the
