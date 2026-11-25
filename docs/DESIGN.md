@@ -27,6 +27,14 @@ not database readiness, production serving, or a new business API. See the
 
 ## 1. Context and design goals
 
+PR #12 Milestone 7 (2026-11-24) retains fresh reads on dashboard entry and adds
+saved-confirmation navigation to My Trips/details. PR #11's merge `15fda2e` is
+already in this branch and the local origin/main ref. Persisted browser history
+restoration rechecks auth with private children hidden, then remounts the proper
+account's reader. Preserve server updated_at-descending/UUID-ascending cursor
+order and explicit page controls; no shared cache, polling or new mutation.
+See [ADR 0016](adr/0016-trip-navigation-freshness.md).
+
 PR #12 Milestone 6 (2026-11-24) replaces the trip route shell with authenticated
 canonical metadata retrieval at `/trips/:tripId`. It reuses getTrip, shared
 formatting and account-keyed local request state. Missing and inaccessible trips

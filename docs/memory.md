@@ -8,6 +8,52 @@
 
 ### Verified facts
 
+- 2026-11-24 PR #12 Milestone 7, owner: user with Codex assistance, started on
+  `feat/saved-trips-dashboard` at human-reviewed/committed Milestone 6 `27f224d`.
+  Initial tracked tree clean; preexisting untracked `.vscode/` preserved.
+  PR #11 merge `15fda2e` is already in this branch and is the local origin/main
+  tip; local main is older `1b7187b`. This supersedes older unmerged-PR #11 and
+  uncommitted-Milestone 6 statements below. No fetch/merge performed by Codex.
+- [Saved confirmation](../frontend/src/features/trip/TripSaved.tsx) now links to
+  My Trips and canonical UUID details. Existing POST/form behavior is unchanged.
+  The dashboard mounts on entry and reads current first-page data; no mounted
+  dashboard/cache exists on the creation route to invalidate. Native links do
+  not prefetch or submit again. Existing details Back link remounts the list.
+- [AuthProvider](../frontend/src/features/auth/AuthProvider.tsx) now handles
+  persisted pageshow by hiding private children behind loading and reusing the
+  guarded session checker. Valid auth remounts a fresh account-keyed reader;
+  expired/unknown auth issues no new protected read. Normal pageshow is ignored,
+  pending session checks are shared and listeners cleaned up. Existing focus/
+  online/visibility checks remain; same-account ordinary checks do not refetch
+  trips. No new auth client or backend session/security behavior.
+- [List hook](../frontend/src/features/trip/useSavedTrips.ts) now synchronously
+  guards pending refresh/page actions, preventing duplicate cursor history before
+  React disables controls. Preserve server updated_at descending, UUID ascending
+  order, existing next/previous cursors and current-page counts; refresh/entry
+  reset to page one. Dashboard explains ordering. Shared date/duration/budget
+  helpers remain; nullable confirmation budget wording now matches details.
+- [Freshness tests](../frontend/src/features/trip/SavedTripsFreshness.test.tsx)
+  add **9 cases** using native clients/provider with isolated HTTP fixtures:
+  existing form save to fresh dashboard, details return/order, persisted history
+  recovery/expiry, pending auth deduplication, pagination/reset, rapid request
+  actions/cursor regression and nullable confirmation budget. Native document
+  navigation is reproduced by URL/remount, not claimed as browser execution.
+- Actual existing Node 24.22.3 checks: focused creation/dashboard/freshness run
+  **51 passed in 3 files** (5.36s); initial full run **467 passed in 23 files**
+  (23.79s); final run after two regression cases **469 passed in 23 files**
+  (17.23s). Lint, typecheck and production build passed; Vite built 128 modules
+  in 443ms. Editor diagnostics and diff whitespace checks passed. No new
+  dependencies, API client changes, backend changes, polling or private storage.
+- Live Google/PostgreSQL, browser cache selection/visuals/mobile/keyboard,
+  backend tests and deployed refresh were not rerun. No future PR #11 merge is
+  needed; remaining integration verification is an authenticated form save
+  through local persistence to dashboard/details and real browser Back/Forward.
+  Production history/static serving remains planned. See
+  [ADR 0016](adr/0016-trip-navigation-freshness.md) and the
+  [manual checklist](runbooks/saved-trips-dashboard.md#milestone-7-freshness-checks).
+  No environment values read or changed. Work remains local for human review;
+  no commits, pushes or merges by Codex. Milestone 8 has not begun.
+
 - 2026-11-24 PR #12 Milestone 6, owner: user with Codex assistance, started on
   `feat/saved-trips-dashboard` at `a8d20da`. The human reported Milestone 5
   complete/reviewed; its older uncommitted status below is superseded. Initial

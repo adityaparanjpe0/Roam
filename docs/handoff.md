@@ -1,5 +1,13 @@
 # Roam MVP handoff
 
+PR #12 Milestone 7 locally adds saved-confirmation links, browser history cache
+restoration revalidation, explicit ordering copy and list action deduplication.
+PR #11 is merged as `15fda2e`, included by this branch and local origin/main;
+the older unmerged-PR #11 wording below is superseded. Milestone 6 is human-reviewed
+and committed as `27f224d`. No creation API responsibilities were duplicated.
+See [ADR 0016](adr/0016-trip-navigation-freshness.md). Live integrated smoke checks
+remain; Milestone 8 has not begun.
+
 PR #12 Milestone 6 locally implements individual saved metadata at
 `/trips/:tripId`, including independent authenticated reads, canonical facts,
 account/HTTP recovery, invalid/unavailable IDs, back navigation and request-race

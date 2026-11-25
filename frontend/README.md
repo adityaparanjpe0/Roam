@@ -1,5 +1,12 @@
 # Roam frontend
 
+PR #12 Milestone 7 adds My Trips/details links after server-confirmed creation,
+retains bounded fresh reads on dashboard entry/return, and rechecks authentication
+before showing private data on persisted browser history restoration. Server
+ordering/cursors remain authoritative. See the
+[freshness decision](../docs/adr/0016-trip-navigation-freshness.md) and
+[verification steps](../docs/runbooks/saved-trips-dashboard.md#milestone-7-freshness-checks).
+
 PR #12 Milestone 6 replaces the detail shell with an independently loaded,
 authenticated `/trips/:tripId` page. It displays saved metadata and explicitly
 identifies the API's missing itinerary contents/presence information. Existing

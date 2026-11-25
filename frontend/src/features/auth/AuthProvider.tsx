@@ -51,11 +51,20 @@ function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void check()
     const recover = () => { if (document.visibilityState !== 'hidden') void check() }
+    // Back/Forward can restore the entire React tree from the browser cache.
+    // Hide private snapshots until the existing session check confirms the user.
+    const restore = (event: PageTransitionEvent) => {
+      if (!event.persisted || logoutPending.current) return
+      setState({ status: 'loading' })
+      void check()
+    }
+    window.addEventListener('pageshow', restore)
     window.addEventListener('focus', recover)
     window.addEventListener('online', recover)
     document.addEventListener('visibilitychange', recover)
     return () => {
       window.removeEventListener('focus', recover)
+      window.removeEventListener('pageshow', restore)
       window.removeEventListener('online', recover)
       document.removeEventListener('visibilitychange', recover)
       revision.current += 1

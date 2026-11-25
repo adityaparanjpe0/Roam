@@ -5,6 +5,14 @@
 
 ## 1. Working agreement
 
+PR #12 Milestone 7 uses fresh first-page reads on dashboard entry, details return
+and confirmed auth after persisted browser history restoration. Reuse get/list
+clients and the existing session checker; keep ordinary focus checks from
+triggering trip requests for the same account. PR #11 is already merged; its
+saved confirmation links to My Trips/details without changing submission.
+Preserve server ordering and explicit cursor controls, synchronous pending guards
+and no polling/cache/persistence. See [ADR 0016](adr/0016-trip-navigation-freshness.md).
+
 PR #12 Milestone 6 now loads canonical metadata at `/trips/:tripId`, replacing
 the previous shell described below. Reuse getTrip and key the authenticated
 consumer by account plus route UUID. No dashboard-state dependency, owner ID,

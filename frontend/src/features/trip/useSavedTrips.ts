@@ -13,6 +13,7 @@ export function useSavedTrips() {
   const [pagination, setPagination] = useState<{ cursor: string | null; previous: (string | null)[] }>({ cursor: null, previous: [] })
   const [attempt, setAttempt] = useState(0)
   const request = useRef<AbortController | null>(null)
+  const pending = useRef(true)
   const cursor = pagination.cursor
 
   useEffect(() => {
@@ -28,7 +29,10 @@ export function useSavedTrips() {
         : new TripApiError('NETWORK_ERROR', undefined, undefined, {}, 'read')
       setState({ status: 'error', error })
     }).finally(() => {
-      if (request.current === controller) request.current = null
+      if (request.current === controller) {
+        request.current = null
+        pending.current = false
+      }
     })
 
     return () => {
@@ -39,21 +43,24 @@ export function useSavedTrips() {
   }, [cursor, attempt])
 
   function refresh() {
-    if (state.status === 'loading') return
+    if (state.status === 'loading' || pending.current) return
+    pending.current = true
     setState({ status: 'loading' })
     setPagination({ cursor: null, previous: [] })
     setAttempt((previous) => previous + 1)
   }
 
   function nextPage() {
-    if (state.status !== 'success' || state.page.next_cursor === null || request.current !== null) return
+    if (state.status !== 'success' || state.page.next_cursor === null || pending.current) return
+    pending.current = true
     const next = state.page.next_cursor
     setState({ status: 'loading' })
     setPagination((previous) => ({ cursor: next, previous: [...previous.previous, previous.cursor] }))
   }
 
   function previousPage() {
-    if (state.status === 'loading' || pagination.previous.length === 0 || request.current !== null) return
+    if (state.status === 'loading' || pagination.previous.length === 0 || pending.current) return
+    pending.current = true
     setState({ status: 'loading' })
     setPagination((previous) => ({ cursor: previous.previous.at(-1) ?? null, previous: previous.previous.slice(0, -1) }))
   }

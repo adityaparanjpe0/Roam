@@ -144,6 +144,7 @@ function SavedTripsDashboard({ page = false }: { page?: boolean }) {
           <p className="saved-trips-eyebrow">Your travel journal</p>
           <Heading ref={heading} tabIndex={-1} id="my-trips-heading">My Trips</Heading>
           <p className="saved-trips-description">A place for the trips you’re looking forward to.</p>
+          <p className="saved-trips-description">Most recently updated first.</p>
         </div>
         <a className="saved-trips-new primary-link" href="/#create-trip"><span aria-hidden="true">+</span> Plan a New Trip</a>
       </header>

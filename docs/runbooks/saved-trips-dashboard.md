@@ -1,5 +1,45 @@
 # My Trips foundation: manual verification
 
+## Milestone 7 freshness checks
+
+PR #11 is already merged (`15fda2e`); use the existing form submission. These
+manual steps remain unexecuted for this milestone; automated HTTP-fixture tests
+are separate evidence. Use synthetic trips in the existing local setup.
+
+1. Sign in, enter/review/save a trip through the existing landing-page form.
+   Confirm exactly one POST and no list prefetch while saving. The saved
+   confirmation offers Go to My Trips, View saved trip and Create another trip.
+2. Follow Go to My Trips. Confirm a fresh first-page GET after auth, and the new
+   trip appears in API order: updated_at descending, UUID ascending for ties.
+   Confirm My Trips is available in desktop and mobile navigation.
+3. Open details, follow Back to My Trips, then reload the dashboard. Each entry
+   should read current first-page data. Details directly opened/refreshed should
+   independently retrieve the selected UUID.
+4. From a dashboard visit, navigate away, then use browser Back/Forward. If the
+   browser uses its back/forward cache, persisted pageshow must hide old cards
+   while /me resolves, then retrieve fresh data for the confirmed account. If
+   the browser reloads instead, normal bootstrap handles freshness. Inspect the
+   browser navigation/cache diagnostics; synthetic events alone do not prove a
+   real cache restoration. Repeat after ending the session in another tab:
+   expired auth must not display old cards or issue a new protected list read.
+5. With more than 20 synthetic owned trips, follow Next/Previous and confirm
+   additional pages remain reachable. Refresh should return to the latest first
+   page, not retain an old cursor. Counts are per page. Concurrent edits can move
+   items between cursor pages; Refresh reloads the current first page.
+6. Try rapid Refresh/page actions. At most one accepted request is pending.
+   Ordinary React renders and same-account auth focus checks must not refetch
+   trips. React Strict Mode's development rehearsal is cancelled normally.
+7. Compare dates/durations across DST and one-day boundaries, and budgets across
+   saved confirmation/details: currency code, integer minor units, per person for
+   the entire trip, unknown distinct from zero. Cards omit unavailable budgets.
+
+Focused command from frontend: `npm run test -- --run
+src/features/trip/SavedTripsFreshness.test.tsx`. The suite uses isolated mocked
+HTTP with native clients; full-document links are tested through URL/remount
+lifecycles. Still needed: live form → PostgreSQL → dashboard/details and actual
+browser history/mobile/keyboard smoke checks. No future PR #11 merge is needed;
+hosted static/history serving remains planned.
+
 ## Milestone 6 details checks
 
 Milestone 6 replaces the older shell described below. These are manual steps,
