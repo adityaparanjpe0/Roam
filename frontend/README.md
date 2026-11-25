@@ -1,5 +1,12 @@
 # Roam frontend
 
+PR #12 Milestone 8 adds HTTP-boundary App integration coverage and a stale-detail
+failure regression, reusing typed synthetic fixture/deferred helpers. Existing
+unit/component suites cover the remaining dashboard/client requirements. See the
+[coverage matrix and commands](../docs/saved-trips-testing.md); mocked frontend
+tests do not prove backend ownership or live browser behavior. Existing CI runs
+the same non-interactive Vitest/lint/typecheck/build scripts without new setup.
+
 PR #12 Milestone 7 adds My Trips/details links after server-confirmed creation,
 retains bounded fresh reads on dashboard entry/return, and rechecks authentication
 before showing private data on persisted browser history restoration. Server

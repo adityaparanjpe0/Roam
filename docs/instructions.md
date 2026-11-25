@@ -5,6 +5,12 @@
 
 ## 1. Working agreement
 
+PR #12 Milestone 8 coverage is mapped in [saved trips testing](saved-trips-testing.md).
+Reuse synthetic fixture factories and controlled deferred promises where useful;
+mock HTTP boundaries and keep backend ownership evidence separate. Existing
+Vitest --run discovery and CI commands are sufficient. PostgreSQL tests require
+the explicit test maintenance URL, never the development database as fallback.
+
 PR #12 Milestone 7 uses fresh first-page reads on dashboard entry, details return
 and confirmed auth after persisted browser history restoration. Reuse get/list
 clients and the existing session checker; keep ordinary focus checks from

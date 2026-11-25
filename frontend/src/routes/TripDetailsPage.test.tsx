@@ -5,14 +5,11 @@ import { MemoryRouter, Route, Routes, useNavigate } from 'react-router'
 import { AuthContext } from '../features/auth/authContext'
 import type { AuthState } from '../features/auth/authContext'
 import TripDetailsPage from './TripDetailsPage'
+import { authUser, savedTrip } from '../test/tripFixtures'
+import { deferred } from '../test/deferred'
 
-const user = { id: '00000000-0000-0000-0000-000000000001', email: 'alice@example.com', display_name: 'Alice' }
-const trip = {
-  id: '95bc33a8-2238-4467-9660-cc60f760826d', title: 'Lisbon spring break', destination_label: 'Lisbon, Portugal',
-  start_date: '2027-03-27', end_date: '2027-03-30', version: 2, updated_at: '2026-11-24T12:00:00Z',
-  timezone: 'Europe/Lisbon', traveler_count: 2, budget_per_person_minor: 75050, currency: 'USD',
-  interests: ['food', 'culture'], free_text_constraints: 'Quiet mornings\nVegetarian meals', status: 'draft', created_at: '2026-11-24T12:00:00Z',
-}
+const user = authUser()
+const trip = savedTrip()
 const otherId = '00000000-0000-0000-0000-000000000002'
 const authenticated: AuthState = { status: 'authenticated', user }
 const retryAuth = vi.fn()
@@ -27,11 +24,6 @@ function page(state: AuthState = authenticated, signingOut = false, id = trip.id
       <Route path="/trips" element={<h1>Dashboard destination</h1>} />
     </Routes></MemoryRouter>
   </AuthContext>
-}
-function deferred<T>() {
-  let resolve!: (value: T) => void
-  const promise = new Promise<T>((done) => { resolve = done })
-  return { promise, resolve }
 }
 afterEach(() => { vi.restoreAllMocks(); vi.useRealTimers(); retryAuth.mockReset() })
 
@@ -168,4 +160,18 @@ test('a malformed successful response never becomes saved content', async () => 
   expect(await screen.findByRole('alert')).toHaveTextContent('unexpected trip response')
   expect(screen.queryByText(trip.title)).not.toBeInTheDocument()
   expect(document.body.textContent).not.toContain('PRIVATE')
+})
+
+test('a late failed request cannot replace a newer successful route', async () => {
+  const old = deferred<Response>()
+  const fetch = vi.fn().mockReturnValueOnce(old.promise)
+    .mockResolvedValueOnce(Response.json(savedTrip({ id: otherId, title: 'Newer route trip' })))
+  vi.stubGlobal('fetch', fetch)
+  render(page())
+  fireEvent.click(screen.getByRole('button', { name: 'Other trip' }))
+  expect(await screen.findByRole('heading', { name: 'Newer route trip' })).toBeInTheDocument()
+  await act(async () => { old.reject(new TypeError('PRIVATE_LATE_FAILURE')) })
+  expect(screen.getByRole('heading', { name: 'Newer route trip' })).toBeInTheDocument()
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  expect(fetch.mock.calls.map(([url]) => url)).toEqual([`/api/v1/trips/${trip.id}`, `/api/v1/trips/${otherId}`])
 })

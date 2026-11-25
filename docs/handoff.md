@@ -1,5 +1,13 @@
 # Roam MVP handoff
 
+PR #12 Milestone 8 adds frontend integration/race/security-rendering tests and
+an auditable [24-requirement coverage matrix](saved-trips-testing.md). Milestone
+7 is human-reviewed/committed as `ca9f072`, superseding its older uncommitted
+status below. No production behavior or workflow/dependency changes. Local
+ownership integration execution is blocked by missing TEST_DATABASE_ADMIN_URL;
+database-free backend evidence is recorded in [memory](memory.md). Milestone 9
+has not begun.
+
 PR #12 Milestone 7 locally adds saved-confirmation links, browser history cache
 restoration revalidation, explicit ordering copy and list action deduplication.
 PR #11 is merged as `15fda2e`, included by this branch and local origin/main;

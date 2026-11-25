@@ -8,6 +8,54 @@
 
 ### Verified facts
 
+- 2026-11-24 PR #12 Milestone 8, owner: user with Codex assistance, started on
+  `feat/saved-trips-dashboard` at human-reviewed/committed Milestone 7 `ca9f072`.
+  Initial tracked tree clean; preexisting `.vscode/` retained. This supersedes
+  the previous milestone's uncommitted status below.
+- Audited Vitest/JSDOM/Testing Library setup, existing component/auth/HTTP mocks,
+  frontend scripts and both GitHub Actions workflows. Existing suites already
+  cover most requested client/dashboard/detail/creation cases; the
+  [coverage matrix](saved-trips-testing.md) maps all 24 requirements without
+  treating frontend mocks as proof of backend ownership.
+- Added [App HTTP-boundary integration tests](../frontend/src/App.savedTrips.integration.test.tsx)
+  for canonical card-to-details and creation navigation, auth-before-detail
+  loading, expired-session recovery through actual /me, repeated 403 after valid
+  account check, logout of rendered details, honest itinerary-unavailable behavior
+  for draft/ready/archived, and literal rendering of server preferences. These
+  use actual App/router/provider/client with only fetch responses mocked.
+  Native document links are reproduced with href/remount, not claimed browser E2E.
+- Added a late rejected old-route request regression to the existing
+  [details tests](../frontend/src/routes/TripDetailsPage.test.tsx). Extracted
+  reused typed synthetic [trip fixtures](../frontend/src/test/tripFixtures.ts)
+  and [deferred promises](../frontend/src/test/deferred.ts). No production source,
+  dependency, backend authorization or workflow changes; no real provider calls.
+- Actual existing Node 24.22.3 results: focused new App/details run **29 passed
+  in 2 files** (3.66s); full `npm run test -- --run` **479 passed in 24 files**
+  (21.76s), **10 new cases** over Milestone 7. Lint and typecheck exited 0;
+  production build exited 0, 128 modules in 330ms. Existing creation/CSRF,
+  cancellation, dashboard retries, formatting and history regressions remain green.
+- Existing Python 3.12 venv database-free `python -m pytest -q`: **434 passed,
+  136 skipped**, one Starlette/httpx deprecation warning (15.94s). Confirmed PR
+  #10 integration tests still cover owner filtering, indistinguishable other-owner/
+  missing 404, cursor ownership/order, spoofing/CSRF and revoked/expired sessions.
+- Explicit documented uv/env-file ownership run initially hit a sandbox uv-cache
+  lock denial; approved escalation ran collection. It then produced **14 setup
+  errors**, zero ownership assertions executed, because TEST_DATABASE_ADMIN_URL
+  is missing from the local test environment. Never substituted the development
+  database or weakened fixture guards. The run also warned about pytest cache
+  permissions and existing Starlette deprecation; no credentials were printed.
+  Root environment values were loaded only through the existing documented
+  runner, with no environment-file edits or values exposed.
+- Frontend CI already uses npm ci then lint/typecheck/Vitest --run/build on the
+  pinned Node version. New tests require no database or credentials and match
+  discovery; local passes establish command compatibility, not a hosted Actions
+  result. Backend CI separately provisions PostgreSQL and explicit test admin URL.
+  Local real ownership pass remains unverified pending that test configuration.
+- Remaining manual checks: real login/save/PostgreSQL/reload/cross-owner denial,
+  real browser history cache, responsive/mobile, keyboard/screen-reader focus,
+  and deployed history fallback. No commits, pushes or merges by Codex. Work
+  remains local for review; Milestone 9 has not begun.
+
 - 2026-11-24 PR #12 Milestone 7, owner: user with Codex assistance, started on
   `feat/saved-trips-dashboard` at human-reviewed/committed Milestone 6 `27f224d`.
   Initial tracked tree clean; preexisting untracked `.vscode/` preserved.
