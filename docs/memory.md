@@ -8,6 +8,50 @@
 
 ### Verified facts
 
+- 2026-11-24 PR #12 Milestone 10 final review/preparation, owner: user with Codex
+  assistance. Product head `58ca1b9` includes the human-committed Milestone 9;
+  this supersedes the prior uncommitted/Milestone-10-not-started status below.
+  Correct branch `feat/saved-trips-dashboard`; initially clean tracked tree and
+  preexisting untracked `.vscode/`. No product code changed during final review.
+- Fetched origin main successfully after sandbox FETCH_HEAD permission denial
+  and approved escalation. Remote main/FETCH_HEAD remain `15fda2e` (PR #11 merge),
+  **0 behind / 8 ahead**. Local main is stale at `1b7187b`; its broad diff includes
+  previously merged prerequisite PRs. Scoped origin/main...HEAD diff: **53 files,
+  4271 insertions, 99 deletions** before final handoff documents. No backend,
+  migrations, workflows, environment-example or ignore changes in PR #12.
+- Reviewed list/detail DTOs against actual Pydantic response fields, relative
+  native client/cookie/runtime validation/error behavior, account/route request
+  lifecycle, creation/navigation integration and backend owner/resource filters.
+  Production readers use the real endpoints, not test fixtures. Live execution
+  still pending; static/source review is not a new ownership test pass.
+- Tracked-path checks found only placeholder .env.example among environment/key/
+  credential/export/temp/screenshot/editor paths checked. High-confidence secret
+  pattern scans of current tracked content and eight branch commits had no
+  matches. No claim of exhaustive secret detection. Lockfile changes are the
+  intentional pinned router dependency plus two transitive packages/peer metadata.
+- Final Windows Node 24.22.3 frontend **479 passed / 24 files** (25.49s);
+  lint/typecheck/build exit 0, 128 modules in 321ms. Existing Python 3.12 backend
+  **434 passed, 136 skipped** (20.89s), existing Starlette/httpx deprecation
+  warning. Ruff format reports **77 files already formatted**, lint passed,
+  mypy **no issues in 40 source files**. Remote-base diff whitespace passed.
+- Explicit final opted-in PR #10 PostgreSQL regression run: **14 setup errors**
+  (0.94s), missing TEST_DATABASE_ADMIN_URL, zero ownership assertions executed.
+  Existing pytest-cache permission/deprecation warnings remain. No fallback to
+  development DB, backend security changes or real Google/provider calls. Local
+  configuration was loaded by the established runner without values printed.
+- Milestone 9's actual Chrome fixture screenshots/23 measurements are reused as
+  historical browser evidence, not described as a new Milestone 10 browser run
+  or live FastAPI/PostgreSQL verification. Hosted CI, real Google/form/persistence/
+  cross-owner browser checks, screenshot upload, screen-reader/zoom/history-cache
+  checks and teammate review remain incomplete. No new product-code blocker was
+  identified within the reviewed diff; recommend draft PR until these gates clear.
+- Prepared [complete PR text](pr12-pull-request.md) and
+  [final review/publishing handoff](pr12-final-review.md) with acceptance status,
+  architecture/tradeoffs, follow-ups, five junior SWE questions and human-only Git/
+  website instructions. These two new documents and this memory evidence are the
+  only final-preparation edits; review/commit them explicitly if desired and keep
+  editor settings excluded. No commits, pushes, merges or PR creation by Codex.
+
 - 2026-11-24 PR #12 Milestone 9, owner: user with Codex assistance, started on
   `feat/saved-trips-dashboard` at human-reviewed/committed Milestone 8 `9bc3892`.
   Initial tracked tree clean; preexisting untracked `.vscode/` retained. This
