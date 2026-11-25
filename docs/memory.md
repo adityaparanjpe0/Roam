@@ -1,12 +1,432 @@
 # Roam durable project memory
 
 > Purpose: preserve verified context across developers and AI sessions  
-> Last updated: 2026-11-22
+> Last updated: 2026-11-24
 > Rule: this file records decisions and evidence; it must not turn plans into facts
 
 ## 1. Current snapshot
 
 ### Verified facts
+
+- 2026-11-24 PR #12 Milestone 10 final review/preparation, owner: user with Codex
+  assistance. Product head `58ca1b9` includes the human-committed Milestone 9;
+  this supersedes the prior uncommitted/Milestone-10-not-started status below.
+  Correct branch `feat/saved-trips-dashboard`; initially clean tracked tree and
+  preexisting untracked `.vscode/`. No product code changed during final review.
+- Fetched origin main successfully after sandbox FETCH_HEAD permission denial
+  and approved escalation. Remote main/FETCH_HEAD remain `15fda2e` (PR #11 merge),
+  **0 behind / 8 ahead**. Local main is stale at `1b7187b`; its broad diff includes
+  previously merged prerequisite PRs. Scoped origin/main...HEAD diff: **53 files,
+  4271 insertions, 99 deletions** before final handoff documents. No backend,
+  migrations, workflows, environment-example or ignore changes in PR #12.
+- Reviewed list/detail DTOs against actual Pydantic response fields, relative
+  native client/cookie/runtime validation/error behavior, account/route request
+  lifecycle, creation/navigation integration and backend owner/resource filters.
+  Production readers use the real endpoints, not test fixtures. Live execution
+  still pending; static/source review is not a new ownership test pass.
+- Tracked-path checks found only placeholder .env.example among environment/key/
+  credential/export/temp/screenshot/editor paths checked. High-confidence secret
+  pattern scans of current tracked content and eight branch commits had no
+  matches. No claim of exhaustive secret detection. Lockfile changes are the
+  intentional pinned router dependency plus two transitive packages/peer metadata.
+- Final Windows Node 24.22.3 frontend **479 passed / 24 files** (25.49s);
+  lint/typecheck/build exit 0, 128 modules in 321ms. Existing Python 3.12 backend
+  **434 passed, 136 skipped** (20.89s), existing Starlette/httpx deprecation
+  warning. Ruff format reports **77 files already formatted**, lint passed,
+  mypy **no issues in 40 source files**. Remote-base diff whitespace passed.
+- Explicit final opted-in PR #10 PostgreSQL regression run: **14 setup errors**
+  (0.94s), missing TEST_DATABASE_ADMIN_URL, zero ownership assertions executed.
+  Existing pytest-cache permission/deprecation warnings remain. No fallback to
+  development DB, backend security changes or real Google/provider calls. Local
+  configuration was loaded by the established runner without values printed.
+- Milestone 9's actual Chrome fixture screenshots/23 measurements are reused as
+  historical browser evidence, not described as a new Milestone 10 browser run
+  or live FastAPI/PostgreSQL verification. Hosted CI, real Google/form/persistence/
+  cross-owner browser checks, screenshot upload, screen-reader/zoom/history-cache
+  checks and teammate review remain incomplete. No new product-code blocker was
+  identified within the reviewed diff; recommend draft PR until these gates clear.
+- Prepared [complete PR text](pr12-pull-request.md) and
+  [final review/publishing handoff](pr12-final-review.md) with acceptance status,
+  architecture/tradeoffs, follow-ups, five junior SWE questions and human-only Git/
+  website instructions. These two new documents and this memory evidence are the
+  only final-preparation edits; review/commit them explicitly if desired and keep
+  editor settings excluded. No commits, pushes, merges or PR creation by Codex.
+
+- 2026-11-24 PR #12 Milestone 9, owner: user with Codex assistance, started on
+  `feat/saved-trips-dashboard` at human-reviewed/committed Milestone 8 `9bc3892`.
+  Initial tracked tree clean; preexisting untracked `.vscode/` retained. This
+  supersedes the prior milestone's uncommitted status below.
+- Focused UX changes: existing-surface grouping of detail facts, min-width and
+  long-text wrapping, detail title spacing/line height, 44px back-link target at
+  default root font size, visible card keyboard outline inset inside its clipped
+  border, and atomic detail error alerts. Shared date/currency/duration helpers
+  and API/auth/state architecture unchanged. No provider imagery, new library,
+  backend/schema/security change or unrelated page redesign.
+- Added [Saved trips guide](SAVED_TRIPS.md): actual component responsibilities,
+  compact list/full metadata contracts, cookie auth versus backend ownership,
+  request lifecycle/cancellation, pagination/order/refetch, recovery and honest
+  itinerary limits, local launch and manual live-verification steps. Updated
+  root/frontend README, DESIGN and CHANGELOG to reflect implemented metadata
+  functionality instead of older planned-CRUD/shell-only descriptions.
+- Local Chrome **151.0.7922.174** with existing Playwright installation ran an
+  isolated HTTP-fixture smoke check against Vite on 127.0.0.1:5177. **23 layout
+  measurements** passed with zero horizontal overflow: empty/one/20 trips at
+  320, 390, 768, 1024 and 1440px; long details at all five widths; loading/error/
+  guest states. Details used 120-character title, 200-character destination and
+  approximately 4000-character multiline preferences. Screenshots of tablet
+  cards, mobile details and keyboard focus were visually inspected.
+- Browser fixture checks passed actual keyboard Tab/Enter to the UUID card URL,
+  independent details reload and back navigation/dashboard reload, date/currency
+  display, error → retry → empty/loading/success, and existing form review/save →
+  dashboard with one intercepted POST. Focus outline computed as 3px solid with
+  -3px offset. No browser page errors. These checks mock /me/trip/health HTTP in
+  a separate browser context and do not prove real Google/PostgreSQL/ownership.
+  Scratch runner, screenshots and metrics remain ignored local tmp evidence.
+- Frontend actual pinned Node 24.22.3 checks: **479 passed in 24 files** (23.71s),
+  lint/typecheck/build passed. Vite built 128 modules in 356ms. Editor diagnostics
+  and whitespace diff checks passed. Backend existing Python 3.12 database-free
+  pytest: **434 passed, 136 skipped**, one existing Starlette/httpx deprecation
+  warning (7.94s). Ruff format: **77 files already formatted**; lint passed;
+  mypy: **no issues in 40 source files**. No tests/assertions weakened.
+- Live-service verification remains blocked: Docker was not found on this
+  shell's PATH or the usual Docker Desktop CLI path, and no frontend/backend/DB
+  listeners were observed initially. Explicit current uv/env-file PR #10
+  PostgreSQL run again produced **14 setup errors** (0.75s), missing
+  TEST_DATABASE_ADMIN_URL; no ownership assertions executed. Existing pytest
+  cache-permission/deprecation warnings remain. No substitute development DB,
+  real sessions or provider requests were created. No environment values printed
+  or environment-file edits; the documented runner loads local configuration.
+- The VS Code task launcher returned no invocation context, so the temporary
+  verification Vite process was started directly. An initial root-directory
+  launch returned 404 and was corrected to the frontend directory; its generated
+  root cache was removed after verifying the exact workspace target. Initial
+  fixture routing also intercepted source-module URLs; restricting it to the
+  actual /api namespace fixed the fixture runner before the successful run above.
+  These were verification-harness issues, not product defects.
+- Remaining human checks are detailed in the guide: start Docker/PostgreSQL and
+  backend using local configuration, sign in through configured Google origin,
+  save/reload/direct details, test two isolated accounts and missing/private 404,
+  actual history cache, mobile menu/keyboard/screen reader and 200% zoom. Hosted
+  history/static fallback remains planned. No live authenticated end-to-end pass
+  or WCAG certification is claimed. No commits, pushes or merges by Codex;
+  Milestone 10 has not begun.
+
+- 2026-11-24 PR #12 Milestone 8, owner: user with Codex assistance, started on
+  `feat/saved-trips-dashboard` at human-reviewed/committed Milestone 7 `ca9f072`.
+  Initial tracked tree clean; preexisting `.vscode/` retained. This supersedes
+  the previous milestone's uncommitted status below.
+- Audited Vitest/JSDOM/Testing Library setup, existing component/auth/HTTP mocks,
+  frontend scripts and both GitHub Actions workflows. Existing suites already
+  cover most requested client/dashboard/detail/creation cases; the
+  [coverage matrix](saved-trips-testing.md) maps all 24 requirements without
+  treating frontend mocks as proof of backend ownership.
+- Added [App HTTP-boundary integration tests](../frontend/src/App.savedTrips.integration.test.tsx)
+  for canonical card-to-details and creation navigation, auth-before-detail
+  loading, expired-session recovery through actual /me, repeated 403 after valid
+  account check, logout of rendered details, honest itinerary-unavailable behavior
+  for draft/ready/archived, and literal rendering of server preferences. These
+  use actual App/router/provider/client with only fetch responses mocked.
+  Native document links are reproduced with href/remount, not claimed browser E2E.
+- Added a late rejected old-route request regression to the existing
+  [details tests](../frontend/src/routes/TripDetailsPage.test.tsx). Extracted
+  reused typed synthetic [trip fixtures](../frontend/src/test/tripFixtures.ts)
+  and [deferred promises](../frontend/src/test/deferred.ts). No production source,
+  dependency, backend authorization or workflow changes; no real provider calls.
+- Actual existing Node 24.22.3 results: focused new App/details run **29 passed
+  in 2 files** (3.66s); full `npm run test -- --run` **479 passed in 24 files**
+  (21.76s), **10 new cases** over Milestone 7. Lint and typecheck exited 0;
+  production build exited 0, 128 modules in 330ms. Existing creation/CSRF,
+  cancellation, dashboard retries, formatting and history regressions remain green.
+- Existing Python 3.12 venv database-free `python -m pytest -q`: **434 passed,
+  136 skipped**, one Starlette/httpx deprecation warning (15.94s). Confirmed PR
+  #10 integration tests still cover owner filtering, indistinguishable other-owner/
+  missing 404, cursor ownership/order, spoofing/CSRF and revoked/expired sessions.
+- Explicit documented uv/env-file ownership run initially hit a sandbox uv-cache
+  lock denial; approved escalation ran collection. It then produced **14 setup
+  errors**, zero ownership assertions executed, because TEST_DATABASE_ADMIN_URL
+  is missing from the local test environment. Never substituted the development
+  database or weakened fixture guards. The run also warned about pytest cache
+  permissions and existing Starlette deprecation; no credentials were printed.
+  Root environment values were loaded only through the existing documented
+  runner, with no environment-file edits or values exposed.
+- Frontend CI already uses npm ci then lint/typecheck/Vitest --run/build on the
+  pinned Node version. New tests require no database or credentials and match
+  discovery; local passes establish command compatibility, not a hosted Actions
+  result. Backend CI separately provisions PostgreSQL and explicit test admin URL.
+  Local real ownership pass remains unverified pending that test configuration.
+- Remaining manual checks: real login/save/PostgreSQL/reload/cross-owner denial,
+  real browser history cache, responsive/mobile, keyboard/screen-reader focus,
+  and deployed history fallback. No commits, pushes or merges by Codex. Work
+  remains local for review; Milestone 9 has not begun.
+
+- 2026-11-24 PR #12 Milestone 7, owner: user with Codex assistance, started on
+  `feat/saved-trips-dashboard` at human-reviewed/committed Milestone 6 `27f224d`.
+  Initial tracked tree clean; preexisting untracked `.vscode/` preserved.
+  PR #11 merge `15fda2e` is already in this branch and is the local origin/main
+  tip; local main is older `1b7187b`. This supersedes older unmerged-PR #11 and
+  uncommitted-Milestone 6 statements below. No fetch/merge performed by Codex.
+- [Saved confirmation](../frontend/src/features/trip/TripSaved.tsx) now links to
+  My Trips and canonical UUID details. Existing POST/form behavior is unchanged.
+  The dashboard mounts on entry and reads current first-page data; no mounted
+  dashboard/cache exists on the creation route to invalidate. Native links do
+  not prefetch or submit again. Existing details Back link remounts the list.
+- [AuthProvider](../frontend/src/features/auth/AuthProvider.tsx) now handles
+  persisted pageshow by hiding private children behind loading and reusing the
+  guarded session checker. Valid auth remounts a fresh account-keyed reader;
+  expired/unknown auth issues no new protected read. Normal pageshow is ignored,
+  pending session checks are shared and listeners cleaned up. Existing focus/
+  online/visibility checks remain; same-account ordinary checks do not refetch
+  trips. No new auth client or backend session/security behavior.
+- [List hook](../frontend/src/features/trip/useSavedTrips.ts) now synchronously
+  guards pending refresh/page actions, preventing duplicate cursor history before
+  React disables controls. Preserve server updated_at descending, UUID ascending
+  order, existing next/previous cursors and current-page counts; refresh/entry
+  reset to page one. Dashboard explains ordering. Shared date/duration/budget
+  helpers remain; nullable confirmation budget wording now matches details.
+- [Freshness tests](../frontend/src/features/trip/SavedTripsFreshness.test.tsx)
+  add **9 cases** using native clients/provider with isolated HTTP fixtures:
+  existing form save to fresh dashboard, details return/order, persisted history
+  recovery/expiry, pending auth deduplication, pagination/reset, rapid request
+  actions/cursor regression and nullable confirmation budget. Native document
+  navigation is reproduced by URL/remount, not claimed as browser execution.
+- Actual existing Node 24.22.3 checks: focused creation/dashboard/freshness run
+  **51 passed in 3 files** (5.36s); initial full run **467 passed in 23 files**
+  (23.79s); final run after two regression cases **469 passed in 23 files**
+  (17.23s). Lint, typecheck and production build passed; Vite built 128 modules
+  in 443ms. Editor diagnostics and diff whitespace checks passed. No new
+  dependencies, API client changes, backend changes, polling or private storage.
+- Live Google/PostgreSQL, browser cache selection/visuals/mobile/keyboard,
+  backend tests and deployed refresh were not rerun. No future PR #11 merge is
+  needed; remaining integration verification is an authenticated form save
+  through local persistence to dashboard/details and real browser Back/Forward.
+  Production history/static serving remains planned. See
+  [ADR 0016](adr/0016-trip-navigation-freshness.md) and the
+  [manual checklist](runbooks/saved-trips-dashboard.md#milestone-7-freshness-checks).
+  No environment values read or changed. Work remains local for human review;
+  no commits, pushes or merges by Codex. Milestone 8 has not begun.
+
+- 2026-11-24 PR #12 Milestone 6, owner: user with Codex assistance, started on
+  `feat/saved-trips-dashboard` at `a8d20da`. The human reported Milestone 5
+  complete/reviewed; its older uncommitted status below is superseded. Initial
+  tracked tree clean, preexisting untracked `.vscode/` preserved.
+- Replaced the route shell with [TripDetailsPage](../frontend/src/routes/TripDetailsPage.tsx),
+  [useSavedTrip](../frontend/src/features/trip/useSavedTrip.ts) and presentation-only
+  [SavedTripDetails](../frontend/src/features/trip/SavedTripDetails.tsx). Existing
+  card UUID links and React Router remain; details load through existing getTrip
+  independently of dashboard state. Shared calendar/currency/traveler helpers,
+  nullable fields, interests and free-text preferences are rendered safely.
+- Confirmed auth gates reads. Account/trip keys discard old state; cleanup abort
+  and active checks reject late results. Invalid IDs, identical missing/private
+  404, explicit 401/403 account recovery, server/offline/timeout errors and retry
+  are handled. Auth provider, API client, backend ownership and dependencies are
+  unchanged. The response cannot establish itinerary presence: the page explains
+  unavailable itinerary information instead of claiming absence or inventing
+  activities. [ADR 0015](adr/0015-saved-trip-details.md) records the local-hook
+  extension and contract limit. No future generation/edit/export controls.
+- Actual frontend gates with existing Node 24.22.3: focused route/app tests
+  **23 passed in 2 files** (3.25s), then full suite **460 passed in 22 files**
+  (17.55s), including **19 new details cases**. Lint, typecheck and production
+  build exited 0; Vite built 128 modules in 340ms. Editor diagnostics had no
+  errors for the new hook/page/view/tests. Native client mocked-HTTP coverage
+  includes auth resolution, direct entry, fields/nulls, errors, explicit retry,
+  timeout, malformed responses, logout/account/route races and Strict Mode.
+- Live Google/PostgreSQL, backend integration suite, browser visuals,
+  screen-reader and hosted refresh were not reverified. Production history/static
+  serving remains planned. Manual steps are in the
+  [details checklist](runbooks/saved-trips-dashboard.md#milestone-6-details-checks).
+  PR #17–#20's individual assignments were not established by inspected local
+  documentation; stable ID/version/canonical read and itinerary section support
+  later feature work without asserting those contracts already exist.
+- No environment values read/changed, dependency installation, backend changes,
+  commits, pushes or merges by Codex. Work is local for review; Milestone 7 has
+  not begun.
+
+- 2026-11-24 PR #12 Milestone 5, owner: user with Codex assistance, started on
+  `feat/saved-trips-dashboard` at human-committed `3bfc6c6`. The human reported
+  Milestone 4 complete/reviewed, superseding its older uncommitted status below.
+  The human defined Milestone 5 as dashboard state/recovery hardening, superseding
+  earlier forecasts assigning canonical details to this milestone. Full details
+  remain future work. Initial tracked tree was clean; `.vscode/` preserved.
+- [Dashboard recovery](../frontend/src/features/trip/SavedTripsDashboard.tsx) now
+  presents distinct account/loading, successful empty/populated and failure
+  states. Confirmed guests have a visible sign-in action using the existing
+  navigation helper, navigation-loss warning, duplicate guard and safe failure
+  text. The empty first page has an inline creation link. Atomic status/alert
+  feedback, labelled errors and user-initiated recovery focus are covered.
+- Read HTTP 403 now normalizes to frontend FORBIDDEN, not CSRF_FAILED. Create
+  403 retains its existing CSRF behavior. [Typed recovery metadata](../frontend/src/features/trip/savedTripsFeedback.ts)
+  selects explicit existing account checks for 401/403/auth configuration errors
+  and explicit request retry for network/server/timeout/response failures. A
+  valid account check neither overrides a repeated denial nor fabricates logout.
+  Existing /me expiration notices establish the next account state; there is no
+  automatic retry/redirect loop or forced account mutation from a trip error.
+- The account-keyed request hook is unchanged: unknown/guest/signing-out states
+  mount no list fetcher, refresh removes old cards, and logout/account changes
+  abort/discard prior state. Late responses cannot restore hidden data. Retry
+  requests the first page once per accepted action and focuses the resulting
+  status/error. Signing out cancels local recovery-focus intent, preserving
+  existing account-control focus. No raw response/error/token text is exposed.
+- Verification on Windows with the existing pinned runtime and dependencies:
+  initial focused API/dashboard/route run **170 passed in 5 files** (3.30s);
+  final `npm run test -- --run` **441 passed in 21 files** (6.71s), including
+  **17 new HTTP-boundary dashboard state cases** and **2 new read-denial cases**.
+  `npm run lint`, `npm run typecheck`, and `npm run build` exited 0. Editor
+  diagnostics and diff checks passed. The new tests use native client/auth
+  composition with mocked HTTP and deterministic timeout timers; prior account
+  switch, Strict Mode, creation/CSRF, routing and formatting regressions passed.
+- Covered auth loading/guest/unknown, list loading/populated/empty, 401 expiry
+  recheck, 403 repeated denial, 500/503, auth configuration outage, offline/
+  ten-second timeout, explicit retry success/failure/focus, blocked sign-in
+  navigation and real client sign-out during pending list reads. Fixtures
+  ignoring abort cannot repopulate the dashboard. No live Google, PostgreSQL,
+  backend suite, browser/screen-reader, hosted CI or deployment check was run
+  for this milestone; the [state matrix](runbooks/saved-trips-dashboard.md#milestone-5-state-checks)
+  is manual guidance, not claimed live execution.
+- Backend contracts/security, auth infrastructure, request hook, proxy,
+  dependencies/lockfile and environment values were not changed. The referenced
+  environment file's secret values were not read. [ADR 0014](adr/0014-dashboard-state-recovery.md)
+  records the policy and revised scope. Work remains uncommitted for review;
+  no commit, push or merge by Codex. Milestone 6 has not begun.
+
+- 2026-11-24 PR #12 Milestone 4, owner: user with Codex assistance, started on
+  `feat/saved-trips-dashboard` at `f04b9a0`. The human reported Milestone 3
+  complete/reviewed and committed it; this supersedes its older uncommitted
+  status below. Initial tracked tree was clean; untracked `.vscode/` preserved.
+- Added [SavedTripsPage](../frontend/src/routes/SavedTripsPage.tsx), a responsive
+  [TripCard](../frontend/src/features/trip/TripCard.tsx) grid and current-page
+  count. Existing typed summaries flow through the unchanged account-keyed hook
+  and dashboard/list props. Cards make no requests and retain stable UUID keys.
+  They omit travelers/budget/interests absent from the collection DTO. Loading,
+  empty and error surfaces reuse existing recovery/state behavior and Roam CSS
+  tokens; no images, Maps integration or paid service is introduced.
+- [Shared formatting](../frontend/src/features/trip/tripFormatting.ts) renders
+  calendar dates in UTC with original time attributes, calculates inclusive days,
+  and centralizes traveler/currency display for existing review/saved views.
+  Budgets remain per person for the entire trip, with explicit currency codes
+  and null distinct from zero. Unit cases cover local timezone differences,
+  one-day/leap/DST/year boundaries, USD/EUR and currency fraction digits.
+- Added pinned React Router **8.5.3** for `/`, `/trips`, `/trips/:tripId` and
+  frontend not-found composition; old `/#my-trips` redirects. Registry engine/
+  peer metadata matched pinned Node **24.22.3** and React/DOM **19.3.1**. The
+  lockfile adds the router plus two dependencies and npm optional-peer metadata;
+  existing package versions are unchanged. Native anchors preserve browser
+  navigation. The detail URL is only an honest shell: no canonical detail fetch,
+  existence/ownership claim or Milestone 5 implementation. Existing auth, API,
+  proxies, backend contracts and migrations are unchanged. [ADR 0013](adr/0013-saved-trip-cards-and-navigation.md)
+  records decisions and production history-fallback limits.
+- Frontend gates on Windows, existing Node **24.22.3** / npm **11.19.1**:
+  `npm run test -- --run` **422 passed in 20 files** (13.91s), including **30 new
+  formatting/card/route cases**. `npm run lint`, `npm run typecheck`, production
+  build and `npm ls --depth=0` exited 0. Existing review assertions were updated
+  for the intended currency-code/date/traveler presentation. API payloads and
+  save/auth production logic were not changed. No commit, push or merge by Codex.
+- Isolated headless Chrome verified the built UI with synthetic intercepted
+  HTTP in an America/Los_Angeles context. **15 layout/state cases** had no
+  horizontal overflow: populated at **320/390/768/1024/1440px**, long names at
+  **320/768/1440px**, empty/error/loading at **320/1440px**, and doubled text at
+  **768px**. Observed grid columns were **1/1/2/3/3** at the populated widths.
+  Desktop/mobile and empty/error screenshots were visually inspected; card
+  metadata/footer alignment and wrapping were reviewed. No page errors occurred.
+- Keyboard Tab/Enter reached the creation CTA and first card link, View Trip
+  reached the shell and returned to My Trips, and mobile Menu/Escape restored
+  trigger focus. Browser checking found a real cross-page fragment bug: the
+  creation form stayed offscreen at top **1316.91px**, scrollY 0, after mounting.
+  A home-fragment layout effect now focuses Destination and scrolls the mounted
+  target. Final observed form top **103.91px**, destination focus true; a route
+  regression test covers this. Full detail behavior remains Milestone 5.
+- The integrated browser could not reliably emulate requested viewport widths;
+  final evidence uses isolated headless Chrome. A temporary Playwright **1.65.1**
+  runtime (two packages) was installed only under ignored scratch tooling, not
+  project dependencies. Browser fixtures/scripts/screenshots are outside shipped
+  source. Live Google, real owner data/PostgreSQL browser integration, backend
+  suite, screen-reader/cross-browser, hosted CI and deployment were not verified.
+  The [manual checklist](runbooks/saved-trips-dashboard.md#milestone-4-visual-checks)
+  distinguishes fixture observations from remaining human/live checks.
+  This milestone is locally implemented and uncommitted for review; Milestone 5
+  has not begun.
+- Final editor diagnostics, diff whitespace and changed-document local-link
+  checks passed. Card titles use second-level headings below the page's primary
+  heading. The temporary preview was stopped and a connection check returned
+  ECONNREFUSED; isolated headless browser sessions were closed. Scratch visual
+  tooling/evidence remains ignored and is not a product dependency or dataset.
+
+- 2026-11-24 PR #12 Milestone 3, owner: user with Codex assistance, started on
+  `feat/saved-trips-dashboard` at human-committed `f535be9`. The human reported
+  Milestone 2 complete/reviewed; that supersedes its older uncommitted/review
+  status below. Initial tracked tree was clean; untracked `.vscode/` preserved.
+- Added a minimal [My Trips section](../frontend/src/features/trip/SavedTripsDashboard.tsx)
+  on the landing page with desktop/mobile `#my-trips` navigation. It reuses
+  useAuth and the typed list client. Confirmed auth mounts a user-ID-keyed
+  child; sign-out initiation, logout, unknown auth and account changes unmount
+  its data/request state while preserving the creation form. The user ID is
+  never sent to determine ownership. [The hook](../frontend/src/features/trip/useSavedTrips.ts)
+  separates requests from a presentation-only list, with loading, successful
+  empty/populated, safe error, explicit retry/refresh and bounded cursor pages.
+- Effect dependencies are primitive cursor/attempt values, not auth/profile
+  objects or callbacks. Cleanup aborts and marks each request inactive; late
+  successes/failures are ignored, including substituted requests ignoring abort.
+  Same-account auth refresh does not refetch trips. No polling, persistence,
+  shared cache, new dependency, API/backend/auth behavior change or detail route.
+  [ADR 0012](adr/0012-saved-trips-dashboard-state.md) records the scoped local-hook
+  decision superseding the earlier TanStack recommendation for this consumer.
+  Explicit Refresh trips is required after save or external data changes.
+- Windows, existing pinned Node **24.22.3** and installed dependencies: focused
+  dashboard/form/auth/header/app tests **67 passed in 5 files** (4.90s); full
+  `npm run test -- --run` **392 passed in 17 files** (9.62s), including **24 new
+  dashboard cases**. `npm run lint`, `npm run typecheck`, and `npm run build`
+  exited 0. Editor diagnostics and `git diff --check` passed; changed docs had
+  no broken local file links. No installation or persistent PATH change.
+- Checks exposed test synchronization assumptions: a new empty-page assertion
+  initially observed loading instead of completed status; logout assertions
+  assumed no concurrent trip GET; an existing save regression observed new
+  account text before passive cancellation cleanup. Tests now wait for the
+  relevant result/abort and assert exactly one correctly protected logout
+  independently of unrelated GET ordering. The late-save privacy assertion
+  remains; production save/auth code was unchanged. Final results are above.
+- Tests substitute HTTP or client promises; no live Google, browser/PostgreSQL
+  integration, responsive browser, screen-reader, backend suite, hosted CI or
+  deployment run was performed for this milestone. The [manual checklist](runbooks/saved-trips-dashboard.md)
+  is instructions, not claimed execution. Milestone 4 visual design and detailed
+  routing remain unimplemented. Changes remain uncommitted for human review;
+  no commit, push or merge by Codex.
+
+- 2026-11-24 PR #12 Milestone 2, owner: user with Codex assistance, on
+  `feat/saved-trips-dashboard` at `15fda2e`. The human updated the branch after
+  the earlier PR #7 baseline blocker; local Git now includes the PR #11 merge.
+  Before implementation there were no tracked edits, only untracked `.vscode/`,
+  which was preserved. This supersedes the earlier branch-baseline blocker only.
+- Extended the [existing trip client](../frontend/src/api/trips.ts), retaining
+  PR #11's create request/response and auth conventions. Added TripSummary,
+  TripListResponse and TripListOptions; TripResponse extends the summary.
+  `listTrips(options?, signal?)` and `getTrip(id, signal?)` require 200/JSON and
+  runtime-validate/copy documented metadata. UUIDs, calendar dates, audit strings,
+  safe integer money/version, required-nullable fields and cursor syntax are
+  checked. Unknown budgets stay null. No itinerary/owner fields are synthesized.
+- Reads use the existing relative `/api/v1/trips` path and same-origin cookies,
+  without reading CSRF/bearer cookies, supplying owner IDs or storing tokens.
+  A private helper shares the prior create fetch/body deadline, cancellation
+  and cleanup. TripApiError now has safe load-specific messages and read 404
+  RESOURCE_NOT_FOUND; create CSRF, validation and uncertain-save messages remain
+  covered by the unchanged creation tests. No automatic retry is introduced.
+- Windows, pinned Node **24.22.3**, existing installed dependencies: focused
+  Vitest **123 passed in 2 files** (2.48s); full `npm run test -- --run`
+  **368 passed in 16 files** (14.80s), including **67 new read-client cases**.
+  ESLint (`node node_modules/eslint/bin/eslint.js .`) and strict TypeScript
+  (`node node_modules/typescript/bin/tsc -b --noEmit`) exited 0; `npm run build`
+  passed TypeScript build and Vite production build. The node commands used the
+  existing portable pinned runtime by absolute path, with no installation or
+  persistent PATH change. Editor diagnostics and `git diff --check` passed;
+  changed documentation had no broken local file links.
+- The initial focused run passed 122 tests and failed one pagination fixture
+  because it returned the same consumed Response twice. Returning a fresh mock
+  response fixed the fixture; the focused and full runs above then passed.
+  Tests use mocked fetch and do not establish live PostgreSQL/Google behavior.
+  Backend tests, browser UI, hosted CI and deployment were not run for this
+  client-only milestone. Backend contracts, authentication, UI, proxy, migrations,
+  dependencies/lockfile and credentials are unchanged. [ADR 0011](adr/0011-saved-trip-read-client.md)
+  and the [API guide](trip-api.md#typescript-read-client) record the boundary.
+  Work remains uncommitted for review; no commit, push or merge by Codex.
+  Dashboard, routing, query-state and Milestone 3 work have not begun.
 
 - 2026-11-22 PR #11 Milestone 3 verification/documentation, owner: user with
   Codex assistance, on clean `feat/trip-creation-integration` at human-committed

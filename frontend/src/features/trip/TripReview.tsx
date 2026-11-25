@@ -2,6 +2,7 @@ import { useId } from 'react'
 import type { ReactNode, RefObject } from 'react'
 import { INTEREST_OPTIONS } from './tripCreationModels'
 import type { TripDraft } from './tripCreationModels'
+import { formatTravelerCount, formatTripBudget, formatTripDate } from './tripFormatting'
 import './TripCreation.css'
 
 interface TripReviewProps {
@@ -17,9 +18,7 @@ interface TripReviewProps {
 
 function TripReview({ draft, onEdit, onSave, canSave, saving, busy = false, headingRef, children }: TripReviewProps) {
   const id = useId()
-  const budget = new Intl.NumberFormat('en-US', {
-    style: 'currency', currency: draft.currency,
-  }).format(draft.budgetPerPersonMinor / 100)
+  const budget = formatTripBudget(draft.budgetPerPersonMinor, draft.currency)
 
   return (
     <section className="trip-review" aria-labelledby={`${id}-heading`} aria-describedby={`${id}-notice`}>
@@ -30,9 +29,9 @@ function TripReview({ draft, onEdit, onSave, canSave, saving, busy = false, head
       <dl className="trip-summary">
         <div><dt>Destination</dt><dd>{draft.destinationLabel}</dd></div>
         <div><dt>Destination time zone</dt><dd>{draft.timezone}</dd></div>
-        <div><dt>Start date</dt><dd><time dateTime={draft.startDate}>{draft.startDate}</time></dd></div>
-        <div><dt>End date</dt><dd><time dateTime={draft.endDate}>{draft.endDate}</time></dd></div>
-        <div><dt>Number of travelers</dt><dd>{draft.travelerCount}</dd></div>
+        <div><dt>Start date</dt><dd><time dateTime={draft.startDate}>{formatTripDate(draft.startDate)}</time></dd></div>
+        <div><dt>End date</dt><dd><time dateTime={draft.endDate}>{formatTripDate(draft.endDate)}</time></dd></div>
+        <div><dt>Number of travelers</dt><dd>{formatTravelerCount(draft.travelerCount)}</dd></div>
         <div><dt>Total budget per person (USD)</dt><dd>{budget} for the entire trip</dd></div>
         <div>
           <dt>Interests</dt>

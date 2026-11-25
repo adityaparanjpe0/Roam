@@ -4,14 +4,14 @@ Roam is a planned AI-native travel planner built by two student developers.
 See the [product handoff](docs/handoff.md) and [technical design](docs/DESIGN.md)
 for the MVP scope and architecture.
 
-Current code includes FastAPI liveness, PostgreSQL/SQLAlchemy migrations, the
-React trip form with local unsaved review, and Google OIDC with database-backed
-Roam sessions and account controls. PR #9 Milestones 1–8 are reported reviewed;
-Milestone 9 documents authentication; the human subsequently reported local
-Google sign-in and logout working. Remaining manual checks are recorded separately.
-Trip CRUD, ownership enforcement, AI planning and production deployment remain
-planned. No released version, agent-observed live browser run or deployed
-production verification is claimed.
+Current code includes FastAPI trip CRUD with owner-scoped queries,
+PostgreSQL/SQLAlchemy migrations, Google OIDC/database-backed sessions, the
+authenticated creation form, My Trips dashboard and individual saved metadata
+details. See [Saved trips](docs/SAVED_TRIPS.md) for implemented contracts,
+launch instructions, verification and limitations. AI planning/maps/editing/PDF
+controls and production deployment remain planned. Automated frontend fixtures
+do not prove live authentication or backend ownership; real-service verification
+and current blockers are recorded separately in [project memory](docs/memory.md).
 
 Follow the [backend setup instructions](backend/README.md) to install
 dependencies, start the local server, and run the available checks. Use the

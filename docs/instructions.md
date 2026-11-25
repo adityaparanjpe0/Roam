@@ -5,6 +5,74 @@
 
 ## 1. Working agreement
 
+Use [Saved trips](SAVED_TRIPS.md) for the current implemented dashboard/details
+architecture, local launch and end-to-end checklist. Keep real-service evidence
+separate from intercepted browser HTTP fixtures and database-free tests. Never
+claim unknown itinerary presence as confirmed empty or weaken ownership to smoke
+test the UI. Milestone 9's current evidence/blockers are in [memory](memory.md).
+
+PR #12 Milestone 8 coverage is mapped in [saved trips testing](saved-trips-testing.md).
+Reuse synthetic fixture factories and controlled deferred promises where useful;
+mock HTTP boundaries and keep backend ownership evidence separate. Existing
+Vitest --run discovery and CI commands are sufficient. PostgreSQL tests require
+the explicit test maintenance URL, never the development database as fallback.
+
+PR #12 Milestone 7 uses fresh first-page reads on dashboard entry, details return
+and confirmed auth after persisted browser history restoration. Reuse get/list
+clients and the existing session checker; keep ordinary focus checks from
+triggering trip requests for the same account. PR #11 is already merged; its
+saved confirmation links to My Trips/details without changing submission.
+Preserve server ordering and explicit cursor controls, synchronous pending guards
+and no polling/cache/persistence. See [ADR 0016](adr/0016-trip-navigation-freshness.md).
+
+PR #12 Milestone 6 now loads canonical metadata at `/trips/:tripId`, replacing
+the previous shell described below. Reuse getTrip and key the authenticated
+consumer by account plus route UUID. No dashboard-state dependency, owner ID,
+query cache, automatic retry or itinerary inference. Direct URLs require the
+frontend history fallback; production serving remains planned. See
+[ADR 0015](adr/0015-saved-trip-details.md) and
+[manual details checks](runbooks/saved-trips-dashboard.md#milestone-6-details-checks).
+
+PR #12 Milestone 5 is dashboard state/recovery hardening, superseding older
+forecasts of a details milestone. Read 401/403 use explicit existing account
+recovery; 403 is frontend FORBIDDEN and must not imply logout or bypass. Create
+403 remains CSRF_FAILED. Network/server/timeout failures use explicit list retry,
+never empty data or raw exception/server strings. Keep account-keyed cancellation,
+atomic dynamic feedback and focus after user-initiated recovery. Dashboard sign-in
+must call the existing navigation helper. See [ADR 0014](adr/0014-dashboard-state-recovery.md)
+and the [state matrix](runbooks/saved-trips-dashboard.md#milestone-5-state-checks).
+
+PR #12 Milestone 4 adds a standalone `/trips` page and presentational TripCard.
+Pass typed summaries through props; do not fetch additional fields inside cards
+or assume collection totals. Use shared tripFormatting helpers for calendar
+dates, inclusive duration, traveler labels and minor-unit currency display.
+Omit fields missing from the actual summary contract. Plan a New Trip returns to
+`/#create-trip`; the trip URL currently renders a navigation shell, not canonical
+detail data. Keep backend auth/CSRF/proxies intact. See
+[ADR 0013](adr/0013-saved-trip-cards-and-navigation.md) and the
+[visual checklist](runbooks/saved-trips-dashboard.md#milestone-4-visual-checks).
+
+PR #12 Milestone 3's single My Trips consumer uses the scoped React-hook decision
+in [ADR 0012](adr/0012-saved-trips-dashboard-state.md). Mount the fetching child
+only inside confirmed auth and key it by stable user ID. Keep the effect's
+dependencies to cursor/explicit attempt; do not depend on whole auth/options
+objects or changing callbacks. Abort and ignore obsolete completions, discard
+state on account loss/sign-out, and keep presentation free of requests. Refresh
+is explicit; no polling/persistence or automatic POST retry. This exception does
+not replace TanStack Query's default for future shared server state. Follow the
+[manual checklist](runbooks/saved-trips-dashboard.md) without claiming it passed.
+
+PR #12 Milestone 2 adds `listTrips(options?, signal?)` and `getTrip(id, signal?)`
+to the existing trip client. Use those functions for saved metadata reads;
+do not construct a second client or supply an owner ID. Keep required-nullable
+DTO fields distinct from optional request fields, and retain runtime validation.
+GETs use the existing same-origin session and do not require a CSRF header.
+Read errors use load-specific safe messages; preserve POST's uncertain-save
+messages/no-retry behavior. Milestone 3 now adds local list state and minimal
+dashboard UI; detailed routing and styled cards remain later work. See
+[client usage](trip-api.md#typescript-read-client) and
+[ADR 0011](adr/0011-saved-trip-read-client.md).
+
 PR #11 Milestones 1–2 add a tested trip POST client and authenticated review/save
 flow. Explicit destination timezone is required; never infer the browser zone.
 Reuse the shared CSRF reader and existing relative `/api` proxy. Never send an

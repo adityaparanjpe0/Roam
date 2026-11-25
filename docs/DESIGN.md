@@ -27,6 +27,30 @@ not database readiness, production serving, or a new business API. See the
 
 ## 1. Context and design goals
 
+PR #12 Milestone 9 polishes existing detail fact grouping, long-text wrapping,
+back-link touch target, card keyboard outline and atomic detail error feedback.
+No API/schema/auth/dependency changes. The [Saved trips guide](SAVED_TRIPS.md)
+documents actual metadata contracts, frontend ownership gates versus backend
+authorization, refetch/cursor decisions, accessible states and the itinerary
+contract limitation. Browser fixture checks and blocked real-service verification
+are recorded separately in memory; they are not a deployed or live OAuth claim.
+
+PR #12 Milestone 7 (2026-11-24) retains fresh reads on dashboard entry and adds
+saved-confirmation navigation to My Trips/details. PR #11's merge `15fda2e` is
+already in this branch and the local origin/main ref. Persisted browser history
+restoration rechecks auth with private children hidden, then remounts the proper
+account's reader. Preserve server updated_at-descending/UUID-ascending cursor
+order and explicit page controls; no shared cache, polling or new mutation.
+See [ADR 0016](adr/0016-trip-navigation-freshness.md).
+
+PR #12 Milestone 6 (2026-11-24) replaces the trip route shell with authenticated
+canonical metadata retrieval at `/trips/:tripId`. It reuses getTrip, shared
+formatting and account-keyed local request state. Missing and inaccessible trips
+share a non-enumerating unavailable state. The API has no itinerary contents or
+presence flag, so the page explains that limit. See
+[ADR 0015](adr/0015-saved-trip-details.md). This supersedes older detail-shell
+forecasts; backend contracts/security and deployment remain unchanged.
+
 PR #8 Milestones 2–8 (2026-11-17) add a frontend form-state foundation under
 `frontend/src/features/trip/`: editable string values, a separate target normalized
 draft type, and local React state. Milestone 3 mounts five controlled core fields
@@ -406,6 +430,46 @@ This refines the original separate-path proposal without claiming dependency
 readiness. Revisit the separate paths when database readiness is implemented.
 
 ### Trips and activities
+
+PR #12 Milestone 5 (2026-11-24) hardens dashboard state/recovery, as explicitly
+scoped by the human. It does not implement canonical trip details. Account states
+gate the keyed list fetcher; signed-out users can invoke existing sign-in from
+the dashboard. Read 401/403/configuration failures offer existing account checks;
+read 403 uses frontend FORBIDDEN without changing backend envelopes or create
+CSRF behavior. Other failures have explicit request retry, with atomic feedback
+and user-initiated recovery focus. Empty results include a creation action;
+logout and refresh rejection cannot retain old cards. See
+[ADR 0014](adr/0014-dashboard-state-recovery.md).
+
+PR #12 Milestone 4 (2026-11-24) adds `/trips`, a responsive presentational
+TripCard grid, current-page count and Plan a New Trip navigation to the existing
+form. Cards consume only list summaries; unavailable travelers/budget/interests
+are omitted without per-card requests. Shared formatters preserve calendar dates,
+inclusive duration, currency minor units and unknown budgets. Pinned React Router
+maps frontend pages and a `/trips/:tripId` navigation shell; full detail behavior
+remains future work. Auth/backend contracts and the list lifecycle are unchanged.
+See [ADR 0013](adr/0013-saved-trip-cards-and-navigation.md) for routing/formatting
+decisions and production history-fallback limits.
+
+PR #12 Milestone 3 (2026-11-24) adds a minimal My Trips section through existing
+anchor navigation. An authenticated child keyed by user ID owns a small React
+list hook; changing/losing accounts or signing out discards results and aborts
+requests. Primitive cursor/attempt dependencies prevent profile rerenders from
+refetching; active/signal checks reject stale completions. Loading, empty/error,
+manual refresh and cursor pages use the typed client. This scoped hook decision
+supersedes the initial TanStack Query recommendation for one consumer; no shared
+cache, polling or dependency was introduced in that milestone. Milestone 4 now
+adds cards and a navigation shell; canonical details remain planned. See
+[ADR 0012](adr/0012-saved-trips-dashboard-state.md).
+
+PR #12 Milestone 2 (2026-11-24), on `feat/saved-trips-dashboard`, extends the
+existing frontend trip client with authenticated list/detail GET functions and
+runtime-validated summary/list models. Reads reuse same-origin cookies, bounded
+native fetch, cancellation and safe TripApiError mapping; create behavior remains
+unchanged. This is transport only: no dashboard, query cache, router or dependency
+is added. Responses contain metadata only, with nullable budget/constraints and
+an opaque nullable next cursor; they do not prove itinerary presence. See
+[ADR 0011](adr/0011-saved-trip-read-client.md) and [client usage](trip-api.md#typescript-read-client).
 
 Trip CRUD Milestones 1–3 (2026-11-20), on `feat/trip-crud-api`, implement
 POST `/api/v1/trips`, collection/detail GET, version-checked PATCH and protected

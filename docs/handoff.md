@@ -1,6 +1,70 @@
 # Roam MVP handoff
 
+PR #12 Milestone 9 locally polishes detail fact grouping/wrapping, back-link
+target, card keyboard focus and atomic detail errors, and adds the current
+[Saved trips guide](SAVED_TRIPS.md). Milestone 8 is human-reviewed/committed as
+`9bc3892`. Frontend/backend database-free gates and browser fixture checks pass;
+real authenticated PostgreSQL verification remains blocked by local Docker/test
+URL setup. See [memory](memory.md) for exact evidence and guide for human steps.
+No production itinerary features or backend changes. Milestone 10 has not begun.
+
+PR #12 Milestone 8 adds frontend integration/race/security-rendering tests and
+an auditable [24-requirement coverage matrix](saved-trips-testing.md). Milestone
+7 is human-reviewed/committed as `ca9f072`, superseding its older uncommitted
+status below. No production behavior or workflow/dependency changes. Local
+ownership integration execution is blocked by missing TEST_DATABASE_ADMIN_URL;
+database-free backend evidence is recorded in [memory](memory.md). Milestone 9
+has not begun.
+
+PR #12 Milestone 7 locally adds saved-confirmation links, browser history cache
+restoration revalidation, explicit ordering copy and list action deduplication.
+PR #11 is merged as `15fda2e`, included by this branch and local origin/main;
+the older unmerged-PR #11 wording below is superseded. Milestone 6 is human-reviewed
+and committed as `27f224d`. No creation API responsibilities were duplicated.
+See [ADR 0016](adr/0016-trip-navigation-freshness.md). Live integrated smoke checks
+remain; Milestone 8 has not begun.
+
+PR #12 Milestone 6 locally implements individual saved metadata at
+`/trips/:tripId`, including independent authenticated reads, canonical facts,
+account/HTTP recovery, invalid/unavailable IDs, back navigation and request-race
+protection. The human reviewed Milestone 5, committed as `a8d20da`; this
+supersedes its earlier uncommitted status and older future-detail forecasts
+below. Itinerary contents/presence are absent from the API and explicitly marked
+unavailable. No generation/edit/delete/export controls or backend changes.
+See [ADR 0015](adr/0015-saved-trip-details.md). Milestone 7 has not begun.
+
 > Status: local main includes the frontend/form, PostgreSQL/ORM/migrations, OAuth/sessions, Trip CRUD and navbar through merge de15c3b. PR #11 implements authenticated creation on feat/trip-creation-integration; Milestone 3 real HTTP/PostgreSQL verification passed with synthetic session identities. Human Google smoke check, hosted CI and review remain outstanding. Deployment remains planned. See [memory.md](memory.md) for evidence.
+
+PR #12 Milestone 5 hardens loading/empty/error/auth recovery with a visible
+dashboard sign-in action, separate read-401/read-403 handling, explicit retries
+and accessible feedback/focus. Backend security, session behavior and the
+account-keyed list lifecycle remain intact. This is local/uncommitted work;
+canonical details remain future work under the human's current milestone scope.
+See [ADR 0014](adr/0014-dashboard-state-recovery.md) and [memory](memory.md).
+
+PR #12 Milestone 4 adds a standalone My Trips page, responsive TripCard grid,
+current-page count, shared date/duration/traveler/budget presentation and working
+creation/navigation links. Full trip details remain future work; card fields are
+limited to the actual collection contract. The human reviewed/committed this
+milestone as `3bfc6c6`. See
+[ADR 0013](adr/0013-saved-trip-cards-and-navigation.md) and
+[memory](memory.md) for actual verification and remaining limits.
+
+PR #12 Milestone 3 adds a minimal My Trips section, account-scoped React hook,
+request states, explicit refresh and cursor pagination. Account changes/logout
+discard data and cancel requests; no query dependency, polling, persistence or
+backend change. The human reviewed/committed it as `f04b9a0`; Milestone 4 now
+adds visual cards and navigation. Full detail loading and live backend browser
+verification remain later work. See [ADR 0012](adr/0012-saved-trips-dashboard-state.md)
+and the [manual checklist](runbooks/saved-trips-dashboard.md).
+
+PR #12 Milestone 2 on `feat/saved-trips-dashboard` adds authenticated metadata
+list/detail functions and runtime-validated DTOs to the existing trip client.
+The human reviewed/committed that transport work as `f535be9`; Milestone 3 now
+adds the minimal dashboard/list state. Full cards/routes and live browser
+integration remain planned. No backend contract,
+authentication behavior, dependency or migration changes. See
+[ADR 0011](adr/0011-saved-trip-read-client.md) and [memory](memory.md) for evidence.
 
 PR #11 follows [ADR 0010](adr/0010-trip-creation-integration.md). The client and
 mocked transport/security tests, explicit destination timezone and

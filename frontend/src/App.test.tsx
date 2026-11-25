@@ -3,6 +3,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import App from './App'
 
 beforeEach(() => {
+  window.history.replaceState(null, '', '/')
   vi.stubEnv('DEV', true)
   vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {})))
 })
@@ -29,12 +30,14 @@ test('all navigation links point to existing, unique page targets', () => {
 
   for (const link of screen.getAllByRole('link')) {
     const target = link.getAttribute('href')
+    if (target === '/trips') continue
     expect(target).toMatch(/^#[a-z-]+$/)
     if (!target) throw new Error('Navigation link is missing its target')
     expect(container.querySelectorAll(target)).toHaveLength(1)
   }
 
   expect(screen.getByRole('link', { name: 'See planned features' })).toHaveAttribute('href', '#the-idea')
+  expect(screen.getByRole('link', { name: 'My Trips' })).toHaveAttribute('href', '/trips')
   expect(screen.getByRole('link', { name: 'Skip to content' })).toHaveAttribute('href', '#main-content')
   expect(screen.getByRole('main')).toHaveAttribute('tabindex', '-1')
 })
