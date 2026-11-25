@@ -151,7 +151,7 @@ test.each(reads)('$name requires HTTP 200 and validates JSON content and syntax'
 
 test.each(reads)('$name maps read errors without save messages or raw server details', async ({ request }) => {
   for (const [status, code] of [
-    [401, 'AUTHENTICATION_REQUIRED'], [403, 'CSRF_FAILED'], [404, 'RESOURCE_NOT_FOUND'],
+    [401, 'AUTHENTICATION_REQUIRED'], [403, 'FORBIDDEN'], [404, 'RESOURCE_NOT_FOUND'],
     [422, 'VALIDATION_FAILED'], [500, 'UNAVAILABLE'], [502, 'UNAVAILABLE'],
     [503, 'DATABASE_UNAVAILABLE'],
   ] as const) {
@@ -184,6 +184,15 @@ test.each(reads)('$name sanitizes network errors without retrying or implying a 
   vi.stubGlobal('fetch', fetch)
   await expect(request()).rejects.toMatchObject({ code: 'NETWORK_ERROR', message: 'Could not load trips. Check your connection and try again.' })
   expect(fetch).toHaveBeenCalledTimes(1)
+})
+
+test.each(reads)('$name treats a legacy CSRF-labelled 403 as a read denial without exposing its details', async ({ request }) => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ error: {
+    code: 'CSRF_FAILED', message: 'PRIVATE_SERVER_MESSAGE', request_id: requestId, details: { token: 'PRIVATE' },
+  } }, { status: 403 })))
+  const error: unknown = await request().catch((failure: unknown) => failure)
+  expect(error).toMatchObject({ code: 'FORBIDDEN', status: 403, fieldErrors: {} })
+  expect(String(error) + JSON.stringify(error)).not.toContain('PRIVATE')
 })
 
 test.each(reads)('$name skips a pre-aborted request', async ({ request }) => {

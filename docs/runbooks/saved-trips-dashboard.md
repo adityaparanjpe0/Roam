@@ -4,8 +4,8 @@ PR #12 Milestone 4 presents My Trips at `/trips` with responsive cards and a
 navigation shell for View Trip. Old `/#my-trips` bookmarks redirect there.
 Canonical detail loading and automatic post-save invalidation remain later work.
 Use the existing [local startup instructions](trip-creation-integration.md#start-locally)
-and [auth setup](../AUTH.md). No new environment variable, dependency, migration
-or backend endpoint is required. This checklist is not evidence of a completed
+and [auth setup](../AUTH.md). Milestone 5 requires no additional environment
+variable, dependency, migration or backend endpoint. This checklist is not evidence of a completed
 live-Google or database/browser run for this milestone.
 
 1. Start the existing local PostgreSQL/FastAPI/Vite stack with pinned runtimes.
@@ -61,7 +61,7 @@ live-Google or database/browser run for this milestone.
 3. Use Tab from the My Trips heading: Plan a New Trip precedes View Trip actions.
    Interactive focus must remain visible. Use Enter on View Trip, verify the
    shell's honest unavailable notice, then Back to My Trips. Full trip details
-   are intentionally deferred to Milestone 5.
+   remain future work; the human defined Milestone 5 as state/recovery hardening.
 4. Choose Plan a New Trip from desktop and mobile. Verify `/#create-trip`, the
    form visible below the sticky header, and focus in Destination. The root home
    page remains the existing creation flow; it makes no dashboard list request.
@@ -77,10 +77,44 @@ synthetic HTTP responses. Those checks can establish rendering/navigation, not
 Google login, real owner data or PostgreSQL behavior. Production deep-link
 serving also remains unverified until FastAPI static/history serving is built.
 
+## Milestone 5 state checks
+
+Milestone 5 is state/recovery hardening. Earlier forecasts assigning full trip
+details to this milestone are superseded; details remain future work.
+
+| Condition | Expected dashboard behavior | Recovery |
+|---|---|---|
+| Auth still loading | Checking-sign-in status; no protected GET | Wait for the existing account check |
+| Confirmed guest | Visible sign-in panel and Google action; no protected GET | Existing full-page sign-in, with draft-loss warning |
+| List pending | Busy region, atomic loading status, hidden decorative skeletons | Wait; no duplicate submit or polling |
+| Valid nonempty page | Real cards and current-page count | Explicit refresh/pagination |
+| Valid empty first page | Empty-account message and Plan your first trip | Existing creation form |
+| Empty later page | Page-moved wording, not an empty-account claim | Previous page or first-page refresh |
+| Read 401 | No cards; Check your sign-in | Recheck sign-in through existing /me; confirmed expiry shows existing notice/sign-in action |
+| Read 403 | No cards; Request not permitted | Check account; a valid profile does not override denial or force logout |
+| 500/storage/upstream failure | Safe load error, never empty data | Retry loading trips explicitly |
+| Auth configuration unavailable | Safe sign-in-unavailable state | Existing account check |
+| Network/ten-second timeout | Distinct connection/timeout message, no cards | Restore connectivity and retry explicitly |
+| Explicit retry | Loading, then success/empty/error; outcome receives focus | At most one request per accepted action |
+| Sign-out/account change | Hide results, abort request and discard component state | Ignore late success/failure; existing auth controls recover focus |
+
+The [HTTP-boundary tests](../../frontend/src/features/trip/SavedTripsDashboard.states.test.tsx)
+cover these failures without weakening a backend route, printing credentials or
+waiting for a real session to expire. They use the real typed client/auth
+provider with deterministic fake HTTP and timers. The API client still preserves
+CSRF_FAILED for unsafe creates; FORBIDDEN is frontend normalization for read 403.
+
+For a manual smoke check, open `/trips` signed out, use the visible sign-in action,
+then inspect a populated/empty account. Browser offline mode can exercise network
+failure; restore connectivity and choose Retry loading trips. Check keyboard
+focus after retry and sign-out during a throttled list request. Do not remove
+server checks to manufacture 401/403/500; automated fixtures cover them. This
+checklist is not a claim of a new live-Google or database/browser run.
+
 Automated commands from `frontend/` with pinned Node 24.22.3:
 
 ```sh
-npm run test -- --run src/features/trip/SavedTripsDashboard.test.tsx src/components/SiteHeader.test.tsx src/App.test.tsx src/features/auth/AuthIntegration.test.tsx
+npm run test -- --run src/features/trip/SavedTripsDashboard.states.test.tsx src/features/trip/SavedTripsDashboard.test.tsx src/api/trips.read.test.ts src/api/trips.test.ts
 npm run lint
 npm run typecheck
 npm run test -- --run

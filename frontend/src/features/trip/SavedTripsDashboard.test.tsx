@@ -231,7 +231,7 @@ test('401 offers explicit existing auth recovery without automatic retry loops',
   render(dashboard({ status: 'authenticated', user: alice }, false, retry))
   expect(await region().findByRole('alert')).toHaveTextContent('Sign in to view your saved trips.')
   expect(retry).not.toHaveBeenCalled()
-  expect(region().getByRole('button', { name: 'Retry loading trips' })).toBeDisabled()
+  expect(region().queryByRole('button', { name: 'Retry loading trips' })).not.toBeInTheDocument()
   fireEvent.click(region().getByRole('button', { name: 'Recheck sign-in' }))
   expect(retry).toHaveBeenCalledTimes(1)
   expect(list).toHaveBeenCalledTimes(1)

@@ -1,7 +1,7 @@
 # ADR 0013: Saved trip cards, formatting and page navigation
 
 - Date: 2026-11-24
-- Status: implemented locally for PR #12 Milestone 4; uncommitted, review pending
+- Status: PR #12 Milestone 4 human-reviewed and committed as 3bfc6c6; not merged
 - Owner: user with Codex assistance
 
 ## Decision and product boundary
@@ -50,7 +50,7 @@ router and its two dependencies; existing package versions are unchanged.
 - `/` retains the existing landing page and creation form.
 - `/trips` renders My Trips. Old `/#my-trips` bookmarks redirect here.
 - `/trips/:tripId` is a navigation shell only. It does not fetch, claim ownership
-  or display canonical detail data. Full detail behavior is Milestone 5.
+  or display canonical detail data. Full detail behavior remains future work.
 - Unmatched frontend paths show a page-not-found view.
 
 Native anchor links retain normal browser navigation semantics. Plan a New Trip
@@ -67,6 +67,10 @@ serve frontend URLs while preserving `/api`, `/auth` and health handling; a Vite
 preview check does not establish production deployment behavior.
 
 ## Alternatives and evidence
+
+The human subsequently scoped Milestone 5 to dashboard state/recovery rather
+than canonical details; [ADR 0014](0014-dashboard-state-recovery.md) supersedes
+that earlier milestone forecast without implementing detail behavior.
 
 Per-card detail calls would add request fan-out to obtain unavailable summary
 fields. Mock enrichments or a broken View Trip URL would misrepresent current

@@ -2,10 +2,19 @@
 
 React + TypeScript + Vite frontend for Roam. The current page introduces the planned travel planner; its itinerary preview is a static concept, not a generated or interactive itinerary.
 
+PR #12 Milestone 5 improves dashboard loading, empty, error and authentication
+recovery. A visible sign-in action reuses existing Google navigation; 401/403
+offer existing account checks, while network/server/timeout failures offer an
+explicit list retry. Empty success is distinct from failure, and old cards are
+discarded on refresh/logout/account changes. Atomic status/alert feedback and
+recovery focus are tested without new state dependencies or backend changes.
+See [ADR 0014](../docs/adr/0014-dashboard-state-recovery.md) and the
+[state matrix](../docs/runbooks/saved-trips-dashboard.md#milestone-5-state-checks).
+
 PR #12 Milestone 4 adds **My Trips** at `/trips`, a responsive card grid, page
 count and Plan a New Trip link to the existing form. Cards use the real list
 response without extra requests; absent travelers/budget/interests are omitted.
-View Trip opens a navigation shell; canonical detail loading remains Milestone 5.
+View Trip opens a navigation shell; canonical detail loading remains future work.
 Calendar dates/duration and existing review/saved money/traveler displays share
 tested formatters. React Router 8.5.3 supplies page routing; production FastAPI
 static serving/history fallback remains planned. See

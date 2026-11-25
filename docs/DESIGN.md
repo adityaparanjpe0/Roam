@@ -407,13 +407,23 @@ readiness. Revisit the separate paths when database readiness is implemented.
 
 ### Trips and activities
 
+PR #12 Milestone 5 (2026-11-24) hardens dashboard state/recovery, as explicitly
+scoped by the human. It does not implement canonical trip details. Account states
+gate the keyed list fetcher; signed-out users can invoke existing sign-in from
+the dashboard. Read 401/403/configuration failures offer existing account checks;
+read 403 uses frontend FORBIDDEN without changing backend envelopes or create
+CSRF behavior. Other failures have explicit request retry, with atomic feedback
+and user-initiated recovery focus. Empty results include a creation action;
+logout and refresh rejection cannot retain old cards. See
+[ADR 0014](adr/0014-dashboard-state-recovery.md).
+
 PR #12 Milestone 4 (2026-11-24) adds `/trips`, a responsive presentational
 TripCard grid, current-page count and Plan a New Trip navigation to the existing
 form. Cards consume only list summaries; unavailable travelers/budget/interests
 are omitted without per-card requests. Shared formatters preserve calendar dates,
 inclusive duration, currency minor units and unknown budgets. Pinned React Router
 maps frontend pages and a `/trips/:tripId` navigation shell; full detail behavior
-remains Milestone 5. Auth/backend contracts and the list lifecycle are unchanged.
+remains future work. Auth/backend contracts and the list lifecycle are unchanged.
 See [ADR 0013](adr/0013-saved-trip-cards-and-navigation.md) for routing/formatting
 decisions and production history-fallback limits.
 

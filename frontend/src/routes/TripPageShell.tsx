@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from 'react'
 import { useAuth } from '../features/auth/authContext'
 
-/** Navigation destination only; canonical detail loading belongs to Milestone 5. */
+/** Navigation destination only; canonical detail loading remains future work. */
 function TripPageShell() {
   const auth = useAuth()
   const heading = useRef<HTMLHeadingElement>(null)

@@ -2,10 +2,18 @@
 
 > Status: local main includes the frontend/form, PostgreSQL/ORM/migrations, OAuth/sessions, Trip CRUD and navbar through merge de15c3b. PR #11 implements authenticated creation on feat/trip-creation-integration; Milestone 3 real HTTP/PostgreSQL verification passed with synthetic session identities. Human Google smoke check, hosted CI and review remain outstanding. Deployment remains planned. See [memory.md](memory.md) for evidence.
 
+PR #12 Milestone 5 hardens loading/empty/error/auth recovery with a visible
+dashboard sign-in action, separate read-401/read-403 handling, explicit retries
+and accessible feedback/focus. Backend security, session behavior and the
+account-keyed list lifecycle remain intact. This is local/uncommitted work;
+canonical details remain future work under the human's current milestone scope.
+See [ADR 0014](adr/0014-dashboard-state-recovery.md) and [memory](memory.md).
+
 PR #12 Milestone 4 adds a standalone My Trips page, responsive TripCard grid,
 current-page count, shared date/duration/traveler/budget presentation and working
-creation/navigation links. Full trip details remain Milestone 5; card fields are
-limited to the actual collection contract. This work is local/uncommitted. See
+creation/navigation links. Full trip details remain future work; card fields are
+limited to the actual collection contract. The human reviewed/committed this
+milestone as `3bfc6c6`. See
 [ADR 0013](adr/0013-saved-trip-cards-and-navigation.md) and
 [memory](memory.md) for actual verification and remaining limits.
 

@@ -55,7 +55,7 @@ test('direct trip navigation reaches an honest shell without claiming a loaded o
 
 test('a guest dashboard sends no protected request and still links to the creation form', async () => {
   const fetch = open('/trips', false)
-  await screen.findByText('Sign in using the account controls to view your saved trips.')
+  await screen.findByText('Sign in to see your saved trips.')
   expect(fetch).toHaveBeenCalledTimes(1)
   expect(screen.queryByRole('article')).not.toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Plan a New Trip' })).toHaveAttribute('href', '/#create-trip')

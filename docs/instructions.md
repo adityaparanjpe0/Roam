@@ -5,6 +5,15 @@
 
 ## 1. Working agreement
 
+PR #12 Milestone 5 is dashboard state/recovery hardening, superseding older
+forecasts of a details milestone. Read 401/403 use explicit existing account
+recovery; 403 is frontend FORBIDDEN and must not imply logout or bypass. Create
+403 remains CSRF_FAILED. Network/server/timeout failures use explicit list retry,
+never empty data or raw exception/server strings. Keep account-keyed cancellation,
+atomic dynamic feedback and focus after user-initiated recovery. Dashboard sign-in
+must call the existing navigation helper. See [ADR 0014](adr/0014-dashboard-state-recovery.md)
+and the [state matrix](runbooks/saved-trips-dashboard.md#milestone-5-state-checks).
+
 PR #12 Milestone 4 adds a standalone `/trips` page and presentational TripCard.
 Pass typed summaries through props; do not fetch additional fields inside cards
 or assume collection totals. Use shared tripFormatting helpers for calendar

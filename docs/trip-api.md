@@ -278,6 +278,13 @@ load-specific messages. A read 404 means RESOURCE_NOT_FOUND for both missing and
 other-owner resources. Read failures do not imply a write occurred. Existing
 create errors and their uncertain-save wording remain unchanged.
 
+PR #12 Milestone 5 normalizes read-time HTTP 403 to frontend `FORBIDDEN` with
+fixed denial wording. It does not infer session expiry from that status. This
+does not change the backend table/envelope above: unsafe create still uses
+CSRF_FAILED. Dashboard account recovery delegates to the existing `/api/auth/me`
+check; only its result changes auth state. Server/network/timeout errors have
+explicit request retry. See [the state/recovery decision](adr/0014-dashboard-state-recovery.md).
+
 Focused mocked-fetch regression command from `frontend/`:
 
 ```sh

@@ -8,6 +8,53 @@
 
 ### Verified facts
 
+- 2026-11-24 PR #12 Milestone 5, owner: user with Codex assistance, started on
+  `feat/saved-trips-dashboard` at human-committed `3bfc6c6`. The human reported
+  Milestone 4 complete/reviewed, superseding its older uncommitted status below.
+  The human defined Milestone 5 as dashboard state/recovery hardening, superseding
+  earlier forecasts assigning canonical details to this milestone. Full details
+  remain future work. Initial tracked tree was clean; `.vscode/` preserved.
+- [Dashboard recovery](../frontend/src/features/trip/SavedTripsDashboard.tsx) now
+  presents distinct account/loading, successful empty/populated and failure
+  states. Confirmed guests have a visible sign-in action using the existing
+  navigation helper, navigation-loss warning, duplicate guard and safe failure
+  text. The empty first page has an inline creation link. Atomic status/alert
+  feedback, labelled errors and user-initiated recovery focus are covered.
+- Read HTTP 403 now normalizes to frontend FORBIDDEN, not CSRF_FAILED. Create
+  403 retains its existing CSRF behavior. [Typed recovery metadata](../frontend/src/features/trip/savedTripsFeedback.ts)
+  selects explicit existing account checks for 401/403/auth configuration errors
+  and explicit request retry for network/server/timeout/response failures. A
+  valid account check neither overrides a repeated denial nor fabricates logout.
+  Existing /me expiration notices establish the next account state; there is no
+  automatic retry/redirect loop or forced account mutation from a trip error.
+- The account-keyed request hook is unchanged: unknown/guest/signing-out states
+  mount no list fetcher, refresh removes old cards, and logout/account changes
+  abort/discard prior state. Late responses cannot restore hidden data. Retry
+  requests the first page once per accepted action and focuses the resulting
+  status/error. Signing out cancels local recovery-focus intent, preserving
+  existing account-control focus. No raw response/error/token text is exposed.
+- Verification on Windows with the existing pinned runtime and dependencies:
+  initial focused API/dashboard/route run **170 passed in 5 files** (3.30s);
+  final `npm run test -- --run` **441 passed in 21 files** (6.71s), including
+  **17 new HTTP-boundary dashboard state cases** and **2 new read-denial cases**.
+  `npm run lint`, `npm run typecheck`, and `npm run build` exited 0. Editor
+  diagnostics and diff checks passed. The new tests use native client/auth
+  composition with mocked HTTP and deterministic timeout timers; prior account
+  switch, Strict Mode, creation/CSRF, routing and formatting regressions passed.
+- Covered auth loading/guest/unknown, list loading/populated/empty, 401 expiry
+  recheck, 403 repeated denial, 500/503, auth configuration outage, offline/
+  ten-second timeout, explicit retry success/failure/focus, blocked sign-in
+  navigation and real client sign-out during pending list reads. Fixtures
+  ignoring abort cannot repopulate the dashboard. No live Google, PostgreSQL,
+  backend suite, browser/screen-reader, hosted CI or deployment check was run
+  for this milestone; the [state matrix](runbooks/saved-trips-dashboard.md#milestone-5-state-checks)
+  is manual guidance, not claimed live execution.
+- Backend contracts/security, auth infrastructure, request hook, proxy,
+  dependencies/lockfile and environment values were not changed. The referenced
+  environment file's secret values were not read. [ADR 0014](adr/0014-dashboard-state-recovery.md)
+  records the policy and revised scope. Work remains uncommitted for review;
+  no commit, push or merge by Codex. Milestone 6 has not begun.
+
 - 2026-11-24 PR #12 Milestone 4, owner: user with Codex assistance, started on
   `feat/saved-trips-dashboard` at `f04b9a0`. The human reported Milestone 3
   complete/reviewed and committed it; this supersedes its older uncommitted

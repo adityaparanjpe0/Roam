@@ -77,6 +77,7 @@ const ERROR_MESSAGES = {
   TIMEOUT: 'Saving timed out. Your trip may have been saved; do not retry automatically.',
   INVALID_RESPONSE: 'The backend returned an unexpected response. Your trip may have been saved.',
   RESOURCE_NOT_FOUND: 'Trip not found or unavailable.',
+  FORBIDDEN: 'This request is not permitted.',
 } as const
 
 export type TripErrorCode = keyof typeof ERROR_MESSAGES
@@ -94,6 +95,7 @@ const READ_ERROR_MESSAGES: Record<TripErrorCode, string> = {
   TIMEOUT: 'Loading trips timed out. Try again.',
   INVALID_RESPONSE: 'The backend returned an unexpected trip response.',
   RESOURCE_NOT_FOUND: 'Trip not found or unavailable.',
+  FORBIDDEN: 'This request was not permitted. Check your sign-in status before trying again.',
 }
 
 export class TripApiError extends Error {
@@ -200,7 +202,7 @@ async function failure(response: Response, operation: TripOperation): Promise<Tr
   try { body = await json(response) } catch { body = null }
   const error = record(body) && record(body.error) ? body.error : null
   const code: TripErrorCode = response.status === 401 ? 'AUTHENTICATION_REQUIRED'
-    : response.status === 403 ? 'CSRF_FAILED'
+    : response.status === 403 ? operation === 'read' ? 'FORBIDDEN' : 'CSRF_FAILED'
     : response.status === 404 && operation === 'read' ? 'RESOURCE_NOT_FOUND'
     : response.status === 422 ? 'VALIDATION_FAILED'
     : response.status === 503 && (error?.code === 'DATABASE_UNAVAILABLE' || error?.code === 'AUTH_NOT_CONFIGURED') ? error.code
